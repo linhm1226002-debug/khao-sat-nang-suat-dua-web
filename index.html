@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Khảo sát năng suất dừa</title>
+
+<!-- Firebase (compat SDK — cú pháp đơn giản, không cần bước build) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+
+<style>
+  :root{
+    --green-900:#123524; --green-700:#1F5C3B; --green-600:#2C7A4B; --green-100:#EAF3EC;
+    --grey-700:#4B5563; --grey-300:#D1D5DB; --grey-100:#F5F7F6; --red-600:#B23A2E; --white:#fff;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+       background:var(--grey-100);color:#1f2937;}
+  header{background:var(--green-700);color:#fff;padding:14px 16px;display:flex;
+         align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+  header h1{font-size:16px;margin:0;font-weight:700;}
+  header .sub{font-size:11px;opacity:.85;margin-top:2px;}
+  header button{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:8px;
+                 padding:8px 12px;font-size:13px;}
+  main{max-width:520px;margin:0 auto;padding:16px 16px 90px;}
+  .hidden{display:none!important;}
+  .card{background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:14px;
+        box-shadow:0 1px 3px rgba(0,0,0,.06);}
+  .card h2{font-size:15px;margin:0 0 12px;color:var(--green-700);}
+  label{display:block;font-size:13px;color:var(--grey-700);margin:10px 0 4px;}
+  input[type=text],input[type=number],input[type=password],input[type=email],
+  input[type=date],select,textarea{
+    width:100%;padding:11px 12px;border:1px solid var(--grey-300);border-radius:8px;
+    font-size:15px;background:#fff;}
+  textarea{min-height:70px;resize:vertical;}
+  .btn{display:block;width:100%;padding:13px;border:none;border-radius:10px;font-size:15px;
+       font-weight:600;cursor:pointer;text-align:center;}
+  .btn-primary{background:var(--green-700);color:#fff;}
+  .btn-secondary{background:var(--green-100);color:var(--green-700);}
+  .btn-danger{background:#FBEDEB;color:var(--red-600);}
+  .btn-outline{background:#fff;color:var(--green-700);border:1px solid var(--green-700);}
+  .btn+.btn{margin-top:10px;}
+  .row{display:flex;gap:10px;}
+  .row>*{flex:1;}
+  .stepper{display:flex;align-items:center;gap:10px;}
+  .stepper button{width:42px;height:42px;border-radius:10px;border:1px solid var(--grey-300);
+                  background:#fff;font-size:20px;line-height:1;}
+  .stepper input{text-align:center;font-size:17px;font-weight:700;}
+  .month-row{border:1px solid var(--grey-300);border-radius:10px;padding:10px 12px;margin-bottom:10px;}
+  .month-row .label{font-size:13px;color:var(--grey-700);margin-bottom:6px;display:flex;
+                     justify-content:space-between;}
+  .month-row .tag{background:var(--green-100);color:var(--green-700);border-radius:6px;
+                   padding:1px 7px;font-size:11px;font-weight:700;}
+  .gps-box{border:1px dashed var(--grey-300);border-radius:10px;padding:12px;font-size:13px;}
+  .gps-ok{color:var(--green-700);font-weight:600;}
+  .gps-warn{color:var(--red-600);font-weight:600;}
+  .tree-item{display:flex;justify-content:space-between;align-items:center;padding:12px;
+             border:1px solid var(--grey-300);border-radius:10px;margin-bottom:8px;}
+  .tree-item .meta{font-size:12px;color:var(--grey-700);}
+  .badge{display:inline-block;background:var(--green-100);color:var(--green-700);
+         border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700;}
+  .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .kpi-tile{background:var(--green-100);border-radius:10px;padding:14px;}
+  .kpi-tile .num{font-size:22px;font-weight:800;color:var(--green-700);}
+  .kpi-tile .lbl{font-size:12px;color:var(--grey-700);}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:8px 6px;border-bottom:1px solid var(--grey-300);text-align:left;}
+  .progress-bar{background:var(--grey-300);border-radius:6px;height:8px;overflow:hidden;}
+  .progress-fill{background:var(--green-600);height:100%;}
+  .muted{color:var(--grey-700);font-size:12px;}
+  .error{color:var(--red-600);font-size:13px;margin-top:8px;}
+  .guide-age-table td,.guide-age-table th{font-size:12px;}
+  .tabbar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--grey-300);
+          display:flex;max-width:520px;margin:0 auto;}
+  .tabbar button{flex:1;padding:10px 0;background:none;border:none;font-size:12px;color:var(--grey-700);}
+  .tabbar button.active{color:var(--green-700);font-weight:700;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🥥 Khảo sát năng suất dừa</h1>
+    <div class="sub" id="headerSub">—</div>
+  </div>
+  <button id="btnLogout" class="hidden">Đăng xuất</button>
+</header>
+
+<main>
+
+  <!-- ============ LOGIN ============ -->
+  <section id="view-login" class="card">
+    <h2>Đăng nhập</h2>
+    <label>Email</label>
+    <input type="email" id="loginEmail" placeholder="ten@congty.vn" />
+    <label>Mật khẩu</label>
+    <input type="password" id="loginPassword" />
+    <button class="btn btn-primary" style="margin-top:16px" onclick="doLogin()">Đăng nhập</button>
+    <div class="error hidden" id="loginError"></div>
+    <div class="hidden" id="loginNotice" style="margin-top:10px;padding:10px 12px;background:var(--green-100);
+         color:var(--green-700);border-radius:8px;font-size:13px"></div>
+    <p class="muted" style="margin-top:14px">Quên mật khẩu, liên hệ Admin. Là khảo sát viên và
+      chưa có tài khoản?
+      <a href="#" onclick="showSignup(); return false;">Đăng ký tại đây</a>.</p>
+  </section>
+
+  <!-- ============ SIGNUP (khảo sát viên tự đăng ký, chờ Admin duyệt) ============ -->
+  <section id="view-signup" class="card hidden">
+    <h2>Đăng ký tài khoản khảo sát viên</h2>
+    <label>Họ tên</label>
+    <input type="text" id="suName" placeholder="Nguyễn Văn A" />
+    <label>Email</label>
+    <input type="email" id="suEmail" placeholder="ten@congty.vn" />
+    <label>Mật khẩu (tối thiểu 6 ký tự)</label>
+    <input type="password" id="suPassword" />
+    <label>Nhập lại mật khẩu</label>
+    <input type="password" id="suPassword2" />
+    <button class="btn btn-primary" style="margin-top:16px" onclick="doSignup()">Gửi yêu cầu đăng ký</button>
+    <button class="btn btn-secondary" onclick="showLogin()">← Quay lại đăng nhập</button>
+    <div class="error hidden" id="signupError"></div>
+    <p class="muted" style="margin-top:14px">Sau khi đăng ký, tài khoản ở trạng thái
+      <b>"chờ duyệt"</b> — Admin sẽ xét duyệt trước khi anh/chị đăng nhập và nhập liệu được.</p>
+  </section>
+
+  <!-- ============ FIELD: HOME ============ -->
+  <section id="view-home" class="card hidden">
+    <h2>Xin chào, <span id="homeUserName"></span></h2>
+    <button class="btn btn-primary" onclick="startNewSurvey()">+ Tạo phiếu khảo sát mới</button>
+    <button class="btn btn-outline" onclick="showGuide()">📖 Hướng dẫn đếm buồng</button>
+    <div style="margin-top:18px">
+      <label>Phiếu của tôi (gần đây)</label>
+      <div id="mySurveysList"><p class="muted">Đang tải…</p></div>
+    </div>
+  </section>
+
+  <!-- ============ GUIDE ============ -->
+  <section id="view-guide" class="card hidden">
+    <h2>Nguyên tắc đếm buồng hữu hiệu</h2>
+    <p style="font-size:14px;line-height:1.5">
+      Đếm buồng tính từ <b>buồng phía dưới của phát hoa đang nở</b> trở xuống (gồm cả buồng có
+      trái lẫn buồng không có trái). Chỉ tính là <b>"buồng hữu hiệu"</b> khi buồng đã qua
+      ngưỡng <b id="guideThreshold">6</b> tháng tuổi — lúc này số trái đã ổn định, ít rụng thêm
+      do nguyên nhân sinh lý tự nhiên.
+    </p>
+    <p style="font-size:14px;line-height:1.5">
+      Với mỗi buồng hữu hiệu, xác định buồng đó sẽ chín vào tháng nào trong 7 tháng tới
+      (tháng hiện tại x, hoặc x+1 … x+6) dựa vào tuổi buồng, rồi ghi số trái đếm được vào
+      đúng ô tháng tương ứng trong phiếu nhập liệu.
+    </p>
+    <table class="guide-age-table">
+      <tr><th>Vị trí buồng (từ buồng đang nở)</th><th>Tuổi buồng (tháng)</th></tr>
+      <tr><td>Buồng đang nở</td><td>0</td></tr>
+      <tr><td>Buồng thứ −1</td><td>0,83</td></tr>
+      <tr><td>Buồng thứ −2</td><td>1,67</td></tr>
+      <tr><td>Buồng thứ −3</td><td>2,5</td></tr>
+      <tr><td>Buồng thứ −4</td><td>3,33</td></tr>
+      <tr><td>Buồng thứ −5</td><td>4,17</td></tr>
+      <tr><td>Buồng thứ −6</td><td>5,0</td></tr>
+      <tr><td>Buồng thứ −7 (ranh giới hữu hiệu)</td><td>5,83</td></tr>
+      <tr><td>Buồng thứ −8 … −15</td><td>6,67 → 12,5</td></tr>
+    </table>
+    <p class="muted">Tuổi thu hoạch trung bình (T_max) hiện đặt ở <b id="guideTmax">12,5</b> tháng —
+      Admin có thể hiệu chỉnh trong mục Cấu hình khi có dữ liệu hậu kiểm mới.</p>
+    <button class="btn btn-secondary" onclick="showHome()">← Quay lại</button>
+  </section>
+
+  <!-- ============ FIELD: SURVEY (VƯỜN) FORM ============ -->
+  <section id="view-survey-form" class="card hidden">
+    <h2>Thông tin vườn khảo sát</h2>
+
+    <div class="gps-box" id="gpsBox">
+      <button class="btn btn-outline" onclick="captureGps()">📍 Lấy vị trí GPS</button>
+      <div id="gpsResult" style="margin-top:8px">Chưa lấy vị trí.</div>
+    </div>
+
+    <label>Xã</label>
+    <input type="text" id="fXa" list="xaList" placeholder="Ví dụ: Hưng Lễ" />
+    <datalist id="xaList">
+      <option value="Hưng Lễ"></option><option value="Cẩm Sơn"></option>
+      <option value="Ngãi Đăng"></option><option value="Hương Mỹ"></option>
+    </datalist>
+
+    <div class="row">
+      <div><label>Chủ vườn</label><input type="text" id="fChuVuon" /></div>
+      <div><label>Số điện thoại</label><input type="text" id="fSdt" /></div>
+    </div>
+
+    <label>Giống dừa</label>
+    <input type="text" id="fGiong" placeholder="Ta xanh, Xiêm xanh…" />
+
+    <div class="row">
+      <div><label>Năm trồng</label><input type="number" id="fNamTrong" oninput="autoTuoiVuon()" /></div>
+      <div><label>Tuổi vườn (năm)</label><input type="number" id="fTuoiVuon" /></div>
+    </div>
+
+    <label>Nhóm tuổi cây</label>
+    <select id="fNhomTuoi">
+      <option value="Tơ">Tơ</option>
+      <option value="Ổn định NS">Ổn định năng suất</option>
+      <option value="Già cỗi/thanh lý">Già cỗi / thanh lý</option>
+    </select>
+
+    <div class="row">
+      <div><label>Mật độ trồng (cây/ha)</label><input type="number" id="fMatDo" /></div>
+      <div><label>Diện tích dừa (ha)</label><input type="number" step="0.01" id="fDienTich" /></div>
+    </div>
+
+    <label>Quy trình canh tác</label>
+    <select id="fCanhTac">
+      <option>Truyền thống</option><option>Hữu cơ</option><option>GlobalGAP</option>
+    </select>
+
+    <button class="btn btn-primary" style="margin-top:16px" onclick="saveSurvey()">Lưu & thêm cây khảo sát</button>
+    <button class="btn btn-secondary" onclick="showHome()">Huỷ</button>
+    <div class="error hidden" id="surveyError"></div>
+  </section>
+
+  <!-- ============ FIELD: TREE LIST (per survey) ============ -->
+  <section id="view-tree-list" class="card hidden">
+    <h2>Cây trong phiếu <span class="badge" id="treeListSurveyLabel"></span></h2>
+    <div id="treeListItems"><p class="muted">Chưa có cây nào.</p></div>
+    <button class="btn btn-primary" onclick="startNewTree()">+ Thêm cây</button>
+    <button class="btn btn-secondary" onclick="showHome()">Hoàn tất phiếu, về Trang chủ</button>
+  </section>
+
+  <!-- ============ FIELD: TREE FORM ============ -->
+  <section id="view-tree-form" class="card hidden">
+    <h2>Nhập số liệu cây <span class="badge" id="treeFormLabel"></span></h2>
+
+    <label>Mã cây</label>
+    <input type="text" id="tMaCay" />
+
+    <label>Tình trạng cây</label>
+    <select id="tTinhTrang">
+      <option>Bình thường</option><option>Sâu bệnh hại</option><option>Khác</option>
+    </select>
+
+    <label>Tổng số buồng hữu hiệu (&gt;6 tháng)</label>
+    <div class="stepper">
+      <button onclick="stepValue('tSoBuong',-1)">−</button>
+      <input type="number" id="tSoBuong" value="0" />
+      <button onclick="stepValue('tSoBuong',1)">+</button>
+    </div>
+
+    <div style="margin-top:16px">
+      <label>Số trái đếm được — theo tháng dự kiến thu hoạch</label>
+      <div id="monthInputs"></div>
+    </div>
+
+    <button class="btn btn-primary" style="margin-top:10px" onclick="saveTree()">Lưu cây này</button>
+    <button class="btn btn-secondary" onclick="cancelTreeForm()">Huỷ</button>
+    <div class="error hidden" id="treeError"></div>
+  </section>
+
+  <!-- ============ ADMIN ============ -->
+  <section id="view-admin" class="card hidden">
+    <h2>Bảng điều khiển Admin</h2>
+    <div class="kpi-grid" id="adminKpiGrid"></div>
+
+    <h2 style="margin-top:20px">Tài khoản chờ duyệt <span class="badge" id="pendingCountBadge">0</span></h2>
+    <div id="pendingUsersList"><p class="muted">Đang tải…</p></div>
+
+    <h2 style="margin-top:20px">Tiến độ theo xã</h2>
+    <div id="adminByXa"><p class="muted">Đang tải…</p></div>
+
+    <h2 style="margin-top:20px">Kết quả dự báo mới nhất (trái/ha/tháng)</h2>
+    <div id="adminForecast">
+      <p class="muted">Chưa có kết quả — chạy <code>scripts/aggregate_trai_ha_thang.py</code>
+      để cập nhật (xem README).</p>
+    </div>
+
+    <h2 style="margin-top:20px">Cấu hình mục tiêu KPI theo xã</h2>
+    <div id="kpiTargetRows"></div>
+    <button class="btn btn-outline" onclick="addKpiTargetRow()">+ Thêm xã</button>
+    <button class="btn btn-primary" onclick="saveKpiTargets()">Lưu mục tiêu KPI</button>
+
+    <h2 style="margin-top:20px">Cấu hình phenology</h2>
+    <label>Tuổi thu hoạch trung bình T_max (tháng)</label>
+    <input type="number" step="0.1" id="cfgTmax" />
+    <label>Ngưỡng buồng hữu hiệu (tháng)</label>
+    <input type="number" step="0.1" id="cfgThreshold" />
+    <button class="btn btn-primary" style="margin-top:10px" onclick="savePhenologyConfig()">Lưu cấu hình phenology</button>
+    <div class="error hidden" id="adminError"></div>
+  </section>
+
+</main>
+
+<div class="tabbar hidden" id="tabbar">
+  <button id="tabHome" onclick="showHome()">🏠 Trang chủ</button>
+  <button id="tabAdmin" class="hidden" onclick="showAdmin()">📊 Admin</button>
+</div>
+
+<script>
+// ============================================================================
+// KHỞI TẠO FIREBASE
+// ============================================================================
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+  console.warn("Offline persistence không bật được:", err.code);
+});
+
+let currentUser = null;      // Firebase Auth user
+let currentUserDoc = null;   // { name, role } từ Firestore
+let currentSurveyId = null;
+let currentSurveyData = null;
+let currentTreeId = null;
+let phenologyConfig = { tMax: 12.5, threshold: 6 };
+let monthTags = [];          // 7 tag "YYYY-MM" tính từ ngày khảo sát hiện tại
+
+// ============================================================================
+// TIỆN ÍCH
+// ============================================================================
+function $(id){ return document.getElementById(id); }
+function showView(id){
+  document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+  $(id).classList.remove('hidden');
+}
+function showError(elId, msg){ const el = $(elId); el.textContent = msg; el.classList.remove('hidden'); }
+function clearError(elId){ $(elId).classList.add('hidden'); }
+function stepValue(id, delta){
+  const el = $(id); let v = parseInt(el.value || '0', 10) + delta;
+  if (v < 0) v = 0; el.value = v;
+}
+function addMonthsTag(date, n){
+  const d = new Date(date.getFullYear(), date.getMonth() + n, 1);
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  return `${d.getFullYear()}-${mm}`;
+}
+function tagToLabel(tag){
+  const [y,m] = tag.split('-'); return `Tháng ${m}/${y}`;
+}
+function autoTuoiVuon(){
+  const namTrong = parseInt($('fNamTrong').value, 10);
+  if (namTrong) $('fTuoiVuon').value = new Date().getFullYear() - namTrong;
+}
+
+// ============================================================================
+// AUTH
+// ============================================================================
+function showLogin(){
+  clearError('signupError');
+  showView('view-login');
+}
+function showSignup(){
+  clearError('loginError');
+  $('loginNotice').classList.add('hidden');
+  clearError('signupError');
+  ['suName','suEmail','suPassword','suPassword2'].forEach(id => $(id).value = '');
+  showView('view-signup');
+}
+
+function doLogin(){
+  clearError('loginError');
+  $('loginNotice').classList.add('hidden');
+  const email = $('loginEmail').value.trim();
+  const pass = $('loginPassword').value;
+  if (!email || !pass) return showError('loginError', 'Nhập đủ email và mật khẩu.');
+  auth.signInWithEmailAndPassword(email, pass).catch(err => {
+    showError('loginError', 'Đăng nhập thất bại: ' + err.message);
+  });
+}
+
+async function doSignup(){
+  clearError('signupError');
+  const name = $('suName').value.trim();
+  const email = $('suEmail').value.trim();
+  const pass = $('suPassword').value;
+  const pass2 = $('suPassword2').value;
+  if (!name || !email || !pass) return showError('signupError', 'Vui lòng nhập đủ Họ tên, Email, Mật khẩu.');
+  if (pass.length < 6) return showError('signupError', 'Mật khẩu cần tối thiểu 6 ký tự.');
+  if (pass !== pass2) return showError('signupError', 'Mật khẩu nhập lại không khớp.');
+  try{
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    await db.collection('users').doc(cred.user.uid).set({
+      name, email, role: 'field', status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    await auth.signOut();
+    showView('view-login');
+    $('loginNotice').textContent =
+      'Đã gửi yêu cầu đăng ký cho "' + name + '". Tài khoản đang chờ Admin duyệt — ' +
+      'vui lòng quay lại đăng nhập sau khi được thông báo đã duyệt.';
+    $('loginNotice').classList.remove('hidden');
+  }catch(e){
+    showError('signupError', 'Đăng ký thất bại: ' + e.message);
+  }
+}
+
+$('btnLogout').addEventListener('click', () => auth.signOut());
+
+auth.onAuthStateChanged(async user => {
+  currentUser = user;
+  if (!user){
+    currentUserDoc = null;
+    $('btnLogout').classList.add('hidden');
+    $('tabbar').classList.add('hidden');
+    $('headerSub').textContent = '—';
+    if ($('view-signup').classList.contains('hidden')) showView('view-login');
+    return;
+  }
+  $('btnLogout').classList.remove('hidden');
+
+  const snap = await db.collection('users').doc(user.uid).get();
+  if (!snap.exists){
+    showError('loginError',
+      'Tài khoản chưa được Admin cấp hồ sơ (users/'+user.uid+'). Liên hệ Admin.');
+    auth.signOut();
+    return;
+  }
+  currentUserDoc = snap.data();
+
+  if (currentUserDoc.status === 'pending'){
+    await auth.signOut();
+    showView('view-login');
+    $('loginNotice').textContent = 'Tài khoản "' + currentUserDoc.name +
+      '" đang chờ Admin duyệt, chưa thể đăng nhập.';
+    $('loginNotice').classList.remove('hidden');
+    return;
+  }
+  if (currentUserDoc.status === 'rejected'){
+    await auth.signOut();
+    showView('view-login');
+    showError('loginError', 'Tài khoản đã bị từ chối truy cập. Liên hệ Admin nếu có thắc mắc.');
+    return;
+  }
+
+  $('headerSub').textContent = currentUserDoc.name + ' · ' +
+    (currentUserDoc.role === 'admin' ? 'Admin' : 'Khảo sát viên');
+  $('tabbar').classList.remove('hidden');
+
+  await loadPhenologyConfig();
+
+  if (currentUserDoc.role === 'admin'){
+    $('tabAdmin').classList.remove('hidden');
+    showAdmin();
+  } else {
+    showHome();
+  }
+});
+
+// ============================================================================
+// PHENOLOGY CONFIG (dùng chung, hiển thị ở màn Hướng dẫn)
+// ============================================================================
+async function loadPhenologyConfig(){
+  try{
+    const doc = await db.collection('config').doc('phenology').get();
+    if (doc.exists) phenologyConfig = doc.data();
+  }catch(e){ /* offline lần đầu chưa có cache — dùng giá trị mặc định */ }
+  $('guideThreshold').textContent = phenologyConfig.threshold;
+  $('guideTmax').textContent = phenologyConfig.tMax;
+}
+
+// ============================================================================
+// FIELD: HOME
+// ============================================================================
+function showHome(){
+  showView('view-home');
+  $('homeUserName').textContent = currentUserDoc ? currentUserDoc.name : '';
+  loadMySurveys();
+}
+function showGuide(){ showView('view-guide'); }
+
+async function loadMySurveys(){
+  const box = $('mySurveysList');
+  box.innerHTML = '<p class="muted">Đang tải…</p>';
+  try{
+    const q = await db.collection('surveys')
+      .where('createdBy', '==', currentUser.uid)
+      .orderBy('createdAt', 'desc').limit(10).get();
+    if (q.empty){ box.innerHTML = '<p class="muted">Chưa có phiếu nào.</p>'; return; }
+    box.innerHTML = '';
+    q.forEach(doc => {
+      const d = doc.data();
+      const div = document.createElement('div');
+      div.className = 'tree-item';
+      div.innerHTML = `<div><b>${d.xa || '(chưa rõ xã)'}</b>
+          <div class="meta">${d.chuVuon || ''}</div></div>
+          <button class="btn btn-outline" style="width:auto;padding:8px 12px"
+            onclick="openSurveyTrees('${doc.id}')">Xem cây →</button>`;
+      box.appendChild(div);
+    });
+  }catch(e){
+    box.innerHTML = '<p class="muted">Không tải được danh sách (có thể đang offline).</p>';
+  }
+}
+
+// ============================================================================
+// FIELD: SURVEY (VƯỜN) FORM
+// ============================================================================
+let capturedGps = null;
+
+function startNewSurvey(){
+  capturedGps = null;
+  $('gpsResult').textContent = 'Chưa lấy vị trí.';
+  ['fXa','fChuVuon','fSdt','fGiong','fNamTrong','fTuoiVuon','fMatDo','fDienTich']
+    .forEach(id => $(id).value = '');
+  $('fNhomTuoi').selectedIndex = 0; $('fCanhTac').selectedIndex = 0;
+  clearError('surveyError');
+  showView('view-survey-form');
+}
+
+function captureGps(){
+  if (!navigator.geolocation){
+    $('gpsResult').innerHTML = '<span class="gps-warn">Thiết bị không hỗ trợ GPS.</span>';
+    return;
+  }
+  $('gpsResult').textContent = 'Đang lấy vị trí…';
+  navigator.geolocation.getCurrentPosition(pos => {
+    capturedGps = {
+      lat: pos.coords.latitude, lng: pos.coords.longitude,
+      accuracy: pos.coords.accuracy
+    };
+    const warn = pos.coords.accuracy > 30;
+    $('gpsResult').innerHTML =
+      `<span class="${warn ? 'gps-warn' : 'gps-ok'}">
+        Lat ${capturedGps.lat.toFixed(6)}, Lng ${capturedGps.lng.toFixed(6)}
+        (độ chính xác ±${Math.round(capturedGps.accuracy)}m)
+        ${warn ? ' — độ chính xác thấp, nên thử lại ngoài trời thoáng' : ''}
+      </span>`;
+  }, err => {
+    $('gpsResult').innerHTML = `<span class="gps-warn">Không lấy được vị trí: ${err.message}.
+      Kiểm tra đã cho phép quyền định vị chưa.</span>`;
+  }, { enableHighAccuracy: true, timeout: 15000 });
+}
+
+async function saveSurvey(){
+  clearError('surveyError');
+  const xa = $('fXa').value.trim();
+  if (!xa) return showError('surveyError', 'Vui lòng nhập Xã.');
+  if (!capturedGps) return showError('surveyError', 'Vui lòng bấm "Lấy vị trí GPS" trước khi lưu.');
+
+  const data = {
+    xa,
+    chuVuon: $('fChuVuon').value.trim(),
+    sdt: $('fSdt').value.trim(),
+    giongDua: $('fGiong').value.trim(),
+    namTrong: parseInt($('fNamTrong').value, 10) || null,
+    tuoiVuon: parseInt($('fTuoiVuon').value, 10) || null,
+    nhomTuoiCay: $('fNhomTuoi').value,
+    matDo: parseFloat($('fMatDo').value) || null,
+    dienTichDua: parseFloat($('fDienTich').value) || null,
+    quyTrinhCanhTac: $('fCanhTac').value,
+    gps: capturedGps,
+    createdBy: currentUser.uid,
+    createdByName: currentUserDoc.name,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    surveyDateLocal: new Date().toISOString().slice(0,10),
+  };
+
+  try{
+    const ref = await db.collection('surveys').add(data);
+    currentSurveyId = ref.id;
+    currentSurveyData = data;
+    // Firestore offline: add() trả về ref ngay cả khi mất mạng (ghi hàng đợi cục bộ).
+    openSurveyTrees(ref.id, data);
+  }catch(e){
+    showError('surveyError', 'Không lưu được: ' + e.message);
+  }
+}
+
+// ============================================================================
+// FIELD: TREE LIST + FORM
+// ============================================================================
+async function openSurveyTrees(surveyId, dataIfKnown){
+  currentSurveyId = surveyId;
+  currentSurveyData = dataIfKnown || (await db.collection('surveys').doc(surveyId).get()).data();
+  $('treeListSurveyLabel').textContent = currentSurveyData.xa || '';
+  showView('view-tree-list');
+  refreshTreeList();
+}
+
+async function refreshTreeList(){
+  const box = $('treeListItems');
+  box.innerHTML = '<p class="muted">Đang tải…</p>';
+  try{
+    const q = await db.collection('surveys').doc(currentSurveyId)
+      .collection('trees').orderBy('createdAt','desc').get();
+    if (q.empty){ box.innerHTML = '<p class="muted">Chưa có cây nào.</p>'; return; }
+    box.innerHTML = '';
+    q.forEach(doc => {
+      const d = doc.data();
+      const div = document.createElement('div');
+      div.className = 'tree-item';
+      div.innerHTML = `<div><b>Cây ${d.maCay}</b>
+          <div class="meta">${d.tongSoBuongHuuHieu} buồng hữu hiệu</div></div>
+          <span class="badge">${Object.values(d.forecast||{}).reduce((a,b)=>a+b,0)} trái</span>`;
+      box.appendChild(div);
+    });
+  }catch(e){
+    box.innerHTML = '<p class="muted">Cây vừa lưu sẽ hiện khi có mạng để đồng bộ.</p>';
+  }
+}
+
+function startNewTree(){
+  clearError('treeError');
+  currentTreeId = null;
+  $('tMaCay').value = '';
+  $('tTinhTrang').selectedIndex = 0;
+  $('tSoBuong').value = 0;
+  const today = new Date();
+  monthTags = [0,1,2,3,4,5,6].map(n => addMonthsTag(today, n));
+  const box = $('monthInputs'); box.innerHTML = '';
+  monthTags.forEach((tag, idx) => {
+    const row = document.createElement('div');
+    row.className = 'month-row';
+    row.innerHTML = `
+      <div class="label"><span>${tagToLabel(tag)}</span>
+        <span class="tag">${idx === 0 ? 'x (hiện tại)' : 'x+' + idx}</span></div>
+      <div class="stepper">
+        <button onclick="stepValue('m_${tag}',-1)">−</button>
+        <input type="number" id="m_${tag}" value="0" />
+        <button onclick="stepValue('m_${tag}',1)">+</button>
+      </div>`;
+    box.appendChild(row);
+  });
+  $('treeFormLabel').textContent = currentSurveyData.xa || '';
+  showView('view-tree-form');
+}
+
+function cancelTreeForm(){ showView('view-tree-list'); }
+
+async function saveTree(){
+  clearError('treeError');
+  const maCay = $('tMaCay').value.trim();
+  if (!maCay) return showError('treeError', 'Vui lòng nhập Mã cây.');
+
+  const forecast = {};
+  monthTags.forEach(tag => { forecast[tag] = parseInt($('m_'+tag).value || '0', 10); });
+
+  const data = {
+    maCay,
+    tinhTrangCay: $('tTinhTrang').value,
+    tongSoBuongHuuHieu: parseInt($('tSoBuong').value || '0', 10),
+    forecast,
+    xa: currentSurveyData.xa,                 // denormalize để Admin dễ thống kê
+    nhomTuoiCay: currentSurveyData.nhomTuoiCay,
+    matDo: currentSurveyData.matDo,
+    surveyId: currentSurveyId,
+    createdBy: currentUser.uid,
+    createdByName: currentUserDoc.name,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  try{
+    await db.collection('surveys').doc(currentSurveyId).collection('trees').add(data);
+    showView('view-tree-list');
+    refreshTreeList();
+  }catch(e){
+    showError('treeError', 'Không lưu được: ' + e.message);
+  }
+}
+
+// ============================================================================
+// ADMIN DASHBOARD
+// ============================================================================
+async function showAdmin(){
+  showView('view-admin');
+  loadAdminOverview();
+  loadPendingUsers();
+  loadKpiTargetsForm();
+  $('cfgTmax').value = phenologyConfig.tMax;
+  $('cfgThreshold').value = phenologyConfig.threshold;
+  loadLatestForecast();
+}
+
+// ---- Duyệt tài khoản khảo sát viên tự đăng ký ----
+async function loadPendingUsers(){
+  const box = $('pendingUsersList');
+  box.innerHTML = '<p class="muted">Đang tải…</p>';
+  try{
+    const q = await db.collection('users').where('status', '==', 'pending').get();
+    $('pendingCountBadge').textContent = q.size;
+    if (q.empty){ box.innerHTML = '<p class="muted">Không có tài khoản nào chờ duyệt.</p>'; return; }
+    box.innerHTML = '';
+    q.forEach(doc => {
+      const d = doc.data();
+      const div = document.createElement('div');
+      div.className = 'tree-item';
+      div.innerHTML = `<div><b>${d.name || '(chưa rõ tên)'}</b>
+          <div class="meta">${d.email || ''}</div></div>
+          <div class="row" style="flex:none;gap:6px">
+            <button class="btn btn-primary" style="width:auto;padding:8px 12px"
+              onclick="approveUser('${doc.id}')">Duyệt</button>
+            <button class="btn btn-danger" style="width:auto;padding:8px 12px"
+              onclick="rejectUser('${doc.id}')">Từ chối</button>
+          </div>`;
+      box.appendChild(div);
+    });
+  }catch(e){
+    box.innerHTML = '<p class="muted">Không tải được danh sách chờ duyệt: ' + e.message + '</p>';
+  }
+}
+async function approveUser(uid){
+  try{
+    await db.collection('users').doc(uid).update({ status: 'approved' });
+    loadPendingUsers();
+  }catch(e){ alert('Không duyệt được: ' + e.message); }
+}
+async function rejectUser(uid){
+  if (!confirm('Từ chối tài khoản này? Người dùng sẽ không đăng nhập/nhập liệu được ' +
+    '(tài khoản đăng nhập vẫn tồn tại trên Firebase, chỉ bị chặn ở tầng dữ liệu).')) return;
+  try{
+    await db.collection('users').doc(uid).update({ status: 'rejected' });
+    loadPendingUsers();
+  }catch(e){ alert('Không từ chối được: ' + e.message); }
+}
+
+async function loadAdminOverview(){
+  const grid = $('adminKpiGrid');
+  const byXaBox = $('adminByXa');
+  grid.innerHTML = '<p class="muted">Đang tải…</p>';
+  byXaBox.innerHTML = '';
+  try{
+    const surveysSnap = await db.collection('surveys').get();
+    const treesSnap = await db.collectionGroup('trees').get();
+
+    grid.innerHTML = `
+      <div class="kpi-tile"><div class="num">${surveysSnap.size}</div><div class="lbl">Phiếu khảo sát</div></div>
+      <div class="kpi-tile"><div class="num">${treesSnap.size}</div><div class="lbl">Cây đã khảo sát</div></div>`;
+
+    const byXa = {};
+    treesSnap.forEach(doc => {
+      const xa = doc.data().xa || '(chưa rõ)';
+      byXa[xa] = (byXa[xa] || 0) + 1;
+    });
+
+    const targetsDoc = await db.collection('config').doc('kpiTargets').get();
+    const targets = targetsDoc.exists ? (targetsDoc.data().targets || []) : [];
+    const targetMap = {}; targets.forEach(t => targetMap[t.xa] = t);
+
+    const xaSet = new Set([...Object.keys(byXa), ...targets.map(t=>t.xa)]);
+    if (xaSet.size === 0){ byXaBox.innerHTML = '<p class="muted">Chưa có dữ liệu.</p>'; return; }
+
+    let html = '<table><tr><th>Xã</th><th>Đã khảo sát</th><th>Mục tiêu</th><th>Tiến độ</th></tr>';
+    xaSet.forEach(xa => {
+      const count = byXa[xa] || 0;
+      const target = targetMap[xa] ? targetMap[xa].targetTrees : null;
+      const pct = target ? Math.min(100, Math.round(count / target * 100)) : null;
+      html += `<tr><td>${xa}</td><td>${count}</td><td>${target ?? '—'}</td>
+        <td>${pct !== null
+          ? `<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+             <span class="muted">${pct}%</span>`
+          : '<span class="muted">chưa đặt</span>'}</td></tr>`;
+    });
+    html += '</table>';
+    byXaBox.innerHTML = html;
+  }catch(e){
+    grid.innerHTML = '<p class="muted">Không tải được (kiểm tra kết nối mạng / đăng nhập admin).</p>';
+  }
+}
+
+async function loadLatestForecast(){
+  const box = $('adminForecast');
+  try{
+    const q = await db.collection('results').orderBy('computedAt','desc').limit(1).get();
+    if (q.empty) return; // giữ placeholder mặc định trong HTML
+    const d = q.docs[0].data();
+    let html = `<p class="muted">Tính lúc: ${d.computedAt?.toDate?.().toLocaleString('vi-VN') || ''}</p>
+      <table><tr><th>Tháng</th><th>Dự báo (trái/ha)</th><th>Khoảng tin cậy 95%</th></tr>`;
+    (d.forecastByMonth || []).forEach(row => {
+      html += `<tr><td>${row.month}</td><td>${row.value?.toFixed?.(0) ?? row.value}</td>
+        <td>${row.ciLow?.toFixed?.(0) ?? '—'} – ${row.ciHigh?.toFixed?.(0) ?? '—'}</td></tr>`;
+    });
+    html += '</table>';
+    box.innerHTML = html;
+  }catch(e){ /* giữ placeholder */ }
+}
+
+// ---- Cấu hình mục tiêu KPI theo xã ----
+async function loadKpiTargetsForm(){
+  const box = $('kpiTargetRows'); box.innerHTML = '';
+  const doc = await db.collection('config').doc('kpiTargets').get();
+  const targets = doc.exists ? (doc.data().targets || []) : [];
+  if (targets.length === 0) addKpiTargetRow();
+  else targets.forEach(t => addKpiTargetRow(t.xa, t.targetTrees, t.deadline));
+}
+function addKpiTargetRow(xa='', targetTrees='', deadline=''){
+  const box = $('kpiTargetRows');
+  const row = document.createElement('div');
+  row.className = 'row kpi-target-row';
+  row.style.marginBottom = '8px';
+  row.innerHTML = `
+    <input type="text" placeholder="Xã" class="kt-xa" value="${xa}">
+    <input type="number" placeholder="Số cây mục tiêu" class="kt-target" value="${targetTrees}">
+    <input type="date" class="kt-deadline" value="${deadline}">`;
+  box.appendChild(row);
+}
+async function saveKpiTargets(){
+  clearError('adminError');
+  const rows = document.querySelectorAll('.kpi-target-row');
+  const targets = [];
+  rows.forEach(r => {
+    const xa = r.querySelector('.kt-xa').value.trim();
+    if (!xa) return;
+    targets.push({
+      xa,
+      targetTrees: parseInt(r.querySelector('.kt-target').value, 10) || 0,
+      deadline: r.querySelector('.kt-deadline').value || null,
+    });
+  });
+  try{
+    await db.collection('config').doc('kpiTargets').set({ targets }, { merge: true });
+    loadAdminOverview();
+  }catch(e){ showError('adminError', 'Không lưu được mục tiêu KPI: ' + e.message); }
+}
+
+// ---- Cấu hình phenology ----
+async function savePhenologyConfig(){
+  clearError('adminError');
+  const tMax = parseFloat($('cfgTmax').value);
+  const threshold = parseFloat($('cfgThreshold').value);
+  try{
+    await db.collection('config').doc('phenology').set({ tMax, threshold }, { merge: true });
+    phenologyConfig = { tMax, threshold };
+    $('guideThreshold').textContent = threshold;
+    $('guideTmax').textContent = tMax;
+  }catch(e){ showError('adminError', 'Không lưu được cấu hình: ' + e.message); }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+rules_version = '2';
+
+// ============================================================================
+// FIRESTORE SECURITY RULES — Hệ thống khảo sát năng suất dừa
+//
+// Cách deploy: copy nội dung file này vào Firebase Console → Firestore
+// Database → tab "Rules" → dán đè → Publish. (Hoặc dùng Firebase CLI:
+// `firebase deploy --only firestore:rules` nếu anh cài Firebase CLI sau này.)
+//
+// CƠ CHẾ TÀI KHOẢN (tự đăng ký + Admin duyệt):
+//  - Khảo sát viên tự đăng ký trong app (email/mật khẩu tự chọn). Khi tạo
+//    hồ sơ users/{uid}, CHỈ được phép tự gán role='field', status='pending'
+//    (không thể tự phong Admin hoặc tự duyệt chính mình).
+//  - Admin (tài khoản do Claude/anh Linh tạo trực tiếp trong Console, đã có
+//    sẵn role='admin', status='approved') duyệt (approved) hoặc từ chối
+//    (rejected) từng tài khoản chờ duyệt ngay trong Bảng điều khiển Admin.
+//  - Chỉ tài khoản status='approved' mới được tạo/sửa phiếu khảo sát & cây.
+//  - status='rejected' hoặc 'pending' vẫn đăng nhập được (Firebase Auth
+//    không có cách chặn đăng nhập từ phía client-only), nhưng app sẽ tự
+//    đăng xuất và chặn ngay khi phát hiện — mọi thao tác ghi dữ liệu khảo
+//    sát cũng bị Rules chặn ở tầng server, nên không có rủi ro dữ liệu giả.
+//
+// LƯU Ý KỸ THUẬT: các hàm helper (isSignedIn, isAdmin...) PHẢI khai báo BÊN
+// TRONG khối `match /databases/{database}/documents { ... }` — không đặt ở
+// ngoài cùng trước "service cloud.firestore {" — vì dùng biến $(database),
+// biến này chỉ tồn tại (in scope) bên trong khối match đó. Đặt sai vị trí
+// sẽ báo lỗi khi Publish: "Invalid variable name: database".
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function myUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isApproved() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        myUserData().status == 'approved';
+    }
+
+    function isAdmin() {
+      return isApproved() && myUserData().role == 'admin';
+    }
+
+    function isOwner(existingData) {
+      return isSignedIn() && existingData.createdBy == request.auth.uid;
+    }
+
+    function withinEditWindow(existingData) {
+      // Cho sửa trong 48 giờ kể từ lúc tạo phiếu/cây.
+      return request.time < existingData.createdAt + duration.value(48, 'h');
+    }
+
+    // Hồ sơ người dùng (role: 'admin' | 'field'; status: 'pending' | 'approved' | 'rejected').
+    // Tự đăng ký chỉ được tạo hồ sơ role='field', status='pending' cho chính
+    // mình — không tự phong Admin, không tự duyệt. Admin gán role='admin' /
+    // status='approved' thủ công qua Console cho tài khoản Admin đầu tiên.
+    match /users/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if isSignedIn() && request.auth.uid == uid &&
+                      request.resource.data.role == 'field' &&
+                      request.resource.data.status == 'pending';
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Tham số cấu hình: phenology (T_max, nhịp ra buồng...) và mục tiêu KPI.
+    match /config/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Kết quả tổng hợp thống kê (do tiến trình Python ghi vào, mục 6.5).
+    match /results/{docId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin(); // tiến trình Python nên dùng Admin SDK
+                                 // (bỏ qua rules) — quyền này chỉ để phòng
+                                 // trường hợp ghi tay qua Console.
+    }
+
+    // Phiếu khảo sát (cấp vườn). Chỉ tài khoản đã được duyệt (approved) mới
+    // được tạo phiếu/cây mới.
+    match /surveys/{surveyId} {
+      allow create: if isApproved();
+      allow read: if isAdmin() || isOwner(resource.data);
+      allow update: if isAdmin() ||
+                      (isOwner(resource.data) && withinEditWindow(resource.data));
+      allow delete: if isAdmin();
+
+      // Cây trong phiếu (cấp cây), kế thừa quyền theo phiếu cha.
+      match /trees/{treeId} {
+        allow create: if isApproved() &&
+          isOwner(get(/databases/$(database)/documents/surveys/$(surveyId)).data);
+        allow read: if isAdmin() ||
+          isOwner(get(/databases/$(database)/documents/surveys/$(surveyId)).data);
+        allow update: if isAdmin() ||
+          (isOwner(get(/databases/$(database)/documents/surveys/$(surveyId)).data) &&
+           withinEditWindow(resource.data));
+        allow delete: if isAdmin();
+      }
+    }
+  }
+}
