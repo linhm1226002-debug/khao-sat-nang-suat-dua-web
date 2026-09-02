@@ -1,4 +1,4 @@
-# Hệ thống khảo sát & dự báo năng suất dừa — Bản v1.1
+# Hệ thống khảo sát & dự báo năng suất dừa — Bản v1.2
 
 Web app khảo sát năng suất dừa qua điện thoại, hoạt động offline, đồng bộ
 real-time qua Firebase — theo đúng thiết kế trong "Báo cáo phân tích &
@@ -76,6 +76,27 @@ xoá/khoá tài khoản người khác. Nếu cần khoá hẳn, vào Authentica
 **Cách thay thế (không khuyến nghị, để tham khảo):** script
 `scripts/bulk_create_users.js` vẫn dùng được nếu muốn Admin tự tạo tài
 khoản hàng loạt thay vì để mọi người tự đăng ký.
+
+## Bản v1.2 — 3 tính năng mới cho Admin & khảo sát viên
+
+1. **Cấu hình trường bắt buộc** (Bảng điều khiển Admin → mục "Cấu hình trường
+   bắt buộc"): Admin tick chọn trường nào của phiếu vườn / cây khảo sát là
+   bắt buộc nhập. Khảo sát viên sẽ thấy dấu `*` ở trường bắt buộc và không
+   lưu được nếu thiếu. Khuyến nghị luôn để "Xã" và "Vị trí GPS" bắt buộc.
+2. **Khảo sát viên xem lại phiếu đã thực hiện**: mục "Phiếu của tôi" ở Trang
+   chủ giờ hiển thị dạng bảng (ngày, xã, chủ vườn, số cây, trạng thái) — bấm
+   "Xem" để vào màn chi tiết phiếu, có đầy đủ thông tin vườn + bảng toàn bộ
+   cây đã khảo sát (kèm số trái dự báo theo từng tháng).
+3. **Yêu cầu chỉnh sửa phiếu**: phiếu chỉ tự sửa được trong 48 giờ đầu sau khi
+   tạo. Sau đó, khảo sát viên vào màn chi tiết phiếu → "Gửi yêu cầu chỉnh
+   sửa" (nêu lý do) → Admin vào mục "Yêu cầu chỉnh sửa phiếu" trong Bảng điều
+   khiển → Duyệt (mở thêm 48h để sửa) hoặc Từ chối. Nhờ vậy Admin luôn nắm
+   được ai sửa gì, sửa khi nào.
+
+*Lưu ý kỹ thuật (đã xử lý, không cần làm gì thêm): mục "Phiếu của tôi" cần 1
+chỉ mục kép (composite index) trong Firestore — Claude đã tạo sẵn trong dự án.
+Nếu sau này thêm truy vấn tương tự mà bị lỗi "The query requires an index",
+Firebase Console sẽ tự đưa link để tạo — bấm vào link đó là xong.*
 
 ## Bước 4 — Đưa web lên GitHub Pages
 

@@ -20,6 +20,13 @@ rules_version = '2';
 //    đăng xuất và chặn ngay khi phát hiện — mọi thao tác ghi dữ liệu khảo
 //    sát cũng bị Rules chặn ở tầng server, nên không có rủi ro dữ liệu giả.
 //
+// YÊU CẦU CHỈNH SỬA PHIẾU (v1.2): phiếu được sửa tự do trong 48h đầu sau khi
+// tạo. Sau đó, khảo sát viên phải gửi "yêu cầu chỉnh sửa" (chỉ đổi 3 trường
+// editRequestStatus/editRequestNote/editRequestAt — xem isEditRequestUpdate),
+// Admin duyệt (editApproved=true, editApprovedAt=now) mới mở thêm 48h để
+// sửa thật sự (withinApprovedEditWindow). Khảo sát viên KHÔNG thể tự đặt
+// editApproved=true.
+//
 // LƯU Ý KỸ THUẬT: các hàm helper (isSignedIn, isAdmin...) PHẢI khai báo BÊN
 // TRONG khối `match /databases/{database}/documents { ... }` — không đặt ở
 // ngoài cùng trước "service cloud.firestore {" — vì dùng biến $(database),
@@ -57,6 +64,22 @@ service cloud.firestore {
       return request.time < existingData.createdAt + duration.value(48, 'h');
     }
 
+    function withinApprovedEditWindow(existingData) {
+      // Admin duyệt yêu cầu chỉnh sửa phiếu (ngoài cửa sổ 48h ban đầu) — cho sửa
+      // thêm 48 giờ kể từ lúc Admin bấm Duyệt.
+      return existingData.editApproved == true &&
+        existingData.editApprovedAt != null &&
+        request.time < existingData.editApprovedAt + duration.value(48, 'h');
+    }
+
+    function isEditRequestUpdate() {
+      // Khảo sát viên gửi "yêu cầu chỉnh sửa phiếu": CHỈ được đổi đúng 3 trường
+      // này (không được tự đổi editApproved hay bất kỳ dữ liệu phiếu nào khác).
+      let changedKeys = request.resource.data.diff(resource.data).affectedKeys();
+      return changedKeys.hasOnly(['editRequestStatus', 'editRequestNote', 'editRequestAt']) &&
+        request.resource.data.editRequestStatus == 'pending';
+    }
+
     // Hồ sơ người dùng (role: 'admin' | 'field'; status: 'pending' | 'approved' | 'rejected').
     // Tự đăng ký chỉ được tạo hồ sơ role='field', status='pending' cho chính
     // mình — không tự phong Admin, không tự duyệt. Admin gán role='admin' /
@@ -90,7 +113,12 @@ service cloud.firestore {
       allow create: if isApproved();
       allow read: if isAdmin() || isOwner(resource.data);
       allow update: if isAdmin() ||
-                      (isOwner(resource.data) && withinEditWindow(resource.data));
+                      // Gửi yêu cầu chỉnh sửa (bất kỳ lúc nào, chỉ đổi 3 trường trạng thái):
+                      (isOwner(resource.data) && isApproved() && isEditRequestUpdate()) ||
+                      // Sửa dữ liệu phiếu thật sự: trong 48h đầu, hoặc trong 48h sau khi
+                      // Admin duyệt yêu cầu chỉnh sửa:
+                      (isOwner(resource.data) &&
+                        (withinEditWindow(resource.data) || withinApprovedEditWindow(resource.data)));
       allow delete: if isAdmin();
 
       // Cây trong phiếu (cấp cây), kế thừa quyền theo phiếu cha.

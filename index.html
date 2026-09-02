@@ -78,6 +78,11 @@
           display:flex;max-width:520px;margin:0 auto;}
   .tabbar button{flex:1;padding:10px 0;background:none;border:none;font-size:12px;color:var(--grey-700);}
   .tabbar button.active{color:var(--green-700);font-weight:700;}
+  .badge-pending{background:#FEF3C7;color:#92400E;}
+  .badge-approved{background:var(--green-100);color:var(--green-700);}
+  .badge-rejected{background:#FBEDEB;color:var(--red-600);}
+  .table-wrap{overflow-x:auto;}
+  .table-wrap table{white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -133,7 +138,7 @@
     <button class="btn btn-outline" onclick="showGuide()">📖 Hướng dẫn đếm buồng</button>
     <div style="margin-top:18px">
       <label>Phiếu của tôi (gần đây)</label>
-      <div id="mySurveysList"><p class="muted">Đang tải…</p></div>
+      <div id="mySurveysList" class="table-wrap"><p class="muted">Đang tải…</p></div>
     </div>
   </section>
 
@@ -170,14 +175,15 @@
 
   <!-- ============ FIELD: SURVEY (VƯỜN) FORM ============ -->
   <section id="view-survey-form" class="card hidden">
-    <h2>Thông tin vườn khảo sát</h2>
+    <h2 id="surveyFormTitle">Thông tin vườn khảo sát</h2>
 
     <div class="gps-box" id="gpsBox">
       <button class="btn btn-outline" onclick="captureGps()">📍 Lấy vị trí GPS</button>
+      <span class="badge hidden" id="gpsRequiredNote" style="margin-left:6px">bắt buộc</span>
       <div id="gpsResult" style="margin-top:8px">Chưa lấy vị trí.</div>
     </div>
 
-    <label>Xã</label>
+    <label id="lblXa" data-base="Xã">Xã</label>
     <input type="text" id="fXa" list="xaList" placeholder="Ví dụ: Hưng Lễ" />
     <datalist id="xaList">
       <option value="Hưng Lễ"></option><option value="Cẩm Sơn"></option>
@@ -185,16 +191,16 @@
     </datalist>
 
     <div class="row">
-      <div><label>Chủ vườn</label><input type="text" id="fChuVuon" /></div>
-      <div><label>Số điện thoại</label><input type="text" id="fSdt" /></div>
+      <div><label id="lblChuVuon" data-base="Chủ vườn">Chủ vườn</label><input type="text" id="fChuVuon" /></div>
+      <div><label id="lblSdt" data-base="Số điện thoại">Số điện thoại</label><input type="text" id="fSdt" /></div>
     </div>
 
-    <label>Giống dừa</label>
+    <label id="lblGiong" data-base="Giống dừa">Giống dừa</label>
     <input type="text" id="fGiong" placeholder="Ta xanh, Xiêm xanh…" />
 
     <div class="row">
-      <div><label>Năm trồng</label><input type="number" id="fNamTrong" oninput="autoTuoiVuon()" /></div>
-      <div><label>Tuổi vườn (năm)</label><input type="number" id="fTuoiVuon" /></div>
+      <div><label id="lblNamTrong" data-base="Năm trồng">Năm trồng</label><input type="number" id="fNamTrong" oninput="autoTuoiVuon()" /></div>
+      <div><label id="lblTuoiVuon" data-base="Tuổi vườn (năm)">Tuổi vườn (năm)</label><input type="number" id="fTuoiVuon" /></div>
     </div>
 
     <label>Nhóm tuổi cây</label>
@@ -205,8 +211,8 @@
     </select>
 
     <div class="row">
-      <div><label>Mật độ trồng (cây/ha)</label><input type="number" id="fMatDo" /></div>
-      <div><label>Diện tích dừa (ha)</label><input type="number" step="0.01" id="fDienTich" /></div>
+      <div><label id="lblMatDo" data-base="Mật độ trồng (cây/ha)">Mật độ trồng (cây/ha)</label><input type="number" id="fMatDo" /></div>
+      <div><label id="lblDienTich" data-base="Diện tích dừa (ha)">Diện tích dừa (ha)</label><input type="number" step="0.01" id="fDienTich" /></div>
     </div>
 
     <label>Quy trình canh tác</label>
@@ -214,15 +220,18 @@
       <option>Truyền thống</option><option>Hữu cơ</option><option>GlobalGAP</option>
     </select>
 
-    <button class="btn btn-primary" style="margin-top:16px" onclick="saveSurvey()">Lưu & thêm cây khảo sát</button>
-    <button class="btn btn-secondary" onclick="showHome()">Huỷ</button>
+    <button class="btn btn-primary" id="btnSaveSurvey" style="margin-top:16px" onclick="saveSurvey()">Lưu & thêm cây khảo sát</button>
+    <button class="btn btn-secondary" onclick="cancelSurveyForm()">Huỷ</button>
     <div class="error hidden" id="surveyError"></div>
   </section>
 
   <!-- ============ FIELD: TREE LIST (per survey) ============ -->
   <section id="view-tree-list" class="card hidden">
-    <h2>Cây trong phiếu <span class="badge" id="treeListSurveyLabel"></span></h2>
-    <div id="treeListItems"><p class="muted">Chưa có cây nào.</p></div>
+    <h2>Phiếu khảo sát <span class="badge" id="treeListSurveyLabel"></span></h2>
+    <div id="surveyDetailInfo" class="table-wrap"></div>
+    <div id="editRequestBox" style="margin-top:14px"></div>
+    <h2 style="margin-top:20px">Cây đã khảo sát</h2>
+    <div id="treeListItems" class="table-wrap"><p class="muted">Chưa có cây nào.</p></div>
     <button class="btn btn-primary" onclick="startNewTree()">+ Thêm cây</button>
     <button class="btn btn-secondary" onclick="showHome()">Hoàn tất phiếu, về Trang chủ</button>
   </section>
@@ -231,7 +240,7 @@
   <section id="view-tree-form" class="card hidden">
     <h2>Nhập số liệu cây <span class="badge" id="treeFormLabel"></span></h2>
 
-    <label>Mã cây</label>
+    <label id="lblMaCay" data-base="Mã cây">Mã cây</label>
     <input type="text" id="tMaCay" />
 
     <label>Tình trạng cây</label>
@@ -264,6 +273,9 @@
     <h2 style="margin-top:20px">Tài khoản chờ duyệt <span class="badge" id="pendingCountBadge">0</span></h2>
     <div id="pendingUsersList"><p class="muted">Đang tải…</p></div>
 
+    <h2 style="margin-top:20px">Yêu cầu chỉnh sửa phiếu <span class="badge" id="editReqCountBadge">0</span></h2>
+    <div id="editRequestsList"><p class="muted">Đang tải…</p></div>
+
     <h2 style="margin-top:20px">Tiến độ theo xã</h2>
     <div id="adminByXa"><p class="muted">Đang tải…</p></div>
 
@@ -272,6 +284,12 @@
       <p class="muted">Chưa có kết quả — chạy <code>scripts/aggregate_trai_ha_thang.py</code>
       để cập nhật (xem README).</p>
     </div>
+
+    <h2 style="margin-top:20px">Cấu hình trường bắt buộc</h2>
+    <p class="muted">Chọn trường nào bắt buộc nhập khi khảo sát viên tạo phiếu / thêm cây.
+      Nên luôn để "Xã" và "Vị trí GPS" bắt buộc để dữ liệu dùng được cho thống kê & bản đồ.</p>
+    <div id="requiredFieldsBox"></div>
+    <button class="btn btn-primary" onclick="saveRequiredFields()">Lưu cấu hình trường bắt buộc</button>
 
     <h2 style="margin-top:20px">Cấu hình mục tiêu KPI theo xã</h2>
     <div id="kpiTargetRows"></div>
@@ -310,8 +328,27 @@ let currentUserDoc = null;   // { name, role } từ Firestore
 let currentSurveyId = null;
 let currentSurveyData = null;
 let currentTreeId = null;
+let editingSurveyId = null;  // != null khi đang ở chế độ sửa phiếu (sau khi Admin duyệt yêu cầu)
 let phenologyConfig = { tMax: 12.5, threshold: 6 };
 let monthTags = [];          // 7 tag "YYYY-MM" tính từ ngày khảo sát hiện tại
+
+// Trường nào có thể cấu hình bắt buộc/không bắt buộc (Admin chỉnh trong Bảng điều khiển).
+const REQUIRED_FIELD_DEFS = {
+  survey: [
+    { key:'xa', label:'Xã' }, { key:'chuVuon', label:'Chủ vườn' },
+    { key:'sdt', label:'Số điện thoại' }, { key:'giongDua', label:'Giống dừa' },
+    { key:'namTrong', label:'Năm trồng' }, { key:'tuoiVuon', label:'Tuổi vườn' },
+    { key:'matDo', label:'Mật độ trồng' }, { key:'dienTichDua', label:'Diện tích dừa' },
+    { key:'gps', label:'Vị trí GPS' },
+  ],
+  tree: [ { key:'maCay', label:'Mã cây' } ],
+};
+const DEFAULT_REQUIRED_FIELDS = {
+  survey: { xa:true, chuVuon:false, sdt:false, giongDua:false, namTrong:false,
+            tuoiVuon:false, matDo:false, dienTichDua:false, gps:true },
+  tree: { maCay:true },
+};
+let requiredFieldsConfig = JSON.parse(JSON.stringify(DEFAULT_REQUIRED_FIELDS));
 
 // ============================================================================
 // TIỆN ÍCH
@@ -434,7 +471,7 @@ auth.onAuthStateChanged(async user => {
     (currentUserDoc.role === 'admin' ? 'Admin' : 'Khảo sát viên');
   $('tabbar').classList.remove('hidden');
 
-  await loadPhenologyConfig();
+  await loadGlobalConfig();
 
   if (currentUserDoc.role === 'admin'){
     $('tabAdmin').classList.remove('hidden');
@@ -445,15 +482,40 @@ auth.onAuthStateChanged(async user => {
 });
 
 // ============================================================================
-// PHENOLOGY CONFIG (dùng chung, hiển thị ở màn Hướng dẫn)
+// CẤU HÌNH DÙNG CHUNG: phenology + trường bắt buộc
 // ============================================================================
-async function loadPhenologyConfig(){
+async function loadGlobalConfig(){
   try{
     const doc = await db.collection('config').doc('phenology').get();
     if (doc.exists) phenologyConfig = doc.data();
   }catch(e){ /* offline lần đầu chưa có cache — dùng giá trị mặc định */ }
   $('guideThreshold').textContent = phenologyConfig.threshold;
   $('guideTmax').textContent = phenologyConfig.tMax;
+
+  try{
+    const doc2 = await db.collection('config').doc('requiredFields').get();
+    if (doc2.exists){
+      const d = doc2.data();
+      requiredFieldsConfig = {
+        survey: Object.assign({}, DEFAULT_REQUIRED_FIELDS.survey, d.survey || {}),
+        tree: Object.assign({}, DEFAULT_REQUIRED_FIELDS.tree, d.tree || {}),
+      };
+    }
+  }catch(e){ /* dùng mặc định */ }
+  applyRequiredFieldMarkers();
+}
+
+function applyRequiredFieldMarkers(){
+  const svLabelIds = { xa:'lblXa', chuVuon:'lblChuVuon', sdt:'lblSdt', giongDua:'lblGiong',
+    namTrong:'lblNamTrong', tuoiVuon:'lblTuoiVuon', matDo:'lblMatDo', dienTichDua:'lblDienTich' };
+  Object.keys(svLabelIds).forEach(k => {
+    const el = $(svLabelIds[k]); if (!el) return;
+    el.textContent = el.dataset.base + (requiredFieldsConfig.survey[k] ? ' *' : '');
+  });
+  const gpsNote = $('gpsRequiredNote');
+  if (gpsNote) gpsNote.classList.toggle('hidden', !requiredFieldsConfig.survey.gps);
+  const maCayLbl = $('lblMaCay');
+  if (maCayLbl) maCayLbl.textContent = maCayLbl.dataset.base + (requiredFieldsConfig.tree.maCay ? ' *' : '');
 }
 
 // ============================================================================
@@ -466,6 +528,14 @@ function showHome(){
 }
 function showGuide(){ showView('view-guide'); }
 
+function editStatusBadge(d){
+  const s = d.editRequestStatus;
+  if (s === 'pending') return '<span class="badge badge-pending">Chờ duyệt sửa</span>';
+  if (s === 'approved' && d.editApproved) return '<span class="badge badge-approved">Được sửa</span>';
+  if (s === 'rejected') return '<span class="badge badge-rejected">Từ chối sửa</span>';
+  return '<span class="muted">—</span>';
+}
+
 async function loadMySurveys(){
   const box = $('mySurveysList');
   box.innerHTML = '<p class="muted">Đang tải…</p>';
@@ -474,19 +544,25 @@ async function loadMySurveys(){
       .where('createdBy', '==', currentUser.uid)
       .orderBy('createdAt', 'desc').limit(10).get();
     if (q.empty){ box.innerHTML = '<p class="muted">Chưa có phiếu nào.</p>'; return; }
-    box.innerHTML = '';
+    let html = '<table><tr><th>Ngày</th><th>Xã</th><th>Chủ vườn</th>' +
+      '<th>Số cây</th><th>Trạng thái</th><th></th></tr>';
     q.forEach(doc => {
       const d = doc.data();
-      const div = document.createElement('div');
-      div.className = 'tree-item';
-      div.innerHTML = `<div><b>${d.xa || '(chưa rõ xã)'}</b>
-          <div class="meta">${d.chuVuon || ''}</div></div>
-          <button class="btn btn-outline" style="width:auto;padding:8px 12px"
-            onclick="openSurveyTrees('${doc.id}')">Xem cây →</button>`;
-      box.appendChild(div);
+      html += `<tr>
+          <td>${d.surveyDateLocal || ''}</td>
+          <td>${d.xa || '(chưa rõ)'}</td>
+          <td>${d.chuVuon || ''}</td>
+          <td>${d.treeCount ?? 0}</td>
+          <td>${editStatusBadge(d)}</td>
+          <td><button class="btn btn-outline" style="width:auto;padding:6px 10px;font-size:12px"
+                onclick="openSurveyTrees('${doc.id}')">Xem</button></td>
+        </tr>`;
     });
+    html += '</table>';
+    box.innerHTML = html;
   }catch(e){
-    box.innerHTML = '<p class="muted">Không tải được danh sách (có thể đang offline).</p>';
+    box.innerHTML = '<p class="muted">Không tải được danh sách (có thể đang offline, hoặc thiếu ' +
+      'chỉ mục Firestore — báo Admin nếu lỗi này lặp lại nhiều lần).</p>';
   }
 }
 
@@ -496,13 +572,43 @@ async function loadMySurveys(){
 let capturedGps = null;
 
 function startNewSurvey(){
+  editingSurveyId = null;
   capturedGps = null;
   $('gpsResult').textContent = 'Chưa lấy vị trí.';
   ['fXa','fChuVuon','fSdt','fGiong','fNamTrong','fTuoiVuon','fMatDo','fDienTich']
     .forEach(id => $(id).value = '');
   $('fNhomTuoi').selectedIndex = 0; $('fCanhTac').selectedIndex = 0;
   clearError('surveyError');
+  $('surveyFormTitle').textContent = 'Thông tin vườn khảo sát';
+  $('btnSaveSurvey').textContent = 'Lưu & thêm cây khảo sát';
   showView('view-survey-form');
+}
+
+function startEditSurvey(surveyId, data){
+  editingSurveyId = surveyId;
+  capturedGps = data.gps || null;
+  $('gpsResult').innerHTML = capturedGps
+    ? `<span class="gps-ok">Lat ${capturedGps.lat.toFixed(6)}, Lng ${capturedGps.lng.toFixed(6)}</span>`
+    : 'Chưa lấy vị trí.';
+  $('fXa').value = data.xa || '';
+  $('fChuVuon').value = data.chuVuon || '';
+  $('fSdt').value = data.sdt || '';
+  $('fGiong').value = data.giongDua || '';
+  $('fNamTrong').value = data.namTrong || '';
+  $('fTuoiVuon').value = data.tuoiVuon || '';
+  if (data.nhomTuoiCay) $('fNhomTuoi').value = data.nhomTuoiCay;
+  $('fMatDo').value = data.matDo || '';
+  $('fDienTich').value = data.dienTichDua || '';
+  if (data.quyTrinhCanhTac) $('fCanhTac').value = data.quyTrinhCanhTac;
+  clearError('surveyError');
+  $('surveyFormTitle').textContent = 'Chỉnh sửa thông tin phiếu';
+  $('btnSaveSurvey').textContent = 'Lưu thay đổi';
+  showView('view-survey-form');
+}
+
+function cancelSurveyForm(){
+  if (editingSurveyId) openSurveyTrees(editingSurveyId);
+  else showHome();
 }
 
 function captureGps(){
@@ -529,14 +635,25 @@ function captureGps(){
   }, { enableHighAccuracy: true, timeout: 15000 });
 }
 
+function validateSurveyRequiredFields(data){
+  const rf = requiredFieldsConfig.survey;
+  const missing = [];
+  if (rf.xa && !data.xa) missing.push('Xã');
+  if (rf.chuVuon && !data.chuVuon) missing.push('Chủ vườn');
+  if (rf.sdt && !data.sdt) missing.push('Số điện thoại');
+  if (rf.giongDua && !data.giongDua) missing.push('Giống dừa');
+  if (rf.namTrong && !data.namTrong) missing.push('Năm trồng');
+  if (rf.tuoiVuon && !data.tuoiVuon) missing.push('Tuổi vườn');
+  if (rf.matDo && !data.matDo) missing.push('Mật độ trồng');
+  if (rf.dienTichDua && !data.dienTichDua) missing.push('Diện tích dừa');
+  if (rf.gps && !capturedGps) missing.push('Vị trí GPS');
+  return missing;
+}
+
 async function saveSurvey(){
   clearError('surveyError');
-  const xa = $('fXa').value.trim();
-  if (!xa) return showError('surveyError', 'Vui lòng nhập Xã.');
-  if (!capturedGps) return showError('surveyError', 'Vui lòng bấm "Lấy vị trí GPS" trước khi lưu.');
-
   const data = {
-    xa,
+    xa: $('fXa').value.trim(),
     chuVuon: $('fChuVuon').value.trim(),
     sdt: $('fSdt').value.trim(),
     giongDua: $('fGiong').value.trim(),
@@ -547,18 +664,41 @@ async function saveSurvey(){
     dienTichDua: parseFloat($('fDienTich').value) || null,
     quyTrinhCanhTac: $('fCanhTac').value,
     gps: capturedGps,
+  };
+  const missing = validateSurveyRequiredFields(data);
+  if (missing.length) return showError('surveyError', 'Vui lòng nhập: ' + missing.join(', '));
+
+  if (editingSurveyId){
+    try{
+      await db.collection('surveys').doc(editingSurveyId).update(Object.assign({}, data, {
+        editApproved: false,
+        editRequestStatus: 'done',
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }));
+      const savedId = editingSurveyId;
+      editingSurveyId = null;
+      openSurveyTrees(savedId);
+    }catch(e){
+      showError('surveyError', 'Không lưu được: ' + e.message);
+    }
+    return;
+  }
+
+  const newData = Object.assign({}, data, {
     createdBy: currentUser.uid,
     createdByName: currentUserDoc.name,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     surveyDateLocal: new Date().toISOString().slice(0,10),
-  };
+    treeCount: 0,
+    editRequestStatus: 'none',
+  });
 
   try{
-    const ref = await db.collection('surveys').add(data);
+    const ref = await db.collection('surveys').add(newData);
     currentSurveyId = ref.id;
-    currentSurveyData = data;
+    currentSurveyData = newData;
     // Firestore offline: add() trả về ref ngay cả khi mất mạng (ghi hàng đợi cục bộ).
-    openSurveyTrees(ref.id, data);
+    openSurveyTrees(ref.id, newData);
   }catch(e){
     showError('surveyError', 'Không lưu được: ' + e.message);
   }
@@ -571,8 +711,79 @@ async function openSurveyTrees(surveyId, dataIfKnown){
   currentSurveyId = surveyId;
   currentSurveyData = dataIfKnown || (await db.collection('surveys').doc(surveyId).get()).data();
   $('treeListSurveyLabel').textContent = currentSurveyData.xa || '';
+  renderSurveyDetailInfo();
+  renderEditRequestBox();
   showView('view-tree-list');
   refreshTreeList();
+}
+
+function renderSurveyDetailInfo(){
+  const d = currentSurveyData;
+  const rows = [
+    ['Xã', d.xa], ['Chủ vườn', d.chuVuon], ['Số điện thoại', d.sdt],
+    ['Giống dừa', d.giongDua], ['Năm trồng', d.namTrong], ['Tuổi vườn', d.tuoiVuon],
+    ['Nhóm tuổi cây', d.nhomTuoiCay], ['Mật độ trồng', d.matDo],
+    ['Diện tích dừa (ha)', d.dienTichDua], ['Quy trình canh tác', d.quyTrinhCanhTac],
+    ['Vị trí GPS', d.gps ? `${d.gps.lat.toFixed(6)}, ${d.gps.lng.toFixed(6)}` : null],
+    ['Ngày khảo sát', d.surveyDateLocal],
+  ];
+  let html = '<table>';
+  rows.forEach(([label, val]) => {
+    html += `<tr><td class="muted">${label}</td><td>${(val === null || val === undefined || val === '') ? '—' : val}</td></tr>`;
+  });
+  html += '</table>';
+  $('surveyDetailInfo').innerHTML = html;
+}
+
+function renderEditRequestBox(){
+  const box = $('editRequestBox');
+  const d = currentSurveyData;
+  const isOwnSurvey = currentUser && d.createdBy === currentUser.uid;
+  if (!isOwnSurvey){ box.innerHTML = ''; return; }
+
+  const status = d.editRequestStatus || 'none';
+  if (status === 'pending'){
+    box.innerHTML = '<div class="gps-box"><span class="badge badge-pending">' +
+      'Yêu cầu chỉnh sửa đang chờ Admin duyệt</span></div>';
+    return;
+  }
+  if (status === 'approved' && d.editApproved){
+    const approvedAt = d.editApprovedAt && d.editApprovedAt.toDate ? d.editApprovedAt.toDate() : null;
+    const deadlineStr = approvedAt
+      ? new Date(approvedAt.getTime() + 48*3600*1000).toLocaleString('vi-VN') : '';
+    box.innerHTML = `<div class="gps-box">
+        <span class="badge badge-approved">Đã được duyệt${deadlineStr ? ' — có thể chỉnh sửa đến ' + deadlineStr : ''}</span>
+        <button class="btn btn-primary" style="margin-top:10px"
+          onclick="startEditSurvey(currentSurveyId, currentSurveyData)">Chỉnh sửa thông tin phiếu</button>
+      </div>`;
+    return;
+  }
+  const rejectedNote = status === 'rejected'
+    ? '<p class="muted" style="margin-top:6px">Yêu cầu trước đã bị từ chối. Có thể gửi yêu cầu mới.</p>' : '';
+  box.innerHTML = `<div class="gps-box">
+      <label style="margin-top:0">Cần sửa lại thông tin phiếu này?</label>
+      <textarea id="editRequestNote" placeholder="Nêu lý do / nội dung cần sửa…"></textarea>
+      <button class="btn btn-outline" style="margin-top:8px" onclick="requestSurveyEdit()">Gửi yêu cầu chỉnh sửa</button>
+      ${rejectedNote}
+    </div>`;
+}
+
+async function requestSurveyEdit(){
+  const noteEl = $('editRequestNote');
+  const note = (noteEl ? noteEl.value : '').trim();
+  if (!note) return alert('Vui lòng nêu lý do / nội dung cần sửa.');
+  try{
+    await db.collection('surveys').doc(currentSurveyId).update({
+      editRequestStatus: 'pending',
+      editRequestNote: note,
+      editRequestAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    currentSurveyData.editRequestStatus = 'pending';
+    currentSurveyData.editRequestNote = note;
+    renderEditRequestBox();
+  }catch(e){
+    alert('Không gửi được yêu cầu: ' + e.message);
+  }
 }
 
 async function refreshTreeList(){
@@ -582,16 +793,23 @@ async function refreshTreeList(){
     const q = await db.collection('surveys').doc(currentSurveyId)
       .collection('trees').orderBy('createdAt','desc').get();
     if (q.empty){ box.innerHTML = '<p class="muted">Chưa có cây nào.</p>'; return; }
-    box.innerHTML = '';
-    q.forEach(doc => {
-      const d = doc.data();
-      const div = document.createElement('div');
-      div.className = 'tree-item';
-      div.innerHTML = `<div><b>Cây ${d.maCay}</b>
-          <div class="meta">${d.tongSoBuongHuuHieu} buồng hữu hiệu</div></div>
-          <span class="badge">${Object.values(d.forecast||{}).reduce((a,b)=>a+b,0)} trái</span>`;
-      box.appendChild(div);
+
+    const trees = q.docs.map(doc => doc.data());
+    const allTags = new Set();
+    trees.forEach(t => Object.keys(t.forecast || {}).forEach(tag => allTags.add(tag)));
+    const sortedTags = [...allTags].sort();
+
+    let html = '<table><tr><th>Mã cây</th><th>Tình trạng</th><th>Số buồng HH</th>';
+    sortedTags.forEach(tag => { html += `<th>${tagToLabel(tag)}</th>`; });
+    html += '<th>Tổng trái</th></tr>';
+    trees.forEach(t => {
+      const total = Object.values(t.forecast || {}).reduce((a,b)=>a+b,0);
+      html += `<tr><td>${t.maCay}</td><td>${t.tinhTrangCay || ''}</td><td>${t.tongSoBuongHuuHieu ?? 0}</td>`;
+      sortedTags.forEach(tag => { html += `<td>${(t.forecast||{})[tag] ?? 0}</td>`; });
+      html += `<td><b>${total}</b></td></tr>`;
     });
+    html += '</table>';
+    box.innerHTML = html;
   }catch(e){
     box.innerHTML = '<p class="muted">Cây vừa lưu sẽ hiện khi có mạng để đồng bộ.</p>';
   }
@@ -628,7 +846,7 @@ function cancelTreeForm(){ showView('view-tree-list'); }
 async function saveTree(){
   clearError('treeError');
   const maCay = $('tMaCay').value.trim();
-  if (!maCay) return showError('treeError', 'Vui lòng nhập Mã cây.');
+  if (requiredFieldsConfig.tree.maCay && !maCay) return showError('treeError', 'Vui lòng nhập Mã cây.');
 
   const forecast = {};
   monthTags.forEach(tag => { forecast[tag] = parseInt($('m_'+tag).value || '0', 10); });
@@ -649,6 +867,9 @@ async function saveTree(){
 
   try{
     await db.collection('surveys').doc(currentSurveyId).collection('trees').add(data);
+    db.collection('surveys').doc(currentSurveyId)
+      .update({ treeCount: firebase.firestore.FieldValue.increment(1) })
+      .catch(() => { /* ngoài cửa sổ sửa 48h (hiếm) — không chặn lưu cây */ });
     showView('view-tree-list');
     refreshTreeList();
   }catch(e){
@@ -663,10 +884,97 @@ async function showAdmin(){
   showView('view-admin');
   loadAdminOverview();
   loadPendingUsers();
+  loadEditRequests();
+  loadRequiredFieldsForm();
   loadKpiTargetsForm();
   $('cfgTmax').value = phenologyConfig.tMax;
   $('cfgThreshold').value = phenologyConfig.threshold;
   loadLatestForecast();
+}
+
+// ---- Yêu cầu chỉnh sửa phiếu (khảo sát viên gửi, Admin duyệt) ----
+async function loadEditRequests(){
+  const box = $('editRequestsList');
+  box.innerHTML = '<p class="muted">Đang tải…</p>';
+  try{
+    const q = await db.collection('surveys').where('editRequestStatus', '==', 'pending').get();
+    $('editReqCountBadge').textContent = q.size;
+    if (q.empty){ box.innerHTML = '<p class="muted">Không có yêu cầu nào chờ duyệt.</p>'; return; }
+    box.innerHTML = '';
+    q.forEach(doc => {
+      const d = doc.data();
+      const div = document.createElement('div');
+      div.className = 'tree-item';
+      div.innerHTML = `<div><b>${d.xa || ''} — ${d.chuVuon || ''}</b>
+          <div class="meta">KSV: ${d.createdByName || ''} · Lý do: ${d.editRequestNote || ''}</div></div>
+          <div class="row" style="flex:none;gap:6px">
+            <button class="btn btn-primary" style="width:auto;padding:8px 12px"
+              onclick="approveEditRequest('${doc.id}')">Duyệt</button>
+            <button class="btn btn-danger" style="width:auto;padding:8px 12px"
+              onclick="rejectEditRequest('${doc.id}')">Từ chối</button>
+          </div>`;
+      box.appendChild(div);
+    });
+  }catch(e){
+    box.innerHTML = '<p class="muted">Không tải được: ' + e.message + '</p>';
+  }
+}
+async function approveEditRequest(surveyId){
+  try{
+    await db.collection('surveys').doc(surveyId).update({
+      editRequestStatus: 'approved',
+      editApproved: true,
+      editApprovedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    loadEditRequests();
+  }catch(e){ alert('Không duyệt được: ' + e.message); }
+}
+async function rejectEditRequest(surveyId){
+  if (!confirm('Từ chối yêu cầu chỉnh sửa này?')) return;
+  try{
+    await db.collection('surveys').doc(surveyId).update({ editRequestStatus: 'rejected' });
+    loadEditRequests();
+  }catch(e){ alert('Không từ chối được: ' + e.message); }
+}
+
+// ---- Cấu hình trường bắt buộc ----
+function loadRequiredFieldsForm(){
+  const box = $('requiredFieldsBox'); box.innerHTML = '';
+  const groups = [
+    { title: 'Phiếu vườn', key: 'survey', defs: REQUIRED_FIELD_DEFS.survey },
+    { title: 'Cây khảo sát', key: 'tree', defs: REQUIRED_FIELD_DEFS.tree },
+  ];
+  groups.forEach(g => {
+    const h = document.createElement('div');
+    h.style.cssText = 'margin-top:10px;font-weight:700;font-size:13px;color:var(--green-700)';
+    h.textContent = g.title;
+    box.appendChild(h);
+    g.defs.forEach(f => {
+      const row = document.createElement('label');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:14px;margin:8px 0;color:#1f2937';
+      row.innerHTML = `<input type="checkbox" class="rf-check" data-group="${g.key}" data-key="${f.key}"
+          ${requiredFieldsConfig[g.key][f.key] ? 'checked' : ''} style="width:18px;height:18px">
+          ${f.label}`;
+      box.appendChild(row);
+    });
+  });
+}
+async function saveRequiredFields(){
+  clearError('adminError');
+  const cfg = { survey: {}, tree: {} };
+  document.querySelectorAll('.rf-check').forEach(c => {
+    cfg[c.dataset.group][c.dataset.key] = c.checked;
+  });
+  try{
+    await db.collection('config').doc('requiredFields').set(cfg, { merge: true });
+    requiredFieldsConfig = {
+      survey: Object.assign({}, DEFAULT_REQUIRED_FIELDS.survey, cfg.survey),
+      tree: Object.assign({}, DEFAULT_REQUIRED_FIELDS.tree, cfg.tree),
+    };
+    applyRequiredFieldMarkers();
+  }catch(e){
+    showError('adminError', 'Không lưu được cấu hình trường bắt buộc: ' + e.message);
+  }
 }
 
 // ---- Duyệt tài khoản khảo sát viên tự đăng ký ----
