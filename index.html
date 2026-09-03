@@ -118,6 +118,16 @@
   .methodology .caveat{margin-top:8px;font-size:12px;color:var(--grey-700);
     border-top:1px solid rgba(31,92,59,.15);padding-top:8px;}
 
+  /* v1.6: khối placeholder GLMM — chưa có dữ liệu, chỉ mô tả trước những gì sẽ hiện */
+  .glmm-placeholder{border:1.5px dashed var(--grey-300);border-radius:10px;padding:14px 16px;
+    margin-top:18px;background:var(--grey-100,#f7f7f5);}
+  .glmm-placeholder h4{margin:0 0 8px;font-size:13.5px;color:#1f2937;display:flex;
+    align-items:center;gap:8px;flex-wrap:wrap;}
+  .badge-pending{display:inline-block;font-size:11px;font-weight:600;color:var(--grey-700);
+    background:var(--grey-200,#e5e5e0);border-radius:999px;padding:2px 9px;}
+  .glmm-preview-list{margin:6px 0 0;padding-left:18px;font-size:12.5px;line-height:1.6;color:#1f2937;}
+  .glmm-preview-list li{margin-bottom:6px;}
+
   .chart-card{border:1px solid var(--grey-300);border-radius:10px;padding:14px;margin-bottom:16px;
     background:#fff;}
   .chart-card h4{margin:0 0 4px;font-size:13.5px;color:#1f2937;}
@@ -602,7 +612,8 @@
 
     <h2 style="margin-top:26px">📊 Báo cáo phân tích &amp; dự báo năng suất (trái/ha/tháng)</h2>
     <div id="forecastEmpty" class="muted">
-      Chưa có kết quả — chạy <code>scripts/aggregate_trai_ha_thang.py</code> để cập nhật (xem README).
+      Chưa có kết quả phân tích riêng cho dự án này — chạy <code>scripts/aggregate_trai_ha_thang.py</code>
+      (bản v1.6 đã tính & ghi kết quả riêng theo từng dự án) trên laptop để cập nhật (xem README).
     </div>
     <div id="forecastSection" class="hidden">
       <p class="muted" id="forecastComputedAt"></p>
@@ -674,6 +685,26 @@
         cáo nhanh cấp quản lý.
       </div>
     </div>
+
+    <div class="glmm-placeholder">
+      <h4>🧮 Mô hình hồi quy đầy đủ (GLMM Negative Binomial) <span class="badge-pending">chưa chạy</span></h4>
+      <p class="muted">
+        Mô hình đề xuất tại mục 5.2 báo cáo phân tích — ước tính riêng ảnh hưởng của từng yếu tố (Xã, tuổi
+        vườn, mật độ, giống, quy trình canh tác) lên số trái, chính xác hơn cách tính trung bình + bootstrap
+        đang dùng ở trên. Cần đủ cỡ mẫu theo thiết kế phân tầng (mục 5.1) và dữ liệu đo lặp theo lịch trước
+        khi chạy được đáng tin cậy — xem phần "Chưa làm" trong README. Khi đã chạy, mục này sẽ hiện:
+      </p>
+      <ul class="glmm-preview-list">
+        <li><b>Hệ số ảnh hưởng từng biến</b> (Xã, tuổi vườn, mật độ, giống, canh tác) kèm mức ý nghĩa
+          thống kê (p-value) — biết chính xác yếu tố nào thực sự ảnh hưởng đến năng suất.</li>
+        <li><b>So sánh độ phù hợp mô hình (AIC)</b> với cách tính trung bình + bootstrap hiện tại — xác
+          nhận GLMM có thực sự mô tả dữ liệu tốt hơn hay không trước khi thay thế.</li>
+        <li><b>Chẩn đoán phần dư (residual diagnostics)</b> — kiểm tra giả định mô hình có phù hợp với
+          dữ liệu thực tế hay không.</li>
+        <li><b>Ước tính năng suất theo mô hình</b> kèm khoảng tin cậy riêng — đối chiếu với kết quả
+          bootstrap hiện tại đang hiển thị ở trên.</li>
+      </ul>
+    </div>
     <div class="error hidden" id="adminError"></div>
   </section>
 
@@ -717,6 +748,15 @@
     <label>Ngưỡng buồng hữu hiệu (tháng)</label>
     <input type="number" step="0.1" id="cfgThreshold" />
     <button class="btn btn-primary" style="margin-top:10px" onclick="savePhenologyConfig()">Lưu cấu hình phenology</button>
+
+    <h2 style="margin-top:26px">📜 Nhật ký thay đổi tham số mô hình dự báo</h2>
+    <p class="muted">Mọi lần đổi T_max/ngưỡng buồng hữu hiệu ở trên đều được ghi lại tại đây — vì 2 tham số
+      này được tính sẵn vào kết quả dự báo của từng cây NGAY LÚC khảo sát viên tạo phiếu, đổi sau đó
+      <b>không</b> tự cập nhật lại các phiếu đã tạo trước. Dùng nhật ký này để đối chiếu khi thấy cách tính
+      khác nhau giữa các giai đoạn/dự án. Sau này khi có hệ số mô hình GLMM (mục 5.2 báo cáo phân tích)
+      cũng sẽ ghi vào cùng một chỗ như thế này.</p>
+    <div id="modelParamHistoryBox"><p class="muted">Đang tải…</p></div>
+
     <div class="error hidden" id="settingsError"></div>
   </section>
 
@@ -1624,6 +1664,7 @@ async function showAdminSettings(){
   loadXaListForm();
   $('cfgTmax').value = phenologyConfig.tMax;
   $('cfgThreshold').value = phenologyConfig.threshold;
+  loadModelParamHistoryForm();
   await Promise.all([loadPendingUsers(), loadEditRequests()]);
 }
 
@@ -1845,16 +1886,24 @@ async function loadAdminOverview(){
   }
 }
 
+// v1.6: mỗi dự án chỉ hiện kết quả dự báo TÍNH RIÊNG cho chính dự án đó (script Python
+// aggregate_trai_ha_thang.py bản v1.6 ghi 1 doc "results" riêng cho từng dự án, có trường
+// projectId). Lấy toàn bộ doc (sắp theo computedAt — chỉ 1 field nên không cần thêm chỉ mục
+// Firestore, giống cách lọc surveys/trees phía client) rồi tìm doc mới nhất khớp đúng dự án
+// đang xem. Doc cũ (trước v1.6, chưa có trường projectId) được coi như thuộc Dự án 0 —
+// tương thích ngược, không mất báo cáo đã có của Dự án 0.
 async function loadLatestForecast(){
   try{
-    const q = await db.collection('results').orderBy('computedAt','desc').limit(1).get();
-    if (q.empty){
+    const q = await db.collection('results').orderBy('computedAt','desc').get();
+    const match = q.docs.map(d => d.data())
+      .find(d => (d.projectId || LEGACY_PROJECT_ID) === viewProjectId);
+    if (!match){
       latestResultsDoc = null;
       $('forecastEmpty').classList.remove('hidden');
       $('forecastSection').classList.add('hidden');
       return;
     }
-    latestResultsDoc = q.docs[0].data();
+    latestResultsDoc = match;
   }catch(e){
     latestResultsDoc = null;
     $('forecastEmpty').classList.remove('hidden');
@@ -2116,16 +2165,70 @@ async function saveKpiTargets(){
 }
 
 // ---- Cấu hình phenology ----
+// v1.6: mỗi lần đổi T_max/ngưỡng buồng hữu hiệu đều được ghi vào mảng "history" ngay
+// trong chính document config/phenology (không tạo collection mới — tránh phải sửa
+// Firestore Rules). Lý do cần nhật ký: 2 tham số này được TÍNH SẴN vào forecast của
+// từng cây NGAY LÚC khảo sát viên tạo phiếu — đổi tham số sau đó KHÔNG cập nhật lại
+// các phiếu đã tạo trước đó, nên nếu 1 dự án kéo dài qua nhiều lần đổi tham số, nhật
+// ký này giúp biết chính xác mốc nào đổi, để giải thích khác biệt cách tính giữa các
+// giai đoạn/dự án khi cần đối chiếu. (Không dùng serverTimestamp() trong mảng vì
+// Firestore không hỗ trợ sentinel này bên trong array — dùng ISO string phía client.)
 async function savePhenologyConfig(){
   clearError('settingsError');
   const tMax = parseFloat($('cfgTmax').value);
   const threshold = parseFloat($('cfgThreshold').value);
   try{
-    await db.collection('config').doc('phenology').set({ tMax, threshold }, { merge: true });
+    const ref = db.collection('config').doc('phenology');
+    const oldSnap = await ref.get();
+    const old = oldSnap.exists ? oldSnap.data() : {};
+    const changed = old.tMax !== tMax || old.threshold !== threshold;
+    let history = Array.isArray(old.history) ? old.history.slice() : [];
+    if (changed && (old.tMax !== undefined || old.threshold !== undefined)){
+      history.push({
+        oldTMax: old.tMax ?? null, oldThreshold: old.threshold ?? null,
+        newTMax: tMax, newThreshold: threshold,
+        changedBy: (auth.currentUser && (auth.currentUser.email || auth.currentUser.uid)) || 'không rõ',
+        changedAt: new Date().toISOString(),
+      });
+      if (history.length > 50) history = history.slice(history.length - 50);
+    }
+    await ref.set({ tMax, threshold, history }, { merge: true });
     phenologyConfig = { tMax, threshold };
     $('guideThreshold').textContent = threshold;
     $('guideTmax').textContent = tMax;
+    renderModelParamHistory(history);
   }catch(e){ showError('settingsError', 'Không lưu được cấu hình: ' + e.message); }
+}
+
+// ---- Nhật ký thay đổi tham số mô hình dự báo (v1.6) ----
+async function loadModelParamHistoryForm(){
+  const box = $('modelParamHistoryBox'); if (box) box.innerHTML = '<p class="muted">Đang tải…</p>';
+  try{
+    const doc = await db.collection('config').doc('phenology').get();
+    renderModelParamHistory(doc.exists ? (doc.data().history || []) : []);
+  }catch(e){
+    if (box) box.innerHTML = '<p class="muted">Không tải được nhật ký.</p>';
+  }
+}
+function renderModelParamHistory(history){
+  const box = $('modelParamHistoryBox'); if (!box) return;
+  const list = Array.isArray(history) ? history.slice().reverse() : [];
+  if (!list.length){
+    box.innerHTML = '<p class="muted">Chưa có thay đổi nào được ghi nhận kể từ khi có nhật ký (bản v1.6).</p>';
+    return;
+  }
+  box.innerHTML = '<table><tr><th>Thời điểm đổi</th><th>Người đổi</th>' +
+    '<th>T_max (tháng)</th><th>Ngưỡng buồng hữu hiệu (tháng)</th></tr>' +
+    list.slice(0, 20).map(h => {
+      let when = '—';
+      try{ when = new Date(h.changedAt).toLocaleString('vi-VN'); }catch(e){}
+      return `<tr>
+        <td>${escapeHtml(when)}</td>
+        <td>${escapeHtml(h.changedBy)}</td>
+        <td>${h.oldTMax ?? '—'} → ${h.newTMax ?? '—'}</td>
+        <td>${h.oldThreshold ?? '—'} → ${h.newThreshold ?? '—'}</td>
+      </tr>`;
+    }).join('') + '</table>';
 }
 
 // ============================================================================

@@ -1,4 +1,4 @@
-# Hệ thống khảo sát & dự báo năng suất dừa — Bản v1.5
+# Hệ thống khảo sát & dự báo năng suất dừa — Bản v1.6
 
 Web app khảo sát năng suất dừa qua điện thoại, hoạt động offline, đồng bộ
 real-time qua Firebase — theo đúng thiết kế trong "Báo cáo phân tích &
@@ -265,6 +265,46 @@ im trong thùng rác đến lần đăng nhập kế tiếp, không tự "biến
 Bản đồ hiện đại diện theo VƯỜN (phiếu khảo sát), chưa có GPS riêng từng cây —
 nếu cần độ chính xác đến từng cây, cần bổ sung bước lấy GPS ở màn "Thêm cây"
 (hiện chưa có, vì tăng thời gian nhập liệu ngoài đồng).*
+
+## Bản v1.6 — Dự báo tách riêng theo từng dự án, nhật ký tham số mô hình, khối chờ GLMM
+
+1. **Script Python tính RIÊNG kết quả dự báo cho từng dự án.** Trước bản này,
+   mục "📊 Báo cáo phân tích & dự báo năng suất" tính chung trên TOÀN BỘ dữ
+   liệu bất kể đang xem dự án nào — dù các mục khác (KPI, tiến độ, thống kê
+   chuyên sâu, xuất CSV) đã lọc đúng theo dự án từ bản v1.4. Từ bản v1.6,
+   `aggregate_trai_ha_thang.py` nhóm dữ liệu theo đúng `projectId` của từng
+   cây, chạy lại đủ 4 bước phương pháp luận riêng cho từng dự án, và ghi
+   **1 document kết quả/dự án** vào Firestore (`results`, có trường
+   `projectId`). Mỗi dự án trên Admin dashboard giờ chỉ hiển thị đúng kết quả
+   tính từ dữ liệu của chính nó. Diện tích theo tầng (`dien_tich_theo_tang.csv`,
+   nếu có) vẫn dùng chung 1 bảng cho mọi dự án vì là số liệu đất đai công ty,
+   không đổi theo dự án — chỉ những tầng thực sự có trong dữ liệu của từng dự
+   án mới được tính trọng số.
+   *Cần làm 1 lần: chạy lại `python aggregate_trai_ha_thang.py` (bản mới) trên
+   laptop sau khi cập nhật code — cho tới lúc đó, dự án nào CHƯA có kết quả
+   riêng sẽ hiện rõ "Chưa có kết quả phân tích riêng cho dự án này" thay vì
+   im lặng hiện nhầm số của dự án khác. Báo cáo cũ của "Dự án 0" (tính từ
+   trước khi có bản v1.6, chưa có trường `projectId`) vẫn hiển thị bình
+   thường — được coi như thuộc "Dự án 0", không mất dữ liệu.*
+2. **Nhật ký thay đổi tham số mô hình dự báo (Cài đặt → "📜 Nhật ký thay đổi
+   tham số mô hình dự báo").** Hai tham số phenology (T_max, ngưỡng buồng hữu
+   hiệu) được tính sẵn vào kết quả dự báo của từng cây **ngay lúc khảo sát
+   viên tạo phiếu** — đổi tham số sau đó KHÔNG tự cập nhật lại các phiếu đã
+   tạo trước. Từ bản này, mỗi lần Admin lưu lại cấu hình phenology, hệ thống
+   tự ghi lại: giá trị cũ → giá trị mới, người đổi, thời điểm đổi — ngay
+   trong `config/phenology` (không tạo collection mới, không cần sửa Firestore
+   Rules). Dùng nhật ký này để biết chính xác mốc nào đổi tham số, giải thích
+   khác biệt cách tính giữa các giai đoạn/dự án khi cần đối chiếu. Khi có hệ
+   số mô hình GLMM (mục 5.2 báo cáo phân tích) trong tương lai, cũng sẽ ghi
+   vào cùng cơ chế nhật ký này.
+3. **Khối chờ "🧮 Mô hình hồi quy đầy đủ (GLMM Negative Binomial)" trong Chi
+   tiết dự án.** Mô hình GLMM (mục 5.2 báo cáo) hiện CHƯA chạy được — cần đủ
+   cỡ mẫu theo thiết kế phân tầng (mục 5.1) và dữ liệu đo lặp theo lịch, xem
+   phần "Chưa làm" bên dưới. Khối này hiện rõ trạng thái "chưa chạy" cùng mô
+   tả trước những gì sẽ hiện khi đã chạy được (hệ số ảnh hưởng từng biến kèm
+   p-value, so sánh AIC với cách tính hiện tại, chẩn đoán phần dư, ước tính
+   kèm khoảng tin cậy riêng của mô hình) — để Admin/Ban lãnh đạo biết trước
+   lộ trình, không hiểu nhầm "báo cáo dự báo" hiện tại đã là mô hình đầy đủ.
 
 ## Bước 4 — Đưa web lên GitHub Pages
 
