@@ -1970,6 +1970,21 @@ function renderForecastTable(d){
 // KHÔNG dùng biến CSS var(--...) để các file HTML xuất ra vẫn hiển thị đúng
 // màu khi mở độc lập, ngoài app).
 // ============================================================================
+let _lineChartSeq = 0;
+// Buộc các thẻ <script> chèn vào qua .innerHTML thực thi (trình duyệt mặc định KHÔNG
+// tự chạy script chèn kiểu này) — cần cho biểu đồ tương tác dùng chung ở Dashboard.
+// 2 file HTML xuất riêng (báo cáo chi tiết / tóm tắt) không cần hàm này vì đó là
+// document HTML đầy đủ, trình duyệt tự thực thi <script> bình thường khi mở file.
+function execInsertedScripts(container){
+  if (!container) return;
+  container.querySelectorAll('script').forEach(oldScript => {
+    const newScript = document.createElement('script');
+    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+    newScript.textContent = oldScript.textContent;
+    oldScript.parentNode.replaceChild(newScript, oldScript);
+  });
+}
+
 function buildLineBandChart(rows, opts){
   opts = Object.assign({ labels:false, smooth:false, color:'#1F5C3B', labelPos:'above' }, opts || chartOptions.line);
   if (!rows || !rows.length) return '<p class="muted">Không có dữ liệu.</p>';
@@ -2002,20 +2017,45 @@ function buildLineBandChart(rows, opts){
   }
   const xlabels = rows.map((r,i) => `<text x="${xFor(i)}" y="${H-10}" font-size="10" fill="#4B5563"
       text-anchor="middle">${tagToLabel(r.month).replace('Tháng ','T')}</text>`).join('');
-  const points = rows.map((r,i) => {
-    const lo = r.ciLow != null ? Math.round(r.ciLow) : Math.round(r.value ?? 0);
-    const hi = r.ciHigh != null ? Math.round(r.ciHigh) : Math.round(r.value ?? 0);
-    return `<circle cx="${xFor(i)}" cy="${yFor(r.value ?? 0)}" r="4.5" fill="${opts.color}" stroke="#fff" stroke-width="1.5">
-      <title>${tagToLabel(r.month)}: ${Math.round(r.value ?? 0)} trái/ha (KTC ${lo}–${hi})</title></circle>`;
-  }).join('');
+  const points = rows.map((r,i) => `<circle cx="${xFor(i)}" cy="${yFor(r.value ?? 0)}" r="4.5"
+      fill="${opts.color}" stroke="#fff" stroke-width="1.5"/>`).join('');
   const dataLabels = opts.labels ? rows.map((r,i) => {
     const y = yFor(r.value ?? 0) + (opts.labelPos === 'below' ? 17 : -10);
     return `<text x="${xFor(i)}" y="${y}" font-size="10.5" fill="${opts.color}" text-anchor="middle"
       font-weight="700">${Math.round(r.value ?? 0)}</text>`;
   }).join('') : '';
 
-  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img"
-      aria-label="Biểu đồ dự báo năng suất theo tháng">
+  // ---- Lớp tương tác: rê chuột/chạm vào biểu đồ hiện đường gióng dọc + hộp chi
+  // tiết (tháng, dự báo, khoảng tin cậy 95%) tại đúng điểm gần con trỏ nhất.
+  const uid = 'lbc' + (++_lineChartSeq) + Math.random().toString(36).slice(2,7);
+  const hoverData = rows.map((r,i) => ({
+    x: xFor(i), y: yFor(r.value ?? 0),
+    month: tagToLabel(r.month),
+    value: r.value ?? 0,
+    ciLow: r.ciLow ?? null, ciHigh: r.ciHigh ?? null,
+  }));
+  const hoverDataJson = JSON.stringify(hoverData).replace(/</g, '\\u003c');
+
+  // Khi TOÀN BỘ các tháng đều không tính được khoảng tin cậy (mỗi tầng Xã × Nhóm
+  // tuổi cây chỉ có 1 phiếu/vườn — bootstrap 2 cấp cần tối thiểu 2 để có ý nghĩa),
+  // dải KTC sẽ không hiện — nêu rõ lý do thay vì để trống gây hiểu nhầm là lỗi.
+  const allCiMissing = rows.every(r => r.ciLow == null && r.ciHigh == null);
+  const someCiMissing = !allCiMissing && rows.some(r => r.ciLow == null || r.ciHigh == null);
+  const ciNotice = allCiMissing
+    ? `<div style="margin-top:8px;padding:8px 10px;background:#FEF3C7;color:#92400E;border-radius:6px;
+        font-size:11.5px;line-height:1.5">⚠️ Chưa hiện được dải khoảng tin cậy 95%: mỗi tầng (Xã × Nhóm
+        tuổi cây) trong dự án này hiện chỉ có 1 phiếu/vườn — bootstrap 2 cấp cần tối thiểu 2 phiếu độc
+        lập/tầng mới ước lượng được khoảng tin cậy có ý nghĩa. Không phải lỗi hiển thị — khi có thêm phiếu
+        khảo sát ở cùng tầng, chạy lại script sẽ tự có dải KTC.</div>`
+    : someCiMissing
+      ? `<div style="margin-top:8px;padding:8px 10px;background:#FEF3C7;color:#92400E;border-radius:6px;
+        font-size:11.5px;line-height:1.5">⚠️ Một vài tháng chưa đủ ≥2 phiếu/vườn trong cùng tầng nên chưa
+        tính được khoảng tin cậy 95% cho tháng đó (xem chi tiết khi rê chuột vào từng điểm).</div>`
+      : '';
+
+  return `<div id="${uid}_wrap" style="position:relative">
+    <svg id="${uid}_svg" viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img"
+        aria-label="Biểu đồ dự báo năng suất theo tháng">
       ${gridlines}
       <path d="${bandPath}" fill="${opts.color}" opacity="0.15" stroke="none"/>
       <path d="${linePath}" fill="none" stroke="${opts.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
@@ -2023,11 +2063,78 @@ function buildLineBandChart(rows, opts){
       ${dataLabels}
       ${xlabels}
       <line x1="${padL}" y1="${padT+innerH}" x2="${W-padR}" y2="${padT+innerH}" stroke="#D1D5DB" stroke-width="1"/>
+      <line id="${uid}_cross" x1="0" y1="${padT}" x2="0" y2="${padT+innerH}" stroke="#9CA3AF"
+        stroke-width="1" stroke-dasharray="3,3" style="display:none;pointer-events:none"/>
+      <circle id="${uid}_dot" r="6" fill="#fff" stroke="${opts.color}" stroke-width="2.5"
+        style="display:none;pointer-events:none"/>
+      <rect id="${uid}_overlay" x="${padL}" y="${padT}" width="${innerW}" height="${innerH}"
+        fill="transparent" style="cursor:crosshair"/>
     </svg>
+    <div id="${uid}_tip" style="position:absolute;pointer-events:none;opacity:0;transition:opacity .1s;
+      background:#1f2937;color:#fff;padding:6px 10px;border-radius:6px;transform:translate(-50%,-100%);
+      white-space:nowrap;z-index:5;box-shadow:0 2px 6px rgba(0,0,0,.25);top:0;left:0"></div>
     <div class="chart-legend">
       <span class="lg-item"><span class="lg-line" style="border-color:${opts.color}"></span>Dự báo (trái/ha)</span>
       <span class="lg-item"><span class="lg-swatch" style="background:${opts.color};opacity:.3"></span>Khoảng tin cậy 95%</span>
-    </div>`;
+      <span class="lg-item" style="color:#4B5563">🖱️ Di chuột/chạm vào biểu đồ để xem chi tiết từng tháng</span>
+    </div>
+    ${ciNotice}
+    <script>(function(){
+      var pts = ${hoverDataJson};
+      var svg = document.getElementById('${uid}_svg');
+      var overlay = document.getElementById('${uid}_overlay');
+      var cross = document.getElementById('${uid}_cross');
+      var dot = document.getElementById('${uid}_dot');
+      var tip = document.getElementById('${uid}_tip');
+      var wrap = document.getElementById('${uid}_wrap');
+      if (!svg || !overlay || !pts.length) return;
+      function svgXFromClient(clientX){
+        var r = svg.getBoundingClientRect();
+        if (!r.width) return 0;
+        return (clientX - r.left) * (${W} / r.width);
+      }
+      function nearestIdx(svgX){
+        var best = 0, bestD = Infinity;
+        for (var i = 0; i < pts.length; i++){
+          var d = Math.abs(pts[i].x - svgX);
+          if (d < bestD){ bestD = d; best = i; }
+        }
+        return best;
+      }
+      function showAt(idx){
+        var p = pts[idx];
+        cross.setAttribute('x1', p.x); cross.setAttribute('x2', p.x);
+        cross.style.display = 'block';
+        dot.setAttribute('cx', p.x); dot.setAttribute('cy', p.y);
+        dot.style.display = 'block';
+        var ciLine = (p.ciLow != null && p.ciHigh != null)
+          ? (Math.round(p.ciLow) + '–' + Math.round(p.ciHigh) + ' trái/ha')
+          : 'chưa đủ dữ liệu để tính (cần ≥2 phiếu độc lập/tầng)';
+        tip.innerHTML = '';
+        var l1 = document.createElement('div');
+        l1.style.cssText = 'font-weight:700;font-size:11px;color:#E5E7EB';
+        l1.textContent = p.month;
+        var l2 = document.createElement('div');
+        l2.style.cssText = 'font-weight:800;font-size:14px;color:#fff;margin-top:1px';
+        l2.textContent = Math.round(p.value) + ' trái/ha';
+        var l3 = document.createElement('div');
+        l3.style.cssText = 'font-size:10.5px;color:#D1D5DB;margin-top:2px';
+        l3.textContent = 'KTC 95%: ' + ciLine;
+        tip.appendChild(l1); tip.appendChild(l2); tip.appendChild(l3);
+        var r = svg.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
+        var scaleX = r.width / ${W}, scaleY = r.height / ${H};
+        var left = (r.left - wr.left) + p.x * scaleX;
+        var top = (r.top - wr.top) + p.y * scaleY;
+        tip.style.left = Math.max(55, Math.min(left, wr.width - 55)) + 'px';
+        tip.style.top = Math.max(0, top - 8) + 'px';
+        tip.style.opacity = '1';
+      }
+      function hide(){ cross.style.display = 'none'; dot.style.display = 'none'; tip.style.opacity = '0'; }
+      overlay.addEventListener('pointermove', function(e){ showAt(nearestIdx(svgXFromClient(e.clientX))); });
+      overlay.addEventListener('pointerdown', function(e){ showAt(nearestIdx(svgXFromClient(e.clientX))); });
+      overlay.addEventListener('pointerleave', hide);
+    })();<\/script>
+  </div>`;
 }
 
 const NHOM_TUOI_COLORS = { 'Tơ':'#2a78d6', 'Ổn định NS':'#eb6834', 'Già cỗi/thanh lý':'#1baf7a' };
@@ -2095,7 +2202,9 @@ function buildStratumBarChart(strata, opts){
 }
 
 function renderForecastLineChart(d){
-  $('chartForecastLine').innerHTML = buildLineBandChart(d.forecastByMonth || [], chartOptions.line);
+  const el = $('chartForecastLine');
+  el.innerHTML = buildLineBandChart(d.forecastByMonth || [], chartOptions.line);
+  execInsertedScripts(el);
 }
 function renderForecastBarChart(d){
   const detail = d.detail || [];
