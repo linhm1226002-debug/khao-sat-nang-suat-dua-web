@@ -1,4 +1,4 @@
-# Hệ thống khảo sát & dự báo năng suất dừa — Bản v1.2
+# Hệ thống khảo sát & dự báo năng suất dừa — Bản v1.3
 
 Web app khảo sát năng suất dừa qua điện thoại, hoạt động offline, đồng bộ
 real-time qua Firebase — theo đúng thiết kế trong "Báo cáo phân tích &
@@ -97,6 +97,47 @@ khoản hàng loạt thay vì để mọi người tự đăng ký.
 chỉ mục kép (composite index) trong Firestore — Claude đã tạo sẵn trong dự án.
 Nếu sau này thêm truy vấn tương tự mà bị lỗi "The query requires an index",
 Firebase Console sẽ tự đưa link để tạo — bấm vào link đó là xong.*
+
+## Bản v1.3 — Chuẩn hoá dữ liệu Xã, mã cây tự sinh, nâng cấp Bảng điều khiển Admin
+
+Xuất phát từ 1 lỗi dữ liệu thực tế phát hiện khi kiểm thử (2 phiếu ghi "Cẩm
+sơn" và "Cẩm Sơn" thành 2 xã khác nhau do gõ tự do), bản này sửa tận gốc và
+nâng cấp phần báo cáo:
+
+1. **Xã: dropdown bắt buộc chọn, không cho gõ tự do.** Admin quản lý danh
+   sách xã đang khảo sát ở Bảng điều khiển → mục "Cấu hình danh sách Xã khảo
+   sát" (thêm/xoá tên xã). Danh sách này tự động đổ vào ô "Xã" của phiếu
+   khảo sát dưới dạng dropdown bắt buộc chọn. Khi lưu danh sách, hệ thống tự
+   chặn nếu 2 tên chỉ khác nhau hoa/thường (đúng lỗi "Cẩm Sơn"/"Cẩm sơn" đã
+   gặp) — buộc Admin gộp lại thành 1 tên trước khi lưu.
+2. **Mã cây: tự động gợi ý theo thứ tự, có nút sinh lại, chặn trùng mã.** Khi
+   mở màn "Thêm cây", hệ thống tự điền mã kế tiếp (VD: "Cây 01", "Cây 02"…)
+   theo đúng thứ tự trong phiếu — khảo sát viên vẫn sửa lại được nếu muốn.
+   Nếu lưu trùng mã đã có trong cùng phiếu, hệ thống báo lỗi ngay, không cho
+   lưu — tránh nhầm lẫn dữ liệu giữa các cây.
+3. **Bảng điều khiển Admin nâng cấp toàn diện:**
+   - Sơ đồ trực quan hoá **luồng thông tin theo 6 công đoạn** (thu thập →
+     kiểm soát & đồng bộ → Admin kiểm duyệt → phân tích thống kê → kết quả
+     dự báo → báo cáo/xuất dữ liệu), mỗi công đoạn hiện trạng thái thực tế
+     (số liệu, cảnh báo nếu có việc đang chờ xử lý).
+   - Mục báo cáo phân tích & dự báo hiện đầy đủ **phương pháp luận 4 bước**
+     (đúng như script `aggregate_trai_ha_thang.py`), **bảng kết quả có đánh
+     dấu tháng cao điểm** và mũi tên xu hướng tăng/giảm, cùng **2 biểu đồ**:
+     đường dự báo kèm dải khoảng tin cậy 95%, và biểu đồ so sánh theo
+     Xã × Nhóm tuổi cây.
+   - **3 file xuất riêng biệt**, tạo trực tiếp trong trình duyệt (không cần
+     server): (i) dữ liệu thô CSV — đúng bảng cấp cây × tháng dùng làm đầu
+     vào phân tích, mở bằng Excel để đối chiếu độc lập; (ii) báo cáo chi
+     tiết từng bước (HTML) — đầy đủ phương pháp luận, bảng số liệu theo
+     từng tầng, kèm biểu đồ; (iii) tóm tắt cho Ban lãnh đạo (HTML) — 1 trang,
+     nêu con số & nhận định chính, kèm 1 biểu đồ, văn phong business.
+
+*Lưu ý: kết quả trong mục "Kết quả dự báo" vẫn do script Python
+`aggregate_trai_ha_thang.py` ghi vào Firestore (nguồn dữ liệu chính thức) —
+Bảng điều khiển Admin chỉ hiển thị & xuất lại kết quả đó, không tự tính toán
+lại bằng JavaScript trong bản chính thức (tránh 2 cách tính khác nhau cùng
+tồn tại). Sau khi đổi tên xã cũ, nên chạy lại script Python 1 lần để kết quả
+dự báo phản ánh đúng tên xã đã chuẩn hoá.*
 
 ## Bước 4 — Đưa web lên GitHub Pages
 
