@@ -11,6 +11,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 
+<!-- Leaflet (bản đồ vị trí cây khảo sát) + OpenStreetMap — miễn phí, không cần API key -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <style>
   :root{
     --green-900:#123524; --green-700:#1F5C3B; --green-600:#2C7A4B; --green-100:#EAF3EC;
@@ -169,6 +173,121 @@
   .hist-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:10px 0;}
   .hist-cell{border:1px solid var(--grey-300);border-radius:8px;padding:8px;}
   .hist-cell h5{margin:0 0 4px;font-size:12px;color:#1f2937;}
+  .hist-bar:hover{opacity:1!important;filter:brightness(0.92);}
+  .hist-bar.hist-bar-active{stroke:#123524;stroke-width:2;opacity:1!important;}
+
+  /* ============================================================================
+     v1.5 — Nền chuyên nghiệp hơn (theo phương pháp dataviz: chrome/ink tách khỏi
+     thương hiệu xanh dừa), Admin Hub / Chi tiết dự án / Cài đặt, wizard, thùng
+     rác, bảng dữ liệu cây, bản đồ, histogram tương tác.
+     ============================================================================ */
+  :root{
+    --chart-surface:#fcfcfb; --chart-ink:#0b0b0b; --chart-ink-2:#52514e; --chart-muted:#898781;
+    --chart-grid:#e1e0d9; --status-good:#0ca30c; --status-warning:#c98500; --status-serious:#ec835a;
+    --status-critical:#d03b3b; --shadow-card:0 1px 2px rgba(18,53,36,.05),0 4px 14px rgba(18,53,36,.06);
+  }
+  body{background:linear-gradient(180deg,#F7FAF8 0%,#F1F5F2 260px,var(--grey-100) 640px);}
+  header{background:linear-gradient(135deg,var(--green-900),var(--green-700));
+    box-shadow:0 2px 10px rgba(18,53,36,.18);}
+  .card{box-shadow:var(--shadow-card);border:1px solid rgba(18,53,36,.05);}
+  body.admin-wide main{max-width:1180px;}
+
+  .section-subtitle{font-size:14px;font-weight:700;color:var(--green-700);margin:0 0 8px;
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+  /* ---- Admin sub-navigation (Hub ⇄ Chi tiết dự án ⇄ Cài đặt) ---- */
+  .admin-toolbar{background:var(--green-100);border-radius:10px;padding:12px 14px;margin:-4px -4px 6px;}
+  .admin-toolbar h2{color:var(--green-900);}
+  .pd-back{background:none;border:none;color:var(--green-700);font-weight:700;font-size:13px;
+    padding:0 0 6px;cursor:pointer;text-align:left;}
+  .pd-back:hover{text-decoration:underline;}
+
+  /* ---- Hub: KPI tổng quan toàn hệ thống ---- */
+  .hub-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px;}
+  .hub-kpi-grid .kpi-tile{background:#fff;border:1px solid var(--grey-300);position:relative;
+    box-shadow:var(--shadow-card);}
+  .hub-kpi-grid .kpi-tile::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    border-radius:10px 10px 0 0;background:var(--green-600);}
+  .hub-kpi-grid .kpi-tile .num{font-size:26px;}
+
+  .hub-projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;}
+  .project-card{border:1px solid var(--grey-300);border-radius:12px;padding:14px 16px;margin-bottom:0;
+    background:#fff;box-shadow:var(--shadow-card);transition:box-shadow .15s,transform .15s;}
+  .project-card:hover{box-shadow:0 4px 18px rgba(18,53,36,.12);transform:translateY(-1px);}
+  .project-card.archived{opacity:.75;background:var(--grey-100);}
+  .project-card .pj-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;}
+  .project-card .pj-name{font-weight:700;font-size:14.5px;color:var(--green-900);}
+  .project-card .pj-meta{font-size:12px;color:var(--grey-700);margin-top:3px;line-height:1.5;}
+  .project-card .pj-quickstat{font-size:12px;color:var(--green-700);font-weight:600;margin-top:6px;}
+  .project-card .pj-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+  .project-card .pj-actions button{width:auto;padding:7px 12px;font-size:12px;}
+  .badge-active{background:var(--green-100);color:var(--green-700);}
+  .badge-archived{background:var(--grey-300);color:var(--grey-700);}
+  .badge-trash{background:#FBEDEB;color:var(--red-600);}
+
+  /* ---- Thùng rác dự án ---- */
+  .trash-box{border:1px dashed var(--red-600);border-radius:12px;padding:14px 16px;background:#FFFBFA;}
+  .trash-box h3{color:var(--red-600);}
+  .trash-item{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:10px 0;border-bottom:1px solid #F3D9D5;}
+  .trash-item:last-child{border-bottom:none;}
+  .trash-item .ti-name{font-weight:700;font-size:13.5px;}
+  .trash-item .ti-meta{font-size:11.5px;color:var(--grey-700);}
+  .trash-item .ti-actions{display:flex;gap:6px;flex:none;}
+  .trash-item .ti-actions button{width:auto;padding:6px 10px;font-size:12px;}
+
+  /* ---- Wizard tạo dự án (modal, nhiều bước) ---- */
+  .wizard-overlay{position:fixed;inset:0;background:rgba(11,20,15,.55);z-index:100;
+    display:flex;align-items:flex-end;justify-content:center;}
+  @media (min-width:600px){ .wizard-overlay{align-items:center;} }
+  .wizard-modal{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;
+    border-radius:16px 16px 0 0;padding:20px 20px 16px;box-shadow:0 -8px 40px rgba(0,0,0,.25);}
+  @media (min-width:600px){ .wizard-modal{border-radius:16px;} }
+  .wizard-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .wizard-head h3{margin:0;font-size:16px;color:var(--green-900);}
+  .wizard-close{background:var(--grey-100);border:none;border-radius:8px;width:32px;height:32px;
+    font-size:15px;color:var(--grey-700);cursor:pointer;}
+  .wizard-steps{display:flex;justify-content:space-between;margin-bottom:18px;position:relative;}
+  .wizard-steps::before{content:'';position:absolute;top:14px;left:20px;right:20px;height:2px;
+    background:var(--grey-300);z-index:0;}
+  .wizard-step-dot{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;
+    gap:6px;font-size:10.5px;color:var(--grey-700);flex:1;}
+  .wizard-step-dot::before{content:attr(data-n);width:28px;height:28px;border-radius:50%;
+    background:#fff;border:2px solid var(--grey-300);display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:12px;color:var(--grey-700);}
+  .wizard-step-dot.active::before{border-color:var(--green-700);color:var(--green-700);background:var(--green-100);}
+  .wizard-step-dot.done::before{content:'✓';border-color:var(--green-600);background:var(--green-600);color:#fff;}
+  .wizard-step-dot span{text-align:center;max-width:70px;}
+  .wizard-pane label:first-child{margin-top:0;}
+  .wizard-actions{display:flex;gap:10px;margin-top:16px;}
+  .wizard-actions .btn{width:auto;flex:1;padding:12px;}
+
+  /* ---- Bảng dữ liệu cây + loại trừ khỏi phân tích ---- */
+  .subtabs{display:flex;gap:6px;margin:10px 0;border-bottom:2px solid var(--grey-300);}
+  .subtab{background:none;border:none;padding:9px 4px;margin-right:14px;font-size:13px;font-weight:600;
+    color:var(--grey-700);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;}
+  .subtab.active{color:var(--green-700);border-bottom-color:var(--green-700);}
+  .tree-filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+  .tree-filter-row input[type=text],.tree-filter-row select{width:auto;flex:1 1 150px;padding:9px 10px;font-size:13px;}
+  .hist-filter-chip{display:inline-flex;align-items:center;gap:8px;background:#FFF7E6;color:#8a5a00;
+    border-radius:8px;padding:6px 12px;font-size:12.5px;margin-bottom:10px;}
+  .hist-filter-chip button{background:none;border:none;color:#8a5a00;font-weight:700;cursor:pointer;
+    text-decoration:underline;padding:0;}
+  tr.tree-row-excluded{opacity:.55;background:#FBEDEB;}
+  .tree-exclude-btn{width:auto;padding:5px 9px;font-size:11.5px;}
+
+  /* ---- Bản đồ + timeline khảo sát ---- */
+  .map-container{width:100%;height:380px;border-radius:10px;overflow:hidden;border:1px solid var(--grey-300);
+    background:var(--grey-100);}
+  .timeline-bar{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+  .timeline-bar button{width:auto;padding:8px 14px;font-size:13px;}
+  .timeline-bar input[type=range]{flex:1;min-width:140px;}
+  .leaflet-popup-content{font-size:12.5px;line-height:1.5;}
+
+  /* ---- Cổng chạy phân tích thủ công (#28) ---- */
+  .analysis-gate{background:var(--green-100);border-radius:10px;padding:16px;text-align:center;}
+  .analysis-gate p{margin:0 0 12px;}
+  .analysis-gate button{width:auto;padding:12px 22px;font-size:14.5px;}
 </style>
 </head>
 <body>
@@ -368,16 +487,44 @@
   </section>
 
   <!-- ============ ADMIN ============ -->
-  <section id="view-admin" class="card hidden">
+  <!-- ============ ADMIN: HUB — DANH MỤC DỰ ÁN ============ -->
+  <section id="view-admin-hub" class="card hidden">
     <div class="admin-toolbar">
-      <h2 style="margin:0">Bảng điều khiển Admin</h2>
-      <button class="btn btn-outline" onclick="showAdmin()">↻ Làm mới dữ liệu</button>
+      <h2 style="margin:0">📁 Danh mục dự án</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline" style="width:auto;padding:9px 14px" onclick="showAdminSettings()">⚙️ Cài đặt hệ thống</button>
+        <button class="btn btn-outline" style="width:auto;padding:9px 14px" onclick="showAdminHub()">↻ Làm mới</button>
+        <button class="btn btn-primary" style="width:auto;padding:9px 14px" onclick="openProjectWizard()">+ Tạo dự án mới</button>
+      </div>
     </div>
-    <label style="margin-top:8px">Dự án đang xem</label>
-    <select id="fViewProject" onchange="onViewProjectChange()">
-      <option value="">🗂 Tất cả dự án</option>
-    </select>
-    <p class="muted" id="viewProjectMeta" style="margin-top:4px"></p>
+
+    <p class="muted" style="margin-top:12px">Tổng quan toàn hệ thống (tất cả dự án):</p>
+    <div class="hub-kpi-grid" id="hubKpiGrid"></div>
+
+    <p class="muted">
+      <span class="badge" id="hubPendingBadge">0</span> tài khoản chờ duyệt ·
+      <span class="badge" id="hubEditReqBadge">0</span> yêu cầu chỉnh sửa phiếu chờ xử lý —
+      xem ở mục <a href="#" onclick="showAdminSettings();return false" style="color:var(--green-700);font-weight:700">⚙️ Cài đặt hệ thống</a>.
+    </p>
+
+    <h2 style="margin-top:22px">Các dự án đang mở / đã lưu trữ</h2>
+    <div class="hub-projects-grid" id="hubProjectsList"><p class="muted">Đang tải…</p></div>
+
+    <div id="hubTrashSection" style="margin-top:22px"></div>
+
+    <div class="error hidden" id="hubError"></div>
+  </section>
+
+  <!-- ============ ADMIN: CHI TIẾT DỰ ÁN ============ -->
+  <section id="view-admin-project" class="card hidden">
+    <div class="admin-toolbar">
+      <div>
+        <button class="pd-back" onclick="showAdminHub()">← Danh mục dự án</button>
+        <h2 style="margin:2px 0 0" id="pdProjectName">Dự án</h2>
+        <p class="muted" id="pdProjectMeta" style="margin:2px 0 0"></p>
+      </div>
+      <button class="btn btn-outline" style="width:auto;padding:9px 14px" onclick="refreshProjectDetail()">↻ Làm mới dữ liệu</button>
+    </div>
 
     <p class="muted" style="margin-top:12px">Luồng thông tin từ hiện trường đến báo cáo — từng công đoạn
       và trạng thái hiện tại:</p>
@@ -387,21 +534,73 @@
 
     <div id="projectProgressBox"></div>
 
-    <h2 style="margin-top:22px">Tài khoản chờ duyệt <span class="badge" id="pendingCountBadge">0</span></h2>
-    <div id="pendingUsersList"><p class="muted">Đang tải…</p></div>
-
-    <h2 style="margin-top:20px">Yêu cầu chỉnh sửa phiếu <span class="badge" id="editReqCountBadge">0</span></h2>
-    <div id="editRequestsList"><p class="muted">Đang tải…</p></div>
-
-    <h2 style="margin-top:20px">Tiến độ khảo sát theo xã</h2>
+    <h2 style="margin-top:22px">Tiến độ khảo sát theo xã</h2>
     <div id="adminByXa"><p class="muted">Đang tải…</p></div>
 
     <h2 style="margin-top:26px">👤 Hiệu suất khảo sát viên</h2>
-    <p class="muted">Số phiếu/cây thực hiện so với chỉ tiêu Admin đặt cho từng người trong dự án đang xem
-      (đặt chỉ tiêu ở mục "Quản lý dự án" bên dưới).</p>
+    <p class="muted">Số phiếu/cây thực hiện so với chỉ tiêu Admin đặt cho từng người trong dự án này.</p>
     <div id="userPerfBox"><p class="muted">Đang tải…</p></div>
+    <button class="btn btn-outline" style="width:auto;padding:8px 12px;margin-top:6px" onclick="toggleUserTargetsForm()">🎯 Đặt chỉ tiêu KPI cho từng khảo sát viên</button>
+    <div id="userTargetsBoxWrap" class="hidden" style="margin-top:10px"></div>
 
-    <h2 style="margin-top:26px">📊 Báo cáo phân tích & dự báo năng suất (trái/ha/tháng)</h2>
+    <h2 style="margin-top:28px">🔎 Dữ liệu đầu vào — xem &amp; rà soát trước khi phân tích</h2>
+    <p class="muted">Xem chi tiết đến từng cây, loại trừ cây có sai sót khỏi phân tích (có thể khôi phục
+      bất cứ lúc nào), xem vị trí thực tế trên bản đồ và diễn biến khảo sát theo thời gian.</p>
+
+    <div class="subtabs" id="dataOverviewTabs">
+      <button class="subtab active" data-tab="table" onclick="switchDataOverviewTab('table')">📋 Bảng dữ liệu cây</button>
+      <button class="subtab" data-tab="map" onclick="switchDataOverviewTab('map')">🗺️ Bản đồ vị trí</button>
+    </div>
+
+    <div id="dataOverviewTable">
+      <div class="tree-filter-row">
+        <input type="text" id="treeSearchInput" placeholder="🔍 Tìm mã cây…" oninput="renderTreeTable()">
+        <select id="treeFilterXa" onchange="renderTreeTable()"><option value="">— Tất cả xã —</option></select>
+        <select id="treeFilterStatus" onchange="renderTreeTable()">
+          <option value="">— Tất cả trạng thái —</option>
+          <option value="included">Đang dùng để phân tích</option>
+          <option value="excluded">Đã loại trừ</option>
+        </select>
+        <span class="muted" id="treeFilterCount"></span>
+      </div>
+      <div id="histFilterChipBox"></div>
+      <div class="table-wrap" id="treeTableBox"><p class="muted">Đang tải…</p></div>
+    </div>
+
+    <div id="dataOverviewMap" class="hidden">
+      <div class="timeline-bar">
+        <button class="btn btn-outline" id="btnTimelinePlay" onclick="toggleTimelinePlay()">▶ Phát</button>
+        <input type="range" id="timelineSlider" min="0" max="0" value="0" oninput="onTimelineSliderChange()">
+        <span class="muted" id="timelineDateLabel">—</span>
+      </div>
+      <div id="projectMap" class="map-container"></div>
+      <p class="muted" style="margin-top:6px">📍 GPS được ghi nhận theo từng <b>phiếu khảo sát (vườn)</b>,
+        không theo từng cây riêng lẻ — mỗi điểm trên bản đồ đại diện 1 vườn khảo sát; kéo thanh trượt
+        hoặc bấm "▶ Phát" để xem các vườn xuất hiện dần theo ngày khảo sát.</p>
+    </div>
+
+    <h2 style="margin-top:28px">🔬 Phân tích thống kê chuyên sâu theo tháng (cấp cây)</h2>
+    <div class="chart-card" id="deepStatsCard">
+      <div class="chart-sub" style="margin-bottom:10px">Mô tả thống kê, phân phối (histogram kèm đường
+        cong mật độ chuẩn), kiểm định chuẩn và so sánh khác biệt giữa các tháng — tính trực tiếp trên số
+        trái đếm được của từng cây CHƯA bị loại trừ, độc lập với kết quả script Python.</div>
+      <div id="analysisGate" class="analysis-gate">
+        <p class="muted">Sẵn sàng phân tích trên <b id="analysisGateN">0</b> cây
+          (đã loại trừ <b id="analysisGateExcluded">0</b> cây có sai sót, nếu có). Rà soát bảng dữ liệu và
+          bản đồ ở trên trước khi chạy — Admin chủ động bấm nút bên dưới để tính kết quả.</p>
+        <button class="btn btn-primary" onclick="runDeepStatsAnalysis()">▶ Chạy phân tích thống kê</button>
+      </div>
+      <div id="deepStatsResults" class="hidden">
+        <div class="chart-toolbar">
+          <label><input type="checkbox" id="histOpt_labels" onchange="renderDeepStats()"> Hiện số liệu trên histogram</label>
+          <label>Màu <input type="color" id="histOpt_color" value="#2C7A4B" onchange="renderDeepStats()"></label>
+          <button class="btn btn-outline" style="width:auto;padding:6px 10px;margin-left:auto" onclick="resetDeepStatsGate()">↻ Chạy lại phân tích</button>
+        </div>
+        <div id="deepStatsBox"></div>
+      </div>
+    </div>
+
+    <h2 style="margin-top:26px">📊 Báo cáo phân tích &amp; dự báo năng suất (trái/ha/tháng)</h2>
     <div id="forecastEmpty" class="muted">
       Chưa có kết quả — chạy <code>scripts/aggregate_trai_ha_thang.py</code> để cập nhật (xem README).
     </div>
@@ -456,18 +655,6 @@
         <div id="chartForecastBar"></div>
       </div>
 
-      <div class="chart-card" id="deepStatsCard">
-        <h4>🔬 Phân tích thống kê chuyên sâu theo tháng (cấp cây)</h4>
-        <div class="chart-sub">Mô tả thống kê, phân phối (histogram), kiểm định chuẩn và so sánh khác
-          biệt giữa các tháng — tính trực tiếp trên số trái đếm được của từng cây, độc lập với kết quả
-          script Python.</div>
-        <div class="chart-toolbar">
-          <label><input type="checkbox" id="histOpt_labels" onchange="renderDeepStats()"> Hiện số liệu trên histogram</label>
-          <label>Màu <input type="color" id="histOpt_color" value="#2C7A4B" onchange="renderDeepStats()"></label>
-        </div>
-        <div id="deepStatsBox"><p class="muted">Đang tải…</p></div>
-      </div>
-
       <h4 style="margin:16px 0 8px;font-size:13.5px">Bảng kết quả theo tháng</h4>
       <div class="table-wrap" id="forecastTable"></div>
 
@@ -479,14 +666,31 @@
       </div>
       <div class="export-card">
         <b>Dữ liệu thô (CSV):</b> đúng bảng dữ liệu cấp cây × tháng dùng làm đầu vào phân tích (surveyId,
-        xã, nhóm tuổi, mật độ, mã cây, tháng, số trái, quy đổi trái/ha) — mở bằng Excel để kiểm tra/đối
-        chiếu độc lập.<br>
+        xã, nhóm tuổi, mật độ, mã cây, tháng, số trái, quy đổi trái/ha, có loại trừ hay không) — mở bằng
+        Excel để kiểm tra/đối chiếu độc lập.<br>
         <b>Báo cáo chi tiết:</b> trình bày đầy đủ 4 bước phương pháp luận kèm bảng số liệu & biểu đồ —
         dùng khi cần giải trình cách tính.<br>
         <b>Tóm tắt Ban lãnh đạo:</b> 1 trang, nêu con số & nhận định chính, kèm 1 biểu đồ — dùng để báo
         cáo nhanh cấp quản lý.
       </div>
     </div>
+    <div class="error hidden" id="adminError"></div>
+  </section>
+
+  <!-- ============ ADMIN: CÀI ĐẶT HỆ THỐNG ============ -->
+  <section id="view-admin-settings" class="card hidden">
+    <div class="admin-toolbar">
+      <div>
+        <button class="pd-back" onclick="showAdminHub()">← Danh mục dự án</button>
+        <h2 style="margin:2px 0 0">⚙️ Cài đặt hệ thống</h2>
+      </div>
+    </div>
+
+    <h2 style="margin-top:20px">Tài khoản chờ duyệt <span class="badge" id="pendingCountBadge">0</span></h2>
+    <div id="pendingUsersList"><p class="muted">Đang tải…</p></div>
+
+    <h2 style="margin-top:20px">Yêu cầu chỉnh sửa phiếu <span class="badge" id="editReqCountBadge">0</span></h2>
+    <div id="editRequestsList"><p class="muted">Đang tải…</p></div>
 
     <h2 style="margin-top:26px">Cấu hình danh sách Xã khảo sát</h2>
     <p class="muted">Danh sách xã dưới đây sẽ hiện thành dropdown bắt buộc chọn khi khảo sát viên tạo
@@ -494,34 +698,6 @@
     <div id="xaListRows"></div>
     <button class="btn btn-outline" onclick="addXaListRow()">+ Thêm xã</button>
     <button class="btn btn-primary" onclick="saveXaListConfig()">Lưu danh sách xã</button>
-
-    <h2 style="margin-top:26px">🗂 Quản lý dự án</h2>
-    <p class="muted">Mỗi dự án khảo sát (VD: "Dự án 01 — 3 tháng") có phạm vi xã, số tháng dự báo và
-      thời gian riêng. Có thể mở nhiều dự án song song — khảo sát viên chọn đúng dự án đang nhập liệu
-      ở Trang chủ. "Lưu trữ" chỉ ẩn dự án khỏi danh sách đang mở, KHÔNG xoá dữ liệu — vẫn xem/xuất báo
-      cáo lại được bất cứ lúc nào qua mục "Dự án đang xem" phía trên.</p>
-
-    <div id="projectFormBox" class="gps-box" style="margin-bottom:14px">
-      <label style="margin-top:0">Tên dự án</label>
-      <input type="text" id="pjName" placeholder="VD: Dự án 01 — Khảo sát đánh giá Q1" />
-      <label>Mô tả (tuỳ chọn)</label>
-      <textarea id="pjDesc" placeholder="Mục tiêu, ghi chú..."></textarea>
-      <div class="row">
-        <div><label>Ngày bắt đầu</label><input type="date" id="pjStart" /></div>
-        <div><label>Ngày kết thúc</label><input type="date" id="pjEnd" /></div>
-      </div>
-      <label>Số tháng dự báo mỗi cây (mặc định 7)</label>
-      <input type="number" id="pjForecastMonths" value="7" min="1" max="12" />
-      <label>Phạm vi xã áp dụng</label>
-      <label style="display:flex;align-items:center;gap:8px;font-size:14px;margin:8px 0;color:#1f2937">
-        <input type="checkbox" id="pjAllXa" checked onchange="toggleProjectXaScope()" style="width:18px;height:18px">
-        Áp dụng cho tất cả xã trong danh sách
-      </label>
-      <div id="pjXaScopeBox" class="hidden"></div>
-      <button class="btn btn-primary" style="margin-top:10px" onclick="createProject()">+ Tạo dự án mới</button>
-    </div>
-
-    <div id="projectsList"><p class="muted">Đang tải…</p></div>
 
     <h2 style="margin-top:22px">Cấu hình trường bắt buộc</h2>
     <p class="muted">Chọn trường nào bắt buộc nhập khi khảo sát viên tạo phiếu / thêm cây.
@@ -541,14 +717,62 @@
     <label>Ngưỡng buồng hữu hiệu (tháng)</label>
     <input type="number" step="0.1" id="cfgThreshold" />
     <button class="btn btn-primary" style="margin-top:10px" onclick="savePhenologyConfig()">Lưu cấu hình phenology</button>
-    <div class="error hidden" id="adminError"></div>
+    <div class="error hidden" id="settingsError"></div>
   </section>
 
 </main>
 
+<!-- ============ WIZARD TẠO DỰ ÁN MỚI (modal nhiều bước) ============ -->
+<div id="wizardOverlay" class="wizard-overlay hidden">
+  <div class="wizard-modal">
+    <div class="wizard-head">
+      <h3>+ Tạo dự án khảo sát mới</h3>
+      <button class="wizard-close" onclick="closeProjectWizard()">✕</button>
+    </div>
+    <div class="wizard-steps">
+      <div class="wizard-step-dot active" id="wStepDot1" data-n="1"><span>Thông tin</span></div>
+      <div class="wizard-step-dot" id="wStepDot2" data-n="2"><span>Thời gian</span></div>
+      <div class="wizard-step-dot" id="wStepDot3" data-n="3"><span>Phạm vi xã</span></div>
+      <div class="wizard-step-dot" id="wStepDot4" data-n="4"><span>Xác nhận</span></div>
+    </div>
+    <div class="wizard-body">
+      <div class="wizard-pane" id="wPane1">
+        <label>Tên dự án *</label>
+        <input type="text" id="wjName" placeholder="VD: Dự án 01 — Khảo sát đánh giá Q1" />
+        <label>Mô tả (tuỳ chọn)</label>
+        <textarea id="wjDesc" placeholder="Mục tiêu, ghi chú..."></textarea>
+      </div>
+      <div class="wizard-pane hidden" id="wPane2">
+        <div class="row">
+          <div><label>Ngày bắt đầu</label><input type="date" id="wjStart" /></div>
+          <div><label>Ngày kết thúc</label><input type="date" id="wjEnd" /></div>
+        </div>
+        <label>Số tháng dự báo mỗi cây (mặc định 7)</label>
+        <input type="number" id="wjForecastMonths" value="7" min="1" max="12" />
+      </div>
+      <div class="wizard-pane hidden" id="wPane3">
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;margin:8px 0;color:#1f2937">
+          <input type="checkbox" id="wjAllXa" checked onchange="toggleWizardXaScope()" style="width:18px;height:18px">
+          Áp dụng cho tất cả xã trong danh sách
+        </label>
+        <div id="wjXaScopeBox" class="hidden"></div>
+      </div>
+      <div class="wizard-pane hidden" id="wPane4">
+        <div id="wizardSummaryBox" class="gps-box"></div>
+      </div>
+    </div>
+    <div class="error hidden" id="wizardError"></div>
+    <div class="wizard-actions">
+      <button class="btn btn-outline hidden" id="wBtnBack" onclick="wizardBack()">← Quay lại</button>
+      <button class="btn btn-primary" id="wBtnNext" onclick="wizardNext()">Tiếp tục →</button>
+      <button class="btn btn-primary hidden" id="wBtnCreate" onclick="wizardCreateProject()">✓ Tạo dự án</button>
+    </div>
+  </div>
+</div>
+
 <div class="tabbar hidden" id="tabbar">
   <button id="tabHome" onclick="showHome()">🏠 Trang chủ</button>
-  <button id="tabAdmin" class="hidden" onclick="showAdmin()">📊 Admin</button>
+  <button id="tabAdmin" class="hidden" onclick="showAdminHub()">📊 Admin</button>
 </div>
 
 <script>
@@ -578,7 +802,8 @@ let currentTreeCodes = [];   // mã cây đã có trong phiếu đang xem — d�
 let projectsCache = [];      // TẤT CẢ doc projects (kể cả archived) — Admin quản lý, kèm .id
 let activeProjectId = null;  // dự án khảo sát viên đang chọn để nhập liệu (Field), nhớ theo localStorage
 let activeProjectData = null;
-let viewProjectId = '';      // '' = tất cả dự án gộp chung; Admin đang xem Dashboard theo dự án nào
+let viewProjectId = '';      // v1.5: dự án Admin đang xem ở "Chi tiết dự án" (luôn có giá trị cụ thể
+                              // khi ở view-admin-project — xem openProjectDetail(); '' chỉ ở Hub)
 let allSurveysCache = [];    // toàn bộ surveys (kèm .id) — tải 1 lần, lọc theo projectId phía client
 let allTreesCache = [];      // toàn bộ trees (collectionGroup, kèm .id/.surveyId) — tải 1 lần, lọc tương tự
 const LEGACY_PROJECT_ID = 'legacy-0'; // "Dự án 0" — nơi lưu trữ 10 phiếu/36 cây trước khi có tính năng Dự án
@@ -612,10 +837,21 @@ let requiredFieldsConfig = JSON.parse(JSON.stringify(DEFAULT_REQUIRED_FIELDS));
 // TIỆN ÍCH
 // ============================================================================
 function $(id){ return document.getElementById(id); }
+const ADMIN_WIDE_VIEWS = ['view-admin-hub', 'view-admin-project', 'view-admin-settings'];
 function showView(id){
   document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
   $(id).classList.remove('hidden');
-  document.body.classList.toggle('admin-wide', id === 'view-admin');
+  document.body.classList.toggle('admin-wide', ADMIN_WIDE_VIEWS.includes(id));
+}
+// Chống XSS lưu trữ (stored XSS): dữ liệu do người dùng tự nhập (tên, ghi chú, mã cây…) được lưu
+// thẳng vào Firestore và hiển thị lại bằng innerHTML ở nhiều nơi (kể cả cho Admin xem) — PHẢI escape
+// trước khi chèn vào HTML, nếu không một khảo sát viên có thể chèn mã <script> vào ô tự do (VD: tên,
+// lý do yêu cầu sửa phiếu) để chạy trong phiên đăng nhập của Admin khi Admin mở trang duyệt.
+function escapeHtml(v){
+  if (v === null || v === undefined) return '';
+  return String(v).replace(/[&<>"']/g, ch => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;',
+  }[ch]));
 }
 function showError(elId, msg){ const el = $(elId); el.textContent = msg; el.classList.remove('hidden'); }
 function clearError(elId){ $(elId).classList.add('hidden'); }
@@ -734,7 +970,7 @@ auth.onAuthStateChanged(async user => {
 
   if (currentUserDoc.role === 'admin'){
     $('tabAdmin').classList.remove('hidden');
-    showAdmin();
+    showAdminHub();
   } else {
     showHome();
   }
@@ -844,9 +1080,9 @@ async function loadMySurveys(){
     q.forEach(doc => {
       const d = doc.data();
       html += `<tr>
-          <td>${d.surveyDateLocal || ''}</td>
-          <td>${d.xa || '(chưa rõ)'}</td>
-          <td>${d.chuVuon || ''}</td>
+          <td>${escapeHtml(d.surveyDateLocal) || ''}</td>
+          <td>${escapeHtml(d.xa) || '(chưa rõ)'}</td>
+          <td>${escapeHtml(d.chuVuon) || ''}</td>
           <td>${d.treeCount ?? 0}</td>
           <td>${editStatusBadge(d)}</td>
           <td><button class="btn btn-outline" style="width:auto;padding:6px 10px;font-size:12px"
@@ -1034,7 +1270,7 @@ function renderSurveyDetailInfo(){
   ];
   let html = '<table>';
   rows.forEach(([label, val]) => {
-    html += `<tr><td class="muted">${label}</td><td>${(val === null || val === undefined || val === '') ? '—' : val}</td></tr>`;
+    html += `<tr><td class="muted">${label}</td><td>${(val === null || val === undefined || val === '') ? '—' : escapeHtml(val)}</td></tr>`;
   });
   html += '</table>';
   $('surveyDetailInfo').innerHTML = html;
@@ -1111,7 +1347,7 @@ async function refreshTreeList(){
     html += '<th>Tổng trái</th></tr>';
     trees.forEach(t => {
       const total = Object.values(t.forecast || {}).reduce((a,b)=>a+b,0);
-      html += `<tr><td>${t.maCay}</td><td>${t.tinhTrangCay || ''}</td><td>${t.tongSoBuongHuuHieu ?? 0}</td>`;
+      html += `<tr><td>${escapeHtml(t.maCay)}</td><td>${escapeHtml(t.tinhTrangCay) || ''}</td><td>${t.tongSoBuongHuuHieu ?? 0}</td>`;
       sortedTags.forEach(tag => { html += `<td>${(t.forecast||{})[tag] ?? 0}</td>`; });
       html += `<td><b>${total}</b></td></tr>`;
     });
@@ -1205,31 +1441,190 @@ async function saveTree(){
 // ============================================================================
 let totalSurveysCount = 0, totalTreesCount = 0, totalXaCount = 0;
 let pendingUsersCount = 0, pendingEditReqCount = 0;
+const TRASH_RETENTION_DAYS = 90;
 
-async function showAdmin(){
-  showView('view-admin');
+// ============================================================================
+// ADMIN — HUB (danh mục dự án + tiến độ tổng quan) — v1.5
+// ============================================================================
+async function showAdminHub(){
+  showView('view-admin-hub');
+  clearError('hubError');
+  $('hubProjectsList').innerHTML = '<p class="muted">Đang tải…</p>';
+  try{
+    await loadProjectsAdmin();
+    await checkAndPurgeExpiredTrash();
+    await loadAllSurveysAndTrees();
+    await Promise.all([loadPendingUsers(), loadEditRequests()]);
+    $('hubPendingBadge').textContent = pendingUsersCount;
+    $('hubEditReqBadge').textContent = pendingEditReqCount;
+    renderHubKpiGrid();
+    renderProjectsHubList();
+    renderTrashSection();
+  }catch(e){
+    showError('hubError', 'Không tải được danh mục dự án: ' + e.message);
+  }
+}
+
+function renderHubKpiGrid(){
+  const grid = $('hubKpiGrid'); if (!grid) return;
+  const activeCount = projectsCache.filter(p => p.status === 'active').length;
+  const xaSet = new Set(allTreesCache.map(t => t.xa || '(chưa rõ)'));
+  grid.innerHTML = `
+    <div class="kpi-tile"><div class="num">${activeCount}</div><div class="lbl">Dự án đang mở</div></div>
+    <div class="kpi-tile"><div class="num">${allSurveysCache.length}</div><div class="lbl">Tổng phiếu khảo sát</div></div>
+    <div class="kpi-tile"><div class="num">${allTreesCache.length}</div><div class="lbl">Tổng cây đã khảo sát</div></div>
+    <div class="kpi-tile"><div class="num">${xaSet.size}</div><div class="lbl">Xã có dữ liệu</div></div>`;
+}
+
+function renderProjectsHubList(){
+  const box = $('hubProjectsList'); if (!box) return;
+  const list = projectsCache.filter(p => p.status !== 'trashed');
+  if (!list.length){
+    box.innerHTML = '<p class="muted">Chưa có dự án nào — bấm "+ Tạo dự án mới" ở trên để bắt đầu.</p>';
+    return;
+  }
+  box.innerHTML = list.map(p => {
+    const scope = p.xaScope === 'all' ? 'Tất cả xã' : (Array.isArray(p.xaScope) ? p.xaScope.join(', ') : '—');
+    const nSurveys = allSurveysCache.filter(s => (s.projectId || LEGACY_PROJECT_ID) === p.id).length;
+    const nTrees = allTreesCache.filter(t => (t.projectId || LEGACY_PROJECT_ID) === p.id).length;
+    const isLegacy = p.id === LEGACY_PROJECT_ID;
+    return `<div class="project-card ${p.status==='archived'?'archived':''}">
+      <div class="pj-head">
+        <div>
+          <div class="pj-name">${escapeHtml(p.name)}
+            <span class="badge ${p.status==='archived'?'badge-archived':'badge-active'}">
+              ${p.status==='archived'?'Đã lưu trữ':'Đang mở'}</span></div>
+          <div class="pj-meta">${escapeHtml(p.startDate)||'?'} → ${escapeHtml(p.endDate)||'?'} ·
+            Dự báo ${p.forecastMonths||7} tháng/cây · ${escapeHtml(scope)}</div>
+          ${p.description ? `<div class="pj-meta">${escapeHtml(p.description)}</div>` : ''}
+          <div class="pj-quickstat">${nSurveys} phiếu · ${nTrees} cây</div>
+        </div>
+      </div>
+      <div class="pj-actions">
+        <button class="btn btn-primary" onclick="openProjectDetail('${p.id}')">Xem chi tiết →</button>
+        ${isLegacy ? '' : (p.status==='archived'
+          ? `<button class="btn btn-outline" onclick="restoreProject('${p.id}')">Khôi phục</button>`
+          : `<button class="btn btn-outline" onclick="archiveProject('${p.id}')">Lưu trữ</button>`)}
+        ${isLegacy ? '' : `<button class="btn btn-danger" onclick="trashProject('${p.id}')">🗑 Xoá</button>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTrashSection(){
+  const box = $('hubTrashSection'); if (!box) return;
+  const trashed = projectsCache.filter(p => p.status === 'trashed');
+  if (!trashed.length){ box.innerHTML = ''; return; }
+  const rows = trashed.map(p => {
+    const trashedAt = p.trashedAt && p.trashedAt.toDate ? p.trashedAt.toDate() : null;
+    const daysLeft = trashedAt
+      ? Math.max(0, TRASH_RETENTION_DAYS - Math.floor((Date.now() - trashedAt.getTime()) / 86400000))
+      : null;
+    return `<div class="trash-item">
+      <div><div class="ti-name">${escapeHtml(p.name)}</div>
+        <div class="ti-meta">Đã xoá lúc: ${trashedAt ? trashedAt.toLocaleString('vi-VN') : '—'} ·
+          ${daysLeft !== null ? `còn <b>${daysLeft} ngày</b> trước khi tự xoá vĩnh viễn` : 'chưa rõ thời hạn'}</div></div>
+      <div class="ti-actions">
+        <button class="btn btn-outline" onclick="restoreProject('${p.id}')">↩ Khôi phục</button>
+        <button class="btn btn-danger" onclick="purgeProjectNow('${p.id}')">❌ Xoá vĩnh viễn ngay</button>
+      </div>
+    </div>`;
+  }).join('');
+  box.innerHTML = `<div class="trash-box">
+    <h3 class="section-subtitle">🗑 Thùng rác dự án <span class="badge badge-trash">${trashed.length}</span></h3>
+    <p class="muted">Dự án trong thùng rác tự động xoá vĩnh viễn sau ${TRASH_RETENTION_DAYS} ngày. Xoá dự
+      án KHÔNG xoá phiếu/cây đã ghi nhận — dữ liệu khảo sát luôn được giữ lại an toàn.</p>
+    ${rows}
+  </div>`;
+}
+
+async function checkAndPurgeExpiredTrash(){
+  const expired = projectsCache.filter(p => {
+    if (p.status !== 'trashed' || !p.trashedAt || !p.trashedAt.toDate) return false;
+    const days = (Date.now() - p.trashedAt.toDate().getTime()) / 86400000;
+    return days >= TRASH_RETENTION_DAYS;
+  });
+  if (!expired.length) return;
+  try{
+    await Promise.all(expired.map(p => db.collection('projects').doc(p.id).delete()));
+    await loadProjectsAdmin();
+  }catch(e){ /* im lặng — sẽ thử lại lần tải sau, không chặn Admin dùng Hub */ }
+}
+
+async function trashProject(id){
+  if (!confirm('Chuyển dự án này vào THÙNG RÁC? Dự án sẽ ẩn khỏi danh mục và tự xoá vĩnh viễn sau ' +
+    TRASH_RETENTION_DAYS + ' ngày (có thể khôi phục bất cứ lúc nào trước đó). Toàn bộ phiếu/cây đã ghi ' +
+    'nhận trong dự án KHÔNG bị xoá.')) return;
+  try{
+    await db.collection('projects').doc(id).update({
+      status: 'trashed', trashedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    await loadProjectsAdmin();
+    renderProjectsHubList(); renderTrashSection(); renderHubKpiGrid();
+  }catch(e){ alert('Không xoá được: ' + e.message); }
+}
+
+async function purgeProjectNow(id){
+  if (!confirm('XOÁ VĨNH VIỄN dự án này ngay bây giờ? KHÔNG THỂ hoàn tác. Phiếu/cây đã ghi nhận trong ' +
+    'dự án vẫn được giữ lại (không bị xoá theo), chỉ thông tin dự án bị xoá.')) return;
+  try{
+    await db.collection('projects').doc(id).delete();
+    await loadProjectsAdmin();
+    renderProjectsHubList(); renderTrashSection(); renderHubKpiGrid();
+  }catch(e){ alert('Không xoá được: ' + e.message); }
+}
+
+// ============================================================================
+// ADMIN — CHI TIẾT 1 DỰ ÁN (báo cáo / phân tích) — v1.5
+// ============================================================================
+async function openProjectDetail(id){
+  viewProjectId = id;
+  localStorage.setItem('adminViewProjectId', viewProjectId);
+  showView('view-admin-project');
+  clearError('adminError');
+  renderProjectDetailHeader();
+  resetDeepStatsGate();
+  $('userTargetsBoxWrap').classList.add('hidden'); $('userTargetsBoxWrap').innerHTML = '';
+  clearHistBinFilter();
+  await loadAllSurveysAndTrees();
+  await Promise.all([loadAdminOverview(), loadLatestForecast()]);
+  renderPipeline();
+  renderProjectDetailHeader();
+  renderProjectProgress();
+  await loadUserPerformance();
+  populateTreeFilterXaOptions();
+  renderTreeTable();
+  setupProjectMapData();
+}
+function refreshProjectDetail(){ if (viewProjectId) openProjectDetail(viewProjectId); }
+
+function renderProjectDetailHeader(){
+  const pj = projectsCache.find(p => p.id === viewProjectId);
+  const nameEl = $('pdProjectName'), metaEl = $('pdProjectMeta');
+  if (!nameEl || !metaEl) return;
+  if (!pj){
+    nameEl.textContent = viewProjectId === LEGACY_PROJECT_ID ? 'Dự án 0 (dữ liệu lưu trữ trước v1.4)' : 'Dự án';
+    metaEl.textContent = '';
+    return;
+  }
+  nameEl.textContent = pj.name;
+  const scope = pj.xaScope === 'all' ? 'tất cả xã' : (Array.isArray(pj.xaScope) ? pj.xaScope.join(', ') : '—');
+  metaEl.textContent = `${pj.startDate||'?'} → ${pj.endDate||'?'} · Dự báo ${pj.forecastMonths||7} tháng/cây · ` +
+    `Phạm vi: ${scope}${pj.status==='archived' ? ' · Đã lưu trữ' : ''}`;
+}
+
+// ============================================================================
+// ADMIN — CÀI ĐẶT HỆ THỐNG (xã, trường bắt buộc, KPI, phenology, duyệt TK) — v1.5
+// ============================================================================
+async function showAdminSettings(){
+  showView('view-admin-settings');
+  clearError('settingsError');
   loadRequiredFieldsForm();
   loadKpiTargetsForm();
   loadXaListForm();
   $('cfgTmax').value = phenologyConfig.tMax;
   $('cfgThreshold').value = phenologyConfig.threshold;
-
-  viewProjectId = localStorage.getItem('adminViewProjectId') || '';
-  await loadProjectsAdmin();
-  populateViewProjectSelect();
-  renderProjectsList();
-  await loadAllSurveysAndTrees();
-
-  await Promise.all([
-    loadAdminOverview(),
-    loadPendingUsers(),
-    loadEditRequests(),
-    loadLatestForecast(),
-  ]);
-  renderPipeline();
-  renderProjectProgress();
-  loadUserPerformance();
-  renderDeepStats();
+  await Promise.all([loadPendingUsers(), loadEditRequests()]);
 }
 
 // ---- Luồng thông tin từng công đoạn (trực quan hoá cho Admin) ----
@@ -1283,8 +1678,8 @@ async function loadEditRequests(){
       const d = doc.data();
       const div = document.createElement('div');
       div.className = 'tree-item';
-      div.innerHTML = `<div><b>${d.xa || ''} — ${d.chuVuon || ''}</b>
-          <div class="meta">KSV: ${d.createdByName || ''} · Lý do: ${d.editRequestNote || ''}</div></div>
+      div.innerHTML = `<div><b>${escapeHtml(d.xa) || ''} — ${escapeHtml(d.chuVuon) || ''}</b>
+          <div class="meta">KSV: ${escapeHtml(d.createdByName) || ''} · Lý do: ${escapeHtml(d.editRequestNote) || ''}</div></div>
           <div class="row" style="flex:none;gap:6px">
             <button class="btn btn-primary" style="width:auto;padding:8px 12px"
               onclick="approveEditRequest('${doc.id}')">Duyệt</button>
@@ -1338,7 +1733,7 @@ function loadRequiredFieldsForm(){
   });
 }
 async function saveRequiredFields(){
-  clearError('adminError');
+  clearError('settingsError');
   const cfg = { survey: {}, tree: {} };
   document.querySelectorAll('.rf-check').forEach(c => {
     cfg[c.dataset.group][c.dataset.key] = c.checked;
@@ -1351,7 +1746,7 @@ async function saveRequiredFields(){
     };
     applyRequiredFieldMarkers();
   }catch(e){
-    showError('adminError', 'Không lưu được cấu hình trường bắt buộc: ' + e.message);
+    showError('settingsError', 'Không lưu được cấu hình trường bắt buộc: ' + e.message);
   }
 }
 
@@ -1369,8 +1764,8 @@ async function loadPendingUsers(){
       const d = doc.data();
       const div = document.createElement('div');
       div.className = 'tree-item';
-      div.innerHTML = `<div><b>${d.name || '(chưa rõ tên)'}</b>
-          <div class="meta">${d.email || ''}</div></div>
+      div.innerHTML = `<div><b>${escapeHtml(d.name) || '(chưa rõ tên)'}</b>
+          <div class="meta">${escapeHtml(d.email) || ''}</div></div>
           <div class="row" style="flex:none;gap:6px">
             <button class="btn btn-primary" style="width:auto;padding:8px 12px"
               onclick="approveUser('${doc.id}')">Duyệt</button>
@@ -1654,12 +2049,12 @@ function addXaListRow(value=''){
   const box = $('xaListRows');
   const row = document.createElement('div');
   row.className = 'xa-row';
-  row.innerHTML = `<input type="text" class="xa-name" placeholder="Tên xã (VD: Cẩm Sơn)" value="${value}">
+  row.innerHTML = `<input type="text" class="xa-name" placeholder="Tên xã (VD: Cẩm Sơn)" value="${escapeHtml(value)}">
     <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()">Xoá</button>`;
   box.appendChild(row);
 }
 async function saveXaListConfig(){
-  clearError('adminError');
+  clearError('settingsError');
   const inputs = document.querySelectorAll('.xa-name');
   const seen = new Set(), dups = [], list = [];
   inputs.forEach(inp => {
@@ -1671,7 +2066,7 @@ async function saveXaListConfig(){
     list.push(v);
   });
   if (dups.length){
-    return showError('adminError',
+    return showError('settingsError',
       'Có tên xã trùng lặp (chỉ khác hoa/thường, dễ gây sai lệch thống kê như "Cẩm Sơn"/"Cẩm sơn"): ' +
       dups.join(', ') + '. Vui lòng gộp lại thành một tên trước khi lưu.');
   }
@@ -1679,7 +2074,7 @@ async function saveXaListConfig(){
     await db.collection('config').doc('xaList').set({ list }, { merge: true });
     xaListConfig = list;
     populateXaSelect();
-  }catch(e){ showError('adminError', 'Không lưu được danh sách xã: ' + e.message); }
+  }catch(e){ showError('settingsError', 'Không lưu được danh sách xã: ' + e.message); }
 }
 
 // ---- Cấu hình mục tiêu KPI theo xã ----
@@ -1696,13 +2091,13 @@ function addKpiTargetRow(xa='', targetTrees='', deadline=''){
   row.className = 'row kpi-target-row';
   row.style.marginBottom = '8px';
   row.innerHTML = `
-    <input type="text" placeholder="Xã" class="kt-xa" value="${xa}">
-    <input type="number" placeholder="Số cây mục tiêu" class="kt-target" value="${targetTrees}">
-    <input type="date" class="kt-deadline" value="${deadline}">`;
+    <input type="text" placeholder="Xã" class="kt-xa" value="${escapeHtml(xa)}">
+    <input type="number" placeholder="Số cây mục tiêu" class="kt-target" value="${escapeHtml(targetTrees)}">
+    <input type="date" class="kt-deadline" value="${escapeHtml(deadline)}">`;
   box.appendChild(row);
 }
 async function saveKpiTargets(){
-  clearError('adminError');
+  clearError('settingsError');
   const rows = document.querySelectorAll('.kpi-target-row');
   const targets = [];
   rows.forEach(r => {
@@ -1716,13 +2111,13 @@ async function saveKpiTargets(){
   });
   try{
     await db.collection('config').doc('kpiTargets').set({ targets }, { merge: true });
-    loadAdminOverview();
-  }catch(e){ showError('adminError', 'Không lưu được mục tiêu KPI: ' + e.message); }
+    if (viewProjectId) loadAdminOverview();
+  }catch(e){ showError('settingsError', 'Không lưu được mục tiêu KPI: ' + e.message); }
 }
 
 // ---- Cấu hình phenology ----
 async function savePhenologyConfig(){
-  clearError('adminError');
+  clearError('settingsError');
   const tMax = parseFloat($('cfgTmax').value);
   const threshold = parseFloat($('cfgThreshold').value);
   try{
@@ -1730,7 +2125,7 @@ async function savePhenologyConfig(){
     phenologyConfig = { tMax, threshold };
     $('guideThreshold').textContent = threshold;
     $('guideTmax').textContent = tMax;
-  }catch(e){ showError('adminError', 'Không lưu được cấu hình: ' + e.message); }
+  }catch(e){ showError('settingsError', 'Không lưu được cấu hình: ' + e.message); }
 }
 
 // ============================================================================
@@ -1776,11 +2171,12 @@ async function exportRawDataCsv(){
           thang: month,
           soTraiDemDuoc: count,
           quyDoiTraiHa: Math.round(count * matDo * 100) / 100,
+          loaiTruKhoiPhanTich: t.excludedFromAnalysis ? 'Có' : 'Không',
         });
       });
     });
     if (!rows.length) return alert('Chưa có dữ liệu cây nào trong phạm vi đang xem để xuất.');
-    const headers = ['projectId','surveyId','xa','nhomTuoiCay','matDo','maCay','thang','soTraiDemDuoc','quyDoiTraiHa'];
+    const headers = ['projectId','surveyId','xa','nhomTuoiCay','matDo','maCay','thang','soTraiDemDuoc','quyDoiTraiHa','loaiTruKhoiPhanTich'];
     const csv = rowsToCsv(headers, rows);
     const ts = new Date().toISOString().slice(0,10);
     downloadBlob(`du-lieu-tho-phan-tich_${ts}.csv`, csv, 'text/csv;charset=utf-8');
@@ -2035,6 +2431,216 @@ function scopedTrees(){
   if (!viewProjectId) return allTreesCache;
   return allTreesCache.filter(t => (t.projectId || LEGACY_PROJECT_ID) === viewProjectId);
 }
+// Cây dùng để chạy phân tích thống kê — loại trừ những cây Admin đã đánh dấu có sai sót
+// (excludedFromAnalysis=true). Việc loại trừ chỉ ẩn khỏi PHÂN TÍCH, không xoá dữ liệu gốc.
+function analyzableTrees(){
+  return scopedTrees().filter(t => !t.excludedFromAnalysis);
+}
+
+// ============================================================================
+// BẢNG DỮ LIỆU TỪNG CÂY + LOẠI TRỪ KHỎI PHÂN TÍCH (v1.5)
+// ============================================================================
+let histBinFilter = null; // { monthIndex, low, high } — đặt khi click vào 1 cột histogram
+
+function populateTreeFilterXaOptions(){
+  const sel = $('treeFilterXa'); if (!sel) return;
+  const keep = sel.value;
+  const xaSet = new Set(scopedTrees().map(t => t.xa).filter(Boolean));
+  sel.innerHTML = '<option value="">— Tất cả xã —</option>' +
+    [...xaSet].sort().map(xa => `<option value="${escapeHtml(xa)}">${escapeHtml(xa)}</option>`).join('');
+  if ([...xaSet].includes(keep)) sel.value = keep;
+}
+
+function clearHistBinFilter(){
+  histBinFilter = null;
+  const box = $('histFilterChipBox'); if (box) box.innerHTML = '';
+  document.querySelectorAll('.hist-bar-active').forEach(b => b.classList.remove('hist-bar-active'));
+}
+// Gọi từ histogram khi Admin bấm vào 1 cột — lọc Bảng dữ liệu cây theo đúng "tháng thứ N" (vị trí
+// tương đối trong phiếu, giống cách histogram/ANOVA tính) và khoảng giá trị của cột đó.
+function filterTreeTableByHistBin(monthIndex, low, high, rectEl){
+  document.querySelectorAll('.hist-bar-active').forEach(b => b.classList.remove('hist-bar-active'));
+  if (rectEl) rectEl.classList.add('hist-bar-active');
+  histBinFilter = { monthIndex, low, high };
+  switchDataOverviewTab('table');
+  renderTreeTable();
+  const box = $('histFilterChipBox');
+  if (box){
+    box.innerHTML = `<div class="hist-filter-chip">🔗 Đang lọc theo Tháng thứ ${monthIndex+1}
+      (vị trí tương đối): ${low.toFixed(1)}–${high.toFixed(1)} trái/cây
+      <button onclick="clearHistBinFilter();renderTreeTable()">✕ Xoá lọc</button></div>`;
+  }
+  $('treeTableBox').scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function renderTreeTable(){
+  const box = $('treeTableBox'); if (!box) return;
+  const search = ($('treeSearchInput')?.value || '').trim().toLowerCase();
+  const xaFilter = $('treeFilterXa')?.value || '';
+  const statusFilter = $('treeFilterStatus')?.value || '';
+  let trees = scopedTrees();
+  if (search) trees = trees.filter(t => (t.maCay||'').toLowerCase().includes(search));
+  if (xaFilter) trees = trees.filter(t => t.xa === xaFilter);
+  if (statusFilter === 'included') trees = trees.filter(t => !t.excludedFromAnalysis);
+  if (statusFilter === 'excluded') trees = trees.filter(t => t.excludedFromAnalysis);
+  if (histBinFilter){
+    trees = trees.filter(t => {
+      const tags = Object.keys(t.forecast || {}).sort();
+      const tag = tags[histBinFilter.monthIndex];
+      if (tag === undefined) return false;
+      const v = t.forecast[tag] || 0;
+      return v >= histBinFilter.low && v <= histBinFilter.high;
+    });
+  }
+  const total = scopedTrees().length;
+  const excludedTotal = scopedTrees().filter(t => t.excludedFromAnalysis).length;
+  const countEl = $('treeFilterCount');
+  if (countEl) countEl.textContent = `Hiển thị ${trees.length}/${total} cây (đã loại trừ ${excludedTotal})`;
+
+  if (!trees.length){
+    box.innerHTML = '<p class="muted">Không có cây nào khớp điều kiện lọc.</p>';
+    return;
+  }
+  trees.sort((a,b) => (a.xa||'').localeCompare(b.xa||'') || (a.maCay||'').localeCompare(b.maCay||''));
+  let html = '<table><tr><th>Mã cây</th><th>Xã</th><th>Nhóm tuổi cây</th><th>Mật độ</th>' +
+    '<th>Số buồng HH</th><th>Tổng dự kiến (trái)</th><th>Trạng thái</th><th></th></tr>';
+  trees.forEach(t => {
+    const totalForecast = Object.values(t.forecast || {}).reduce((a,b)=>a+b,0);
+    const excluded = !!t.excludedFromAnalysis;
+    html += `<tr class="${excluded ? 'tree-row-excluded' : ''}">
+      <td>${escapeHtml(t.maCay)}</td><td>${escapeHtml(t.xa)}</td><td>${escapeHtml(t.nhomTuoiCay)}</td>
+      <td>${t.matDo ?? '—'}</td><td>${t.tongSoBuongHuuHieu ?? 0}</td><td>${totalForecast}</td>
+      <td>${excluded
+        ? '<span class="badge badge-rejected">Đã loại trừ</span>'
+        : '<span class="badge badge-approved">Đang phân tích</span>'}</td>
+      <td><button class="btn ${excluded?'btn-outline':'btn-danger'} tree-exclude-btn"
+            onclick="toggleTreeExclusion('${t.surveyId}','${t.id}')">${excluded ? '↩ Khôi phục' : '🚫 Loại trừ'}</button></td>
+    </tr>`;
+  });
+  html += '</table>';
+  box.innerHTML = html;
+}
+
+async function toggleTreeExclusion(surveyId, treeId){
+  const tree = allTreesCache.find(t => t.id === treeId && t.surveyId === surveyId);
+  if (!tree) return;
+  const nextVal = !tree.excludedFromAnalysis;
+  try{
+    await db.collection('surveys').doc(surveyId).collection('trees').doc(treeId)
+      .update({ excludedFromAnalysis: nextVal });
+    tree.excludedFromAnalysis = nextVal;
+    renderTreeTable();
+    resetDeepStatsGate();
+  }catch(e){ alert('Không cập nhật được: ' + e.message); }
+}
+
+// ============================================================================
+// CỔNG CHẠY PHÂN TÍCH THỦ CÔNG (v1.5) — Admin rà soát dữ liệu xong mới bấm chạy
+// ============================================================================
+function updateAnalysisGateStats(){
+  const nEl = $('analysisGateN'), exEl = $('analysisGateExcluded');
+  if (!nEl || !exEl) return;
+  const total = scopedTrees().length;
+  const usable = analyzableTrees().length;
+  nEl.textContent = usable;
+  exEl.textContent = total - usable;
+}
+function resetDeepStatsGate(){
+  updateAnalysisGateStats();
+  const gate = $('analysisGate'), results = $('deepStatsResults');
+  if (gate) gate.classList.remove('hidden');
+  if (results) results.classList.add('hidden');
+}
+function runDeepStatsAnalysis(){
+  const gate = $('analysisGate'), results = $('deepStatsResults');
+  if (gate) gate.classList.add('hidden');
+  if (results) results.classList.remove('hidden');
+  renderDeepStats();
+}
+
+// ============================================================================
+// BẢN ĐỒ VỊ TRÍ CÂY KHẢO SÁT (Leaflet + OpenStreetMap) + TIMELINE (v1.5)
+// ============================================================================
+let projectMapInstance = null, projectMapMarkersLayer = null, projectMapSurveysSorted = [];
+let timelinePlaying = false, timelineTimer = null;
+
+function switchDataOverviewTab(tab){
+  document.querySelectorAll('#dataOverviewTabs .subtab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  $('dataOverviewTable').classList.toggle('hidden', tab !== 'table');
+  $('dataOverviewMap').classList.toggle('hidden', tab !== 'map');
+  if (tab === 'map'){
+    initProjectMapIfNeeded();
+    renderProjectMapMarkers();
+    setTimeout(() => { if (projectMapInstance) projectMapInstance.invalidateSize(); }, 60);
+  }
+}
+
+function setupProjectMapData(){
+  if (timelinePlaying){ clearInterval(timelineTimer); timelinePlaying = false; $('btnTimelinePlay').textContent = '▶ Phát'; }
+  const surveys = scopedSurveys().filter(s => s.gps && typeof s.gps.lat === 'number');
+  projectMapSurveysSorted = surveys.slice().sort((a,b) => (a.surveyDateLocal||'').localeCompare(b.surveyDateLocal||''));
+  const slider = $('timelineSlider'); if (!slider) return;
+  slider.max = Math.max(0, projectMapSurveysSorted.length - 1);
+  slider.value = slider.max;
+  updateTimelineLabel();
+  if (!$('dataOverviewMap').classList.contains('hidden')) renderProjectMapMarkers();
+}
+function updateTimelineLabel(){
+  const label = $('timelineDateLabel'); if (!label) return;
+  const idx = +($('timelineSlider')?.value || 0);
+  const s = projectMapSurveysSorted[idx];
+  label.textContent = s ? ('Đến ngày khảo sát: ' + s.surveyDateLocal) : 'Chưa có phiếu nào có GPS';
+}
+function onTimelineSliderChange(){ updateTimelineLabel(); renderProjectMapMarkers(); }
+function initProjectMapIfNeeded(){
+  if (projectMapInstance || typeof L === 'undefined') return;
+  const el = $('projectMap'); if (!el) return;
+  projectMapInstance = L.map(el).setView([10.25, 106.0], 9); // trung tâm mặc định vùng ĐBSCL
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(projectMapInstance);
+  projectMapMarkersLayer = L.layerGroup().addTo(projectMapInstance);
+}
+function renderProjectMapMarkers(){
+  initProjectMapIfNeeded();
+  if (!projectMapInstance || !projectMapMarkersLayer) return;
+  projectMapMarkersLayer.clearLayers();
+  const idx = +($('timelineSlider')?.value || 0);
+  const cutoff = projectMapSurveysSorted[idx] ? projectMapSurveysSorted[idx].surveyDateLocal : null;
+  const visible = cutoff ? projectMapSurveysSorted.filter(s => (s.surveyDateLocal||'') <= cutoff) : projectMapSurveysSorted;
+  const bounds = [];
+  visible.forEach(s => {
+    const treesOfSurvey = scopedTrees().filter(t => t.surveyId === s.id);
+    const totalForecast = treesOfSurvey.reduce((sum,t) => sum + Object.values(t.forecast||{}).reduce((a,b)=>a+b,0), 0);
+    const marker = L.marker([s.gps.lat, s.gps.lng]);
+    marker.bindPopup(
+      `<b>${escapeHtml(s.xa||'')}</b><br>Chủ vườn: ${escapeHtml(s.chuVuon)||'(chưa rõ)'}<br>` +
+      `Ngày khảo sát: ${escapeHtml(s.surveyDateLocal)||'—'}<br>Số cây: ${treesOfSurvey.length}<br>` +
+      `Tổng dự kiến: ${totalForecast} trái<br>Khảo sát viên: ${escapeHtml(s.createdByName)||''}`
+    );
+    marker.addTo(projectMapMarkersLayer);
+    bounds.push([s.gps.lat, s.gps.lng]);
+  });
+  if (bounds.length) projectMapInstance.fitBounds(bounds, { padding: [26,26] });
+}
+function toggleTimelinePlay(){
+  const slider = $('timelineSlider'); if (!slider) return;
+  if (timelinePlaying){
+    clearInterval(timelineTimer); timelinePlaying = false; $('btnTimelinePlay').textContent = '▶ Phát';
+    return;
+  }
+  if (+slider.value >= +slider.max) slider.value = 0;
+  timelinePlaying = true; $('btnTimelinePlay').textContent = '⏸ Dừng';
+  timelineTimer = setInterval(() => {
+    const v = +slider.value;
+    if (v >= +slider.max){
+      clearInterval(timelineTimer); timelinePlaying = false; $('btnTimelinePlay').textContent = '▶ Phát';
+      return;
+    }
+    slider.value = v + 1;
+    onTimelineSliderChange();
+  }, 900);
+}
 
 async function loadProjectsAdmin(){
   try{
@@ -2046,131 +2652,31 @@ async function loadProjectsAdmin(){
     return (a.name||'').localeCompare(b.name||'');
   });
 }
-function populateViewProjectSelect(){
-  const sel = $('fViewProject'); if (!sel) return;
-  const opts = ['<option value="">🗂 Tất cả dự án</option>'];
-  projectsCache.forEach(p => {
-    opts.push(`<option value="${p.id}">${(p.status==='archived'?'📦 ':'🟢 ')}${p.name}</option>`);
-  });
-  sel.innerHTML = opts.join('');
-  sel.value = viewProjectId;
-  updateViewProjectMeta();
-}
-function updateViewProjectMeta(){
-  const meta = $('viewProjectMeta'); if (!meta) return;
-  if (!viewProjectId){
-    meta.textContent = 'Đang xem TỔNG HỢP tất cả dự án (kể cả đã lưu trữ) — riêng mục "Báo cáo phân ' +
-      'tích & dự báo" bên dưới luôn hiển thị kết quả script Python mới nhất, chưa lọc theo dự án.';
-    return;
-  }
-  const pj = projectsCache.find(p => p.id === viewProjectId);
-  if (!pj){ meta.textContent = ''; return; }
-  const scope = pj.xaScope === 'all' ? 'tất cả xã' : (Array.isArray(pj.xaScope) ? pj.xaScope.join(', ') : '—');
-  meta.textContent = `${pj.startDate||'?'} → ${pj.endDate||'?'} · Dự báo ${pj.forecastMonths||7} tháng/cây · ` +
-    `Phạm vi: ${scope}${pj.status==='archived' ? ' · Đã lưu trữ' : ''}`;
-}
-async function onViewProjectChange(){
-  viewProjectId = $('fViewProject').value;
-  localStorage.setItem('adminViewProjectId', viewProjectId);
-  updateViewProjectMeta();
-  await loadAdminOverview();
-  renderPipeline();
-  renderProjectProgress();
-  loadUserPerformance();
-  renderDeepStats();
-}
 
-function renderProjectsList(){
-  const box = $('projectsList'); if (!box) return;
-  if (!projectsCache.length){
-    box.innerHTML = '<p class="muted">Chưa có dự án nào — tạo dự án đầu tiên ở form phía trên.</p>';
-    return;
-  }
-  box.innerHTML = projectsCache.map(p => {
-    const scope = p.xaScope === 'all' ? 'Tất cả xã' : (Array.isArray(p.xaScope) ? p.xaScope.join(', ') : '—');
-    return `<div class="project-card ${p.status==='archived'?'archived':''}">
-      <div class="pj-head">
-        <div>
-          <div class="pj-name">${p.name}
-            <span class="badge ${p.status==='archived'?'badge-archived':'badge-active'}">
-              ${p.status==='archived'?'Đã lưu trữ':'Đang mở'}</span></div>
-          <div class="pj-meta">${p.startDate||'?'} → ${p.endDate||'?'} · Dự báo ${p.forecastMonths||7} tháng/cây · ${scope}</div>
-          ${p.description ? `<div class="pj-meta">${p.description}</div>` : ''}
-        </div>
-        <div class="pj-actions">
-          ${p.id === LEGACY_PROJECT_ID ? '' : (p.status==='archived'
-            ? `<button class="btn btn-outline" onclick="restoreProject('${p.id}')">Khôi phục</button>`
-            : `<button class="btn btn-danger" onclick="archiveProject('${p.id}')">Lưu trữ</button>`)}
-          <button class="btn btn-outline" onclick="toggleUserTargetsForm('${p.id}')">🎯 Chỉ tiêu KPI</button>
-        </div>
-      </div>
-      <div id="pjTargetsBox_${p.id}" class="hidden" style="margin-top:10px"></div>
-    </div>`;
-  }).join('');
-}
-
-function toggleProjectXaScope(){
-  const all = $('pjAllXa').checked;
-  const box = $('pjXaScopeBox');
-  if (all){ box.classList.add('hidden'); box.innerHTML = ''; return; }
-  box.classList.remove('hidden');
-  box.innerHTML = xaListConfig.length
-    ? xaListConfig.map(xa =>
-        `<label style="display:flex;align-items:center;gap:8px;font-size:14px;margin:6px 0;color:#1f2937">
-          <input type="checkbox" class="pj-xa-check" value="${xa}" style="width:18px;height:18px"> ${xa}
-         </label>`).join('')
-    : '<p class="muted">Chưa có xã nào trong danh sách — thêm ở mục "Cấu hình danh sách Xã khảo sát" bên dưới.</p>';
-}
-
-async function createProject(){
-  clearError('adminError');
-  const name = $('pjName').value.trim();
-  if (!name) return showError('adminError', 'Vui lòng nhập Tên dự án.');
-  const allXa = $('pjAllXa').checked;
-  let xaScope = 'all';
-  if (!allXa){
-    xaScope = [...document.querySelectorAll('.pj-xa-check:checked')].map(c => c.value);
-    if (!xaScope.length){
-      return showError('adminError',
-        'Vui lòng chọn ít nhất 1 xã cho phạm vi dự án, hoặc tick "Áp dụng cho tất cả xã".');
-    }
-  }
-  const forecastMonths = parseInt($('pjForecastMonths').value, 10) || 7;
-  try{
-    await db.collection('projects').add({
-      name, description: $('pjDesc').value.trim(),
-      startDate: $('pjStart').value || null, endDate: $('pjEnd').value || null,
-      forecastMonths, xaScope, status: 'active',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      createdBy: currentUser.uid,
-    });
-    $('pjName').value = ''; $('pjDesc').value = ''; $('pjStart').value = ''; $('pjEnd').value = '';
-    $('pjForecastMonths').value = 7; $('pjAllXa').checked = true; toggleProjectXaScope();
-    await loadProjectsAdmin();
-    populateViewProjectSelect();
-    renderProjectsList();
-  }catch(e){ showError('adminError', 'Không tạo được dự án: ' + e.message); }
-}
 async function archiveProject(id){
   if (!confirm('Lưu trữ dự án này? Dự án sẽ ẩn khỏi danh sách "đang mở" cho khảo sát viên chọn — dữ ' +
-    'liệu KHÔNG bị xoá, vẫn xem/xuất báo cáo lại được qua mục "Dự án đang xem" bất cứ lúc nào.')) return;
+    'liệu KHÔNG bị xoá, vẫn xem/xuất báo cáo lại được qua Danh mục dự án bất cứ lúc nào.')) return;
   try{
     await db.collection('projects').doc(id).update({
       status: 'archived', archivedAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
-    await loadProjectsAdmin(); populateViewProjectSelect(); renderProjectsList();
+    await loadProjectsAdmin(); renderProjectsHubList(); renderTrashSection();
+    if (viewProjectId === id) renderProjectDetailHeader();
   }catch(e){ alert('Không lưu trữ được: ' + e.message); }
 }
 async function restoreProject(id){
   try{
-    await db.collection('projects').doc(id).update({ status: 'active', archivedAt: null });
-    await loadProjectsAdmin(); populateViewProjectSelect(); renderProjectsList();
+    await db.collection('projects').doc(id).update({
+      status: 'active', archivedAt: null, trashedAt: null,
+    });
+    await loadProjectsAdmin(); renderProjectsHubList(); renderTrashSection(); renderHubKpiGrid();
+    if (viewProjectId === id) renderProjectDetailHeader();
   }catch(e){ alert('Không khôi phục được: ' + e.message); }
 }
 
-// ---- Chỉ tiêu KPI riêng từng khảo sát viên, theo từng dự án ----
-async function toggleUserTargetsForm(projectId){
-  const box = $('pjTargetsBox_' + projectId); if (!box) return;
+// ---- Chỉ tiêu KPI riêng từng khảo sát viên, theo dự án đang xem (Chi tiết dự án) ----
+async function toggleUserTargetsForm(){
+  const box = $('userTargetsBoxWrap'); if (!box || !viewProjectId) return;
   if (!box.classList.contains('hidden')){ box.classList.add('hidden'); return; }
   box.classList.remove('hidden');
   box.innerHTML = '<p class="muted">Đang tải…</p>';
@@ -2178,7 +2684,7 @@ async function toggleUserTargetsForm(projectId){
     const usersSnap = await db.collection('users').where('status', '==', 'approved').get();
     const fieldUsers = usersSnap.docs.map(d => Object.assign({ uid: d.id }, d.data()))
       .filter(u => u.role === 'field');
-    const targetsSnap = await db.collection('projects').doc(projectId).collection('userTargets').get();
+    const targetsSnap = await db.collection('projects').doc(viewProjectId).collection('userTargets').get();
     const targets = {}; targetsSnap.forEach(d => { targets[d.id] = d.data(); });
     if (!fieldUsers.length){
       box.innerHTML = '<p class="muted">Chưa có khảo sát viên nào được duyệt.</p>';
@@ -2187,16 +2693,16 @@ async function toggleUserTargetsForm(projectId){
     box.innerHTML = fieldUsers.map(u => {
       const t = targets[u.uid] || {};
       return `<div class="target-input-row">
-        <span class="ti-name">${u.name || u.uid}</span>
+        <span class="ti-name">${escapeHtml(u.name) || u.uid}</span>
         <input type="number" class="pjt-surveys" data-uid="${u.uid}" placeholder="Số phiếu" value="${t.targetSurveys||''}">
         <input type="number" class="pjt-trees" data-uid="${u.uid}" placeholder="Số cây" value="${t.targetTrees||''}">
       </div>`;
     }).join('') +
-      `<button class="btn btn-primary" style="margin-top:8px" onclick="saveUserTargets('${projectId}')">Lưu chỉ tiêu</button>`;
+      `<button class="btn btn-primary" style="margin-top:8px" onclick="saveUserTargets()">Lưu chỉ tiêu</button>`;
   }catch(e){ box.innerHTML = '<p class="muted">Không tải được: ' + e.message + '</p>'; }
 }
-async function saveUserTargets(projectId){
-  const box = $('pjTargetsBox_' + projectId); if (!box) return;
+async function saveUserTargets(){
+  const box = $('userTargetsBoxWrap'); if (!box || !viewProjectId) return;
   const rows = box.querySelectorAll('.pjt-surveys');
   try{
     for (const el of rows){
@@ -2204,12 +2710,97 @@ async function saveUserTargets(projectId){
       const targetSurveys = parseInt(el.value, 10) || 0;
       const treesEl = box.querySelector(`.pjt-trees[data-uid="${uid}"]`);
       const targetTrees = parseInt(treesEl.value, 10) || 0;
-      await db.collection('projects').doc(projectId).collection('userTargets').doc(uid)
+      await db.collection('projects').doc(viewProjectId).collection('userTargets').doc(uid)
         .set({ targetSurveys, targetTrees }, { merge: true });
     }
     alert('Đã lưu chỉ tiêu KPI cho dự án.');
-    if (viewProjectId === projectId) loadUserPerformance();
+    loadUserPerformance();
   }catch(e){ alert('Không lưu được chỉ tiêu: ' + e.message); }
+}
+
+// ============================================================================
+// WIZARD TẠO DỰ ÁN MỚI (nhiều bước) — v1.5
+// ============================================================================
+let wizardStep = 1;
+function openProjectWizard(){
+  wizardStep = 1;
+  ['wjName','wjDesc','wjStart','wjEnd'].forEach(id => $(id).value = '');
+  $('wjForecastMonths').value = 7;
+  $('wjAllXa').checked = true;
+  toggleWizardXaScope();
+  clearError('wizardError');
+  showWizardStep(1);
+  $('wizardOverlay').classList.remove('hidden');
+}
+function closeProjectWizard(){ $('wizardOverlay').classList.add('hidden'); }
+function toggleWizardXaScope(){
+  const all = $('wjAllXa').checked;
+  const box = $('wjXaScopeBox');
+  if (all){ box.classList.add('hidden'); box.innerHTML = ''; return; }
+  box.classList.remove('hidden');
+  box.innerHTML = xaListConfig.length
+    ? xaListConfig.map(xa =>
+        `<label style="display:flex;align-items:center;gap:8px;font-size:14px;margin:6px 0;color:#1f2937">
+          <input type="checkbox" class="wj-xa-check" value="${escapeHtml(xa)}" style="width:18px;height:18px"> ${escapeHtml(xa)}
+         </label>`).join('')
+    : '<p class="muted">Chưa có xã nào trong danh sách — thêm ở mục "⚙️ Cài đặt hệ thống" trước.</p>';
+}
+function showWizardStep(n){
+  wizardStep = n;
+  for (let i=1;i<=4;i++){
+    $('wPane'+i).classList.toggle('hidden', i!==n);
+    $('wStepDot'+i).classList.toggle('active', i===n);
+    $('wStepDot'+i).classList.toggle('done', i<n);
+  }
+  $('wBtnBack').classList.toggle('hidden', n===1);
+  $('wBtnNext').classList.toggle('hidden', n===4);
+  $('wBtnCreate').classList.toggle('hidden', n!==4);
+  if (n===4) renderWizardSummary();
+}
+function wizardValidateStep(n){
+  clearError('wizardError');
+  if (n===1 && !$('wjName').value.trim()){
+    showError('wizardError', 'Vui lòng nhập Tên dự án.'); return false;
+  }
+  if (n===3 && !$('wjAllXa').checked){
+    const sel = [...document.querySelectorAll('.wj-xa-check:checked')];
+    if (!sel.length){
+      showError('wizardError', 'Chọn ít nhất 1 xã, hoặc tick "Áp dụng cho tất cả xã".'); return false;
+    }
+  }
+  return true;
+}
+function wizardNext(){ if (!wizardValidateStep(wizardStep)) return; if (wizardStep<4) showWizardStep(wizardStep+1); }
+function wizardBack(){ if (wizardStep>1) showWizardStep(wizardStep-1); }
+function renderWizardSummary(){
+  const allXa = $('wjAllXa').checked;
+  const scope = allXa ? 'Tất cả xã' : ([...document.querySelectorAll('.wj-xa-check:checked')].map(c=>c.value).join(', ') || '(chưa chọn)');
+  $('wizardSummaryBox').innerHTML = `
+    <p style="margin-top:0"><b>Tên dự án:</b> ${escapeHtml($('wjName').value.trim())}</p>
+    ${$('wjDesc').value.trim() ? `<p><b>Mô tả:</b> ${escapeHtml($('wjDesc').value.trim())}</p>` : ''}
+    <p><b>Thời gian:</b> ${escapeHtml($('wjStart').value) || '(chưa đặt)'} → ${escapeHtml($('wjEnd').value) || '(chưa đặt)'}</p>
+    <p><b>Số tháng dự báo/cây:</b> ${$('wjForecastMonths').value || 7}</p>
+    <p style="margin-bottom:0"><b>Phạm vi xã:</b> ${escapeHtml(scope)}</p>`;
+}
+async function wizardCreateProject(){
+  if (!wizardValidateStep(1) || !wizardValidateStep(3)) return;
+  const name = $('wjName').value.trim();
+  const allXa = $('wjAllXa').checked;
+  let xaScope = 'all';
+  if (!allXa) xaScope = [...document.querySelectorAll('.wj-xa-check:checked')].map(c => c.value);
+  const forecastMonths = parseInt($('wjForecastMonths').value, 10) || 7;
+  try{
+    await db.collection('projects').add({
+      name, description: $('wjDesc').value.trim(),
+      startDate: $('wjStart').value || null, endDate: $('wjEnd').value || null,
+      forecastMonths, xaScope, status: 'active',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdBy: currentUser.uid,
+    });
+    closeProjectWizard();
+    await loadProjectsAdmin();
+    renderProjectsHubList(); renderHubKpiGrid();
+  }catch(e){ showError('wizardError', 'Không tạo được dự án: ' + e.message); }
 }
 
 // ---- Tiến độ dự án (thời gian đã qua vs. khối lượng công việc thực hiện) ----
@@ -2492,7 +3083,7 @@ function pairwiseBonferroni(matrix){
   return pairs;
 }
 function buildHistogramSvg(vals, opts){
-  opts = Object.assign({ labels:false, color:'#2C7A4B' }, opts || chartOptions.hist);
+  opts = Object.assign({ labels:false, color:'#2C7A4B', monthIndex:null }, opts || chartOptions.hist);
   const n = vals.length;
   if (n < 2) return '<p class="muted">Không đủ dữ liệu.</p>';
   const min = Math.min(...vals), max = Math.max(...vals);
@@ -2500,26 +3091,49 @@ function buildHistogramSvg(vals, opts){
   const binW = (max-min)/binCount || 1;
   const bins = new Array(binCount).fill(0);
   vals.forEach(v => { let idx = Math.floor((v-min)/binW); if (idx>=binCount) idx=binCount-1; if (idx<0) idx=0; bins[idx]++; });
-  const W=280,H=170,padL=30,padR=8,padT=10,padB=22;
+  const mean = vals.reduce((a,b)=>a+b,0)/n;
+  const sd = Math.sqrt(vals.reduce((s,v)=>s+(v-mean)**2,0)/((n-1)||1));
+
+  // Đường cong mật độ chuẩn (fit theo Mean/SD mẫu) quy đổi sang cùng thang "tần số" với histogram —
+  // giống cách SPSS/Excel vẽ đường "Normal curve" chồng lên biểu đồ (theo hình tham khảo anh gửi).
+  const NPTS = 48;
+  const xLo = min - binW*0.5, xHi = max + binW*0.5;
+  const curveY = [];
+  for (let i=0;i<=NPTS;i++){
+    const x = xLo + (xHi-xLo)*i/NPTS;
+    const y = sd>0 ? (n*binW/(sd*Math.sqrt(2*Math.PI))) * Math.exp(-0.5*((x-mean)/sd)**2) : 0;
+    curveY.push(y);
+  }
+  const W=280,H=188,padL=30,padR=8,padT=10,padB=34;
   const innerW=W-padL-padR, innerH=H-padT-padB;
-  const maxFreq = Math.max(...bins,1);
+  const maxFreq = Math.max(...bins, ...curveY, 1);
   const bw = innerW/binCount;
   let bars = '';
   bins.forEach((f,i) => {
     const h = (f/maxFreq)*innerH, x = padL+i*bw, y = padT+innerH-h;
-    bars += `<rect x="${x+1}" y="${y}" width="${Math.max(0,bw-2)}" height="${h}" fill="${opts.color}" opacity="0.85">
-      <title>${(min+i*binW).toFixed(1)}–${(min+(i+1)*binW).toFixed(1)}: ${f}</title></rect>`;
+    const binLow = min+i*binW, binHigh = min+(i+1)*binW;
+    const clickAttr = opts.monthIndex != null
+      ? ` style="cursor:pointer" onclick="if(window.filterTreeTableByHistBin) filterTreeTableByHistBin(${opts.monthIndex}, ${binLow}, ${binHigh}, this)"`
+      : '';
+    bars += `<rect class="hist-bar" x="${x+1}" y="${y}" width="${Math.max(0,bw-2)}" height="${h}" fill="${opts.color}" opacity="0.85"${clickAttr}>
+      <title>${binLow.toFixed(1)}–${binHigh.toFixed(1)}: ${f} cây</title></rect>`;
     if (opts.labels && f>0) bars += `<text x="${x+bw/2}" y="${y-3}" font-size="9" fill="#4B5563" text-anchor="middle">${f}</text>`;
   });
-  const mean = vals.reduce((a,b)=>a+b,0)/n;
-  const sd = Math.sqrt(vals.reduce((s,v)=>s+(v-mean)**2,0)/((n-1)||1));
+  const curveXStep = innerW/NPTS;
+  const curvePath = smoothPathD(curveY.map((y,i) => [padL+i*curveXStep, padT+innerH-(y/maxFreq)*innerH]));
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
       <line x1="${padL}" y1="${padT+innerH}" x2="${W-padR}" y2="${padT+innerH}" stroke="#D1D5DB"/>
       ${bars}
-      <text x="${padL}" y="${H-6}" font-size="9" fill="#4B5563">${min.toFixed(0)}</text>
-      <text x="${W-padR}" y="${H-6}" font-size="9" fill="#4B5563" text-anchor="end">${max.toFixed(0)}</text>
+      <path d="${curvePath}" fill="none" stroke="#1f2937" stroke-width="1.6"/>
+      <text x="${padL}" y="${H-20}" font-size="9" fill="#4B5563">${min.toFixed(0)}</text>
+      <text x="${W-padR}" y="${H-20}" font-size="9" fill="#4B5563" text-anchor="end">${max.toFixed(0)}</text>
     </svg>
-    <div class="muted" style="font-size:11px;margin-top:2px">Mean=${mean.toFixed(2)} · SD=${sd.toFixed(2)} · N=${n}</div>`;
+    <div class="chart-legend" style="margin:2px 0 0">
+      <span class="lg-item"><span class="lg-swatch" style="background:${opts.color}"></span>Tần suất thực tế</span>
+      <span class="lg-item"><span class="lg-line" style="border-color:#1f2937"></span>Đường cong chuẩn (Normal fit)</span>
+    </div>
+    <div class="muted" style="font-size:11px;margin-top:2px">Mean=${mean.toFixed(2)} · SD=${sd.toFixed(2)} · N=${n}
+      ${opts.monthIndex!=null ? ' · nhấn vào cột để lọc Bảng dữ liệu cây theo khoảng này' : ''}</div>`;
 }
 // Với mỗi cây, sắp xếp forecast theo tag tăng dần rồi lấy dãy giá trị theo VỊ TRÍ TƯƠNG ĐỐI
 // (1,2,3…) trong phiếu — KHÔNG gộp theo tháng lịch tuyệt đối, vì các phiếu có thể được tạo ở
@@ -2534,11 +3148,14 @@ function buildDeepStatsDataset(trees){
   return { matrix, k, n: matrix.length };
 }
 function buildDeepStatsSectionHtml(){
-  const trees = scopedTrees();
+  const allInScope = scopedTrees();
+  const trees = analyzableTrees();
+  const excludedCount = allInScope.length - trees.length;
   const { matrix, k, n } = buildDeepStatsDataset(trees);
   if (n < 3 || k < 2){
-    return '<p class="muted">Cần tối thiểu 3 cây có đủ dữ liệu ≥2 tháng trong phạm vi đang xem để ' +
-      'chạy phân tích thống kê chuyên sâu.</p>';
+    return '<p class="muted">Cần tối thiểu 3 cây có đủ dữ liệu ≥2 tháng trong phạm vi đang xem ' +
+      (excludedCount ? `(sau khi loại trừ ${excludedCount} cây) ` : '') +
+      'để chạy phân tích thống kê chuyên sâu.</p>';
   }
   let descRows = '', histHtml = '<div class="hist-grid">';
   const descs = [];
@@ -2554,7 +3171,8 @@ function buildDeepStatsSectionHtml(){
       <td>${isFinite(d.skewness)?d.skewness.toFixed(2):'—'} (SE ${isFinite(d.seSkewness)?d.seSkewness.toFixed(2):'—'})</td>
       <td>${isFinite(d.kurtosis)?d.kurtosis.toFixed(2):'—'} (SE ${isFinite(d.seKurtosis)?d.seKurtosis.toFixed(2):'—'})</td>
       <td>${jb.p<0.001?'<0,001':jb.p.toFixed(3)} ${jb.p<0.05?'(lệch chuẩn)':'(không bác bỏ chuẩn)'}</td></tr>`;
-    histHtml += `<div class="hist-cell"><h5>Tháng thứ ${j+1} (N=${d.n})</h5>${buildHistogramSvg(col)}</div>`;
+    histHtml += `<div class="hist-cell"><h5>Tháng thứ ${j+1} (N=${d.n})</h5>` +
+      `${buildHistogramSvg(col, Object.assign({}, chartOptions.hist, { monthIndex: j }))}</div>`;
   }
   histHtml += '</div>';
   const anova = repeatedMeasuresAnova(matrix);
@@ -2566,7 +3184,9 @@ function buildDeepStatsSectionHtml(){
   const narrative = `
     <p><b>Cỡ mẫu:</b> N = ${n} cây có đủ dữ liệu liên tục ${k} mốc tháng (đối chiếu theo <b>vị trí
     tương đối trong phiếu</b> — tháng thứ 1, 2, 3… kể từ tháng khảo sát của từng phiếu — KHÔNG gộp
-    theo tháng lịch tuyệt đối, vì các phiếu có thể được tạo ở thời điểm khác nhau).</p>
+    theo tháng lịch tuyệt đối, vì các phiếu có thể được tạo ở thời điểm khác nhau).${excludedCount
+      ? ` Đã loại trừ <b>${excludedCount} cây</b> có sai sót khỏi phân tích này (xem "Bảng dữ liệu cây"
+      ở trên) — có thể khôi phục lại bất cứ lúc nào nếu loại trừ nhầm.` : ''}</p>
     <p><b>Kiểm định chuẩn (Jarque–Bera, thay thế Kolmogorov–Smirnov/Shapiro–Wilk):</b>
     ${descs.filter(d=>d.jb.p<0.05).length}/${k} tháng có p&lt;0,05 (bằng chứng lệch phân phối chuẩn ở
     mức ý nghĩa 5%) — xem chi tiết từng tháng ở bảng trên.</p>

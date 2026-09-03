@@ -1,4 +1,4 @@
-# Hệ thống khảo sát & dự báo năng suất dừa — Bản v1.4
+# Hệ thống khảo sát & dự báo năng suất dừa — Bản v1.5
 
 Web app khảo sát năng suất dừa qua điện thoại, hoạt động offline, đồng bộ
 real-time qua Firebase — theo đúng thiết kế trong "Báo cáo phân tích &
@@ -189,6 +189,82 @@ bộ dữ liệu như trước. Phần lọc theo dự án trong bản v1.4 áp 
 thông tin 6 công đoạn, KPI theo xã/theo khảo sát viên, tiến độ dự án, phân
 tích thống kê chuyên sâu, và xuất dữ liệu thô CSV. Sẽ nâng cấp script Python
 để nhận biết dự án khi có nhu cầu tách báo cáo dự báo riêng theo từng dự án.*
+
+## Bản v1.5 — Tách Admin Hub/Chi tiết dự án/Cài đặt, wizard tạo dự án, thùng rác, bảng dữ liệu cây + loại trừ, bản đồ, histogram có đường mật độ, chạy phân tích thủ công, rà soát bảo mật
+
+Bản này thiết kế lại toàn bộ khu vực Admin theo hướng chuyên nghiệp hơn, tách
+bạch rõ 3 việc trước đây gộp chung 1 trang dài:
+
+1. **Admin Hub (danh mục dự án + tổng quan).** Đăng nhập Admin giờ vào thẳng
+   trang "📁 Danh mục dự án" — chỉ hiện: 4 số tổng quan toàn hệ thống (số dự
+   án đang mở, tổng phiếu, tổng cây, số xã có dữ liệu), thẻ từng dự án (bấm
+   "Xem chi tiết →" để vào báo cáo), và mục "⚙️ Cài đặt hệ thống" riêng. Bảng
+   điều khiển 1 trang dài trước đây được tách thành 3 màn hình logic:
+   - **Hub** — danh mục & tổng quan (trang này).
+   - **Chi tiết 1 dự án** — luồng thông tin, KPI, tiến độ, hiệu suất khảo sát
+     viên, dữ liệu đầu vào, phân tích thống kê, báo cáo & xuất dữ liệu.
+   - **Cài đặt hệ thống** — tài khoản chờ duyệt, yêu cầu chỉnh sửa phiếu,
+     danh sách xã, trường bắt buộc, mục tiêu KPI theo xã, phenology.
+2. **Wizard tạo dự án mới (4 bước).** Bấm "+ Tạo dự án mới" ở Hub mở hộp
+   thoại theo từng bước: Thông tin cơ bản → Thời gian & số tháng dự báo →
+   Phạm vi xã → Xác nhận (xem lại toàn bộ trước khi tạo) — tránh tạo nhầm dự
+   án do điền thiếu/sai giữa các trường liên quan.
+3. **Xoá dự án có thùng rác, tự xoá vĩnh viễn sau 90 ngày.** Mỗi thẻ dự án ở
+   Hub có nút "🗑 Xoá" — chuyển dự án vào Thùng rác (vẫn hiện ở cuối trang
+   Hub, đếm ngược số ngày còn lại), có thể "↩ Khôi phục" hoặc "❌ Xoá vĩnh
+   viễn ngay" bất cứ lúc nào trong 90 ngày; sau 90 ngày hệ thống tự xoá vĩnh
+   viễn khi Admin mở lại trang Hub. **Xoá dự án KHÔNG xoá phiếu/cây đã ghi
+   nhận** — chỉ xoá thông tin dự án, dữ liệu khảo sát luôn được giữ an toàn
+   (giống cách "Dự án 0" lưu trữ dữ liệu trước v1.4).
+4. **Bảng dữ liệu từng cây + loại trừ khỏi phân tích (có thể khôi phục).**
+   Trong Chi tiết dự án, mục "🔎 Dữ liệu đầu vào" có bảng chi tiết đến từng
+   cây (mã cây, xã, nhóm tuổi, mật độ, tổng dự kiến), tìm kiếm theo mã cây,
+   lọc theo xã/trạng thái. Mỗi dòng có nút "🚫 Loại trừ" / "↩ Khôi phục" —
+   cây bị loại trừ vẫn còn nguyên trong Firestore (KHÔNG xoá), chỉ tạm ẩn
+   khỏi bước tính thống kê chuyên sâu — dùng khi phát hiện cây ghi số liệu
+   rõ ràng sai (VD: gõ nhầm số trái) mà chưa kịp sửa tận gốc.
+5. **Bản đồ vị trí khảo sát (Leaflet + OpenStreetMap, miễn phí) + timeline.**
+   Tab "🗺️ Bản đồ vị trí" hiện từng điểm GPS đã ghi nhận (theo phiếu/vườn —
+   GPS hiện lấy 1 lần/vườn, chưa lấy riêng từng cây), bấm vào điểm xem chủ
+   vườn/ngày khảo sát/số cây/tổng dự kiến. Thanh trượt + nút "▶ Phát" cho
+   xem lại các vườn xuất hiện dần theo đúng thứ tự ngày khảo sát thực tế.
+6. **Histogram có đường cong mật độ chuẩn (giống hình SPSS tham khảo) +
+   tương tác click lọc bảng.** Mỗi histogram trong mục phân tích chuyên sâu
+   giờ có thêm đường cong chuẩn (Normal fit theo Mean/SD mẫu) vẽ chồng lên,
+   đúng kiểu trình bày SPSS "Explore". Bấm vào 1 cột sẽ tự lọc "Bảng dữ liệu
+   cây" theo đúng khoảng giá trị + đúng "tháng thứ N" của cột đó, giúp xem
+   ngay những cây nào đang rơi vào khoảng bất thường.
+7. **Chạy phân tích thống kê thủ công (2 bước tách biệt).** Trước đây thống
+   kê chuyên sâu tự tính ngay khi mở trang. Từ bản này, Admin cần: (1) rà
+   soát dữ liệu đầu vào (bảng cây, bản đồ, loại trừ cây sai sót nếu có) →
+   (2) chủ động bấm "▶ Chạy phân tích thống kê" mới ra kết quả — tránh đọc
+   nhầm kết quả tính trên dữ liệu chưa được rà soát. Mỗi khi loại trừ/khôi
+   phục 1 cây, hệ thống tự yêu cầu chạy lại phân tích.
+8. **Rà soát bảo mật.**
+   - **Chống XSS lưu trữ:** toàn bộ dữ liệu tự do người dùng nhập (tên, ghi
+     chú yêu cầu sửa phiếu, mã cây, tên xã, mô tả dự án…) nay được `escapeHtml()`
+     trước khi hiển thị lại — chặn khả năng 1 tài khoản khảo sát viên chèn mã
+     độc vào ô nhập liệu để chạy trong phiên trình duyệt của Admin.
+   - **Firestore Rules:** đã rà soát lại — trạng thái "trashed" (thùng rác) và
+     trường `excludedFromAnalysis` (loại trừ cây) đều nằm trong phạm vi
+     `allow write: if isAdmin()` đã có sẵn từ trước, không cần rule mới; xem
+     ghi chú chi tiết ngay trong file `firestore.rules`.
+   - **Giới hạn cần biết:** Rules chỉ bảo vệ được **dữ liệu** (ai đọc/ghi được
+     gì) — KHÔNG thể "giấu" mã nguồn HTML/CSS/JS phía trình duyệt (đây là giới
+     hạn chung của mọi trang web tĩnh, không phải lỗ hổng riêng của app này).
+     Nếu lo ngại đối thủ copy giao diện, cách xử lý thực tế là thương hiệu/
+     bản quyền, không phải kỹ thuật che mã nguồn. Khuyến nghị bổ sung (làm
+     trên Firebase/Google Cloud Console, xem chi tiết trong `firestore.rules`):
+     giới hạn API key theo domain (HTTP referrers), cân nhắc bật Firebase App
+     Check, và định kỳ rà soát danh sách tài khoản chờ duyệt/đã duyệt.
+
+*Giới hạn đã biết của bản v1.5: việc tự xoá thùng rác sau 90 ngày chỉ chạy
+khi Admin MỞ trang Hub (app không có server/cron riêng để tự chạy lúc không
+ai mở app) — nếu 90 ngày trôi qua mà không ai đăng nhập Admin, dự án vẫn nằm
+im trong thùng rác đến lần đăng nhập kế tiếp, không tự "biến mất" đúng giờ.
+Bản đồ hiện đại diện theo VƯỜN (phiếu khảo sát), chưa có GPS riêng từng cây —
+nếu cần độ chính xác đến từng cây, cần bổ sung bước lấy GPS ở màn "Thêm cây"
+(hiện chưa có, vì tăng thời gian nhập liệu ngoài đồng).*
 
 ## Bước 4 — Đưa web lên GitHub Pages
 

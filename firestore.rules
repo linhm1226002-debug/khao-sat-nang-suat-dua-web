@@ -32,6 +32,30 @@ rules_version = '2';
 // ngoài cùng trước "service cloud.firestore {" — vì dùng biến $(database),
 // biến này chỉ tồn tại (in scope) bên trong khối match đó. Đặt sai vị trí
 // sẽ báo lỗi khi Publish: "Invalid variable name: database".
+//
+// v1.5 — RÀ SOÁT BẢO MẬT (Hub/Thùng rác/Loại trừ cây/Bản đồ):
+//  - Trạng thái dự án 'trashed' (Thùng rác) và trường tree.excludedFromAnalysis
+//    (loại trừ cây khỏi phân tích) đều được ghi qua `projects/{id}` và
+//    `surveys/{id}/trees/{id}` — CẢ HAI đã được `allow write/update: if isAdmin()`
+//    bên dưới bảo vệ sẵn (chỉ Admin mới xoá/khôi phục dự án, chỉ Admin mới bật/tắt
+//    loại trừ cây), KHÔNG cần rule riêng.
+//  - Rules này CHỈ bảo vệ được DỮ LIỆU (ai đọc/ghi được gì) — KHÔNG thể "giấu" mã
+//    nguồn phía trình duyệt (View Source luôn xem được HTML/CSS/JS của mọi trang
+//    web tĩnh, kể cả của Google/Facebook — đây là giới hạn kỹ thuật chung của web,
+//    không phải lỗ hổng riêng của app này). Rủi ro copy giao diện KHÔNG đồng nghĩa
+//    với rủi ro mất dữ liệu — hai việc tách biệt.
+//  - Bổ sung khuyến nghị (làm trên Firebase Console, không sửa được bằng Rules):
+//    (1) Google Cloud Console → APIs & Services → Credentials → giới hạn API key
+//        Firebase theo "HTTP referrers" = đúng domain GitHub Pages đang triển khai,
+//        để key không dùng được nếu bị sao chép sang site khác.
+//    (2) Cân nhắc bật Firebase App Check (reCAPTCHA v3) để chặn bot/script gọi
+//        thẳng vào Firestore API ngoài app thật.
+//    (3) Định kỳ xem "Danh sách chờ duyệt" — chỉ duyệt tài khoản khảo sát viên
+//        đúng là người trong công ty/dự án.
+//  - Phía client (index.html) đã bổ sung escapeHtml() cho toàn bộ dữ liệu tự do
+//    người dùng nhập (tên, ghi chú yêu cầu sửa phiếu, mã cây…) trước khi hiển thị,
+//    để chặn XSS lưu trữ (một khảo sát viên chèn <script> vào ô nhập liệu rồi chạy
+//    trong phiên của Admin khi Admin mở trang duyệt).
 // ============================================================================
 
 service cloud.firestore {
@@ -99,6 +123,18 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Dự án khảo sát (v1.4): admin tạo/lưu trữ, khảo sát viên approved chỉ cần ĐỌC để chọn
+    // dự án đang nhập liệu. Chỉ tiêu KPI từng khảo sát viên nằm trong subcollection userTargets.
+    match /projects/{projectId} {
+      allow read: if isApproved();
+      allow write: if isAdmin();
+
+      match /userTargets/{uid} {
+        allow read: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+        allow write: if isAdmin();
+      }
+    }
+
     // Kết quả tổng hợp thống kê (do tiến trình Python ghi vào, mục 6.5).
     match /results/{docId} {
       allow read: if isAdmin();
@@ -132,6 +168,15 @@ service cloud.firestore {
            withinEditWindow(resource.data));
         allow delete: if isAdmin();
       }
+    }
+
+    // Rule riêng cho truy vấn collectionGroup('trees') (Bảng điều khiển Admin
+    // dùng để đếm tổng số cây) — Firestore CHỈ áp dụng rule lồng nhau ở trên
+    // cho truy cập theo đường dẫn con trực tiếp (surveys/{id}/trees/{id}),
+    // không tự áp dụng cho collectionGroup query; cần khai báo riêng với
+    // {path=**} để Admin đọc được qua toàn bộ nhóm collection "trees".
+    match /{path=**}/trees/{treeId} {
+      allow read: if isAdmin();
     }
   }
 }
