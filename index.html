@@ -504,18 +504,21 @@
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-outline" style="width:auto;padding:9px 14px" onclick="showAdminSettings()">⚙️ Cài đặt hệ thống</button>
         <button class="btn btn-outline" style="width:auto;padding:9px 14px" onclick="showAdminHub()">↻ Làm mới</button>
-        <button class="btn btn-primary" style="width:auto;padding:9px 14px" onclick="openProjectWizard()">+ Tạo dự án mới</button>
+        <button class="btn btn-primary admin-only-hub" style="width:auto;padding:9px 14px" onclick="openProjectWizard()">+ Tạo dự án mới</button>
       </div>
     </div>
 
     <p class="muted" style="margin-top:12px">Tổng quan toàn hệ thống (tất cả dự án):</p>
     <div class="hub-kpi-grid" id="hubKpiGrid"></div>
 
-    <p class="muted">
+    <p class="muted admin-only-hub">
       <span class="badge" id="hubPendingBadge">0</span> tài khoản chờ duyệt ·
       <span class="badge" id="hubEditReqBadge">0</span> yêu cầu chỉnh sửa phiếu chờ xử lý —
       xem ở mục <a href="#" onclick="showAdminSettings();return false" style="color:var(--green-700);font-weight:700">⚙️ Cài đặt hệ thống</a>.
     </p>
+    <p class="muted hidden" id="hubManagerNotice">👁️ Bạn đang xem với <b>quyền Quản lý</b> —
+      xem chi tiết dự án, tải báo cáo, thiết lập KPI. Không tạo/lưu trữ/xoá dự án, không sửa dữ liệu
+      khảo sát, không loại trừ cây khỏi phân tích.</p>
 
     <h2 style="margin-top:22px">Các dự án đang mở / đã lưu trữ</h2>
     <div class="hub-projects-grid" id="hubProjectsList"><p class="muted">Đang tải…</p></div>
@@ -607,6 +610,31 @@
           <button class="btn btn-outline" style="width:auto;padding:6px 10px;margin-left:auto" onclick="resetDeepStatsGate()">↻ Chạy lại phân tích</button>
         </div>
         <div id="deepStatsBox"></div>
+      </div>
+    </div>
+
+    <h2 style="margin-top:28px">🔬 Phân tích thống kê chuyên sâu theo tháng (cấp xã)</h2>
+    <div class="chart-card" id="deepStatsXaCard">
+      <div class="chart-sub" style="margin-bottom:10px">So sánh khác biệt năng suất (trái/ha) giữa các
+        <b>Xã</b>, tính theo từng <b>tháng dự báo</b> — đơn vị quan sát là <b>PHIẾU/VƯỜN</b> (không phải
+        từng cây riêng lẻ), vì cây "lồng" trong vườn (dữ liệu cụm) — cùng nguyên tắc với bootstrap 2 cấp
+        ở phần dự báo bên dưới. Tính trực tiếp trên dữ liệu chưa loại trừ, độc lập với kết quả script Python.</div>
+      <div id="analysisGateXa" class="analysis-gate">
+        <p class="muted">Sẵn sàng phân tích trên <b id="analysisGateXaN">0</b> phiếu/vườn thuộc
+          <b id="analysisGateXaK">0</b> xã (đã loại trừ cây có sai sót, nếu có). Rà soát bảng dữ liệu và
+          bản đồ ở trên trước khi chạy.</p>
+        <button class="btn btn-primary" onclick="runDeepStatsXaAnalysis()">▶ Chạy phân tích thống kê theo Xã</button>
+      </div>
+      <div id="deepStatsXaResults" class="hidden">
+        <div class="chart-toolbar">
+          <label>Tháng dự báo
+            <select id="xaStatsMonthSelect" onchange="onXaStatsMonthChange()"></select>
+          </label>
+          <label><input type="checkbox" id="histXaOpt_labels" onchange="renderDeepStatsXa()"> Hiện số liệu trên histogram</label>
+          <label>Màu <input type="color" id="histXaOpt_color" value="#2a78d6" onchange="renderDeepStatsXa()"></label>
+          <button class="btn btn-outline" style="width:auto;padding:6px 10px;margin-left:auto" onclick="resetDeepStatsXaGate()">↻ Chạy lại phân tích</button>
+        </div>
+        <div id="deepStatsXaBox"></div>
       </div>
     </div>
 
@@ -736,46 +764,64 @@
         <h2 style="margin:2px 0 0">⚙️ Cài đặt hệ thống</h2>
       </div>
     </div>
+    <p class="muted hidden" id="settingsManagerNotice">👁️ Bạn đang xem với <b>quyền Quản lý</b> — chỉ thấy
+      mục thiết lập KPI &amp; tính cỡ mẫu bên dưới. Duyệt tài khoản, cấu hình xã/trường bắt buộc/phenology
+      chỉ Admin mới thao tác được.</p>
 
-    <h2 style="margin-top:20px">Tài khoản chờ duyệt <span class="badge" id="pendingCountBadge">0</span></h2>
-    <div id="pendingUsersList"><p class="muted">Đang tải…</p></div>
+    <div class="admin-only-settings">
+      <h2 style="margin-top:20px">Tài khoản chờ duyệt <span class="badge" id="pendingCountBadge">0</span></h2>
+      <div id="pendingUsersList"><p class="muted">Đang tải…</p></div>
 
-    <h2 style="margin-top:20px">Yêu cầu chỉnh sửa phiếu <span class="badge" id="editReqCountBadge">0</span></h2>
-    <div id="editRequestsList"><p class="muted">Đang tải…</p></div>
+      <h2 style="margin-top:20px">Yêu cầu chỉnh sửa phiếu <span class="badge" id="editReqCountBadge">0</span></h2>
+      <div id="editRequestsList"><p class="muted">Đang tải…</p></div>
 
-    <h2 style="margin-top:26px">Cấu hình danh sách Xã khảo sát</h2>
-    <p class="muted">Danh sách xã dưới đây sẽ hiện thành dropdown bắt buộc chọn khi khảo sát viên tạo
-      phiếu — giúp tránh gõ sai chính tả/trùng lặp tên xã (ví dụ "Cẩm Sơn" vs "Cẩm sơn").</p>
-    <div id="xaListRows"></div>
-    <button class="btn btn-outline" onclick="addXaListRow()">+ Thêm xã</button>
-    <button class="btn btn-primary" onclick="saveXaListConfig()">Lưu danh sách xã</button>
+      <h2 style="margin-top:20px">Quyền Quản lý — cấp thêm cho tài khoản khảo sát viên</h2>
+      <p class="muted">Cấp thêm (không đổi vai trò) cho 1 tài khoản đã duyệt: xem chi tiết dự án, tải báo
+        cáo, thiết lập KPI, xem (không loại trừ) dữ liệu đầu vào. Tài khoản vẫn nhập phiếu bình thường như
+        trước — đây chỉ là quyền cộng thêm, không thay thế.</p>
+      <div id="managerAccessList"><p class="muted">Đang tải…</p></div>
 
-    <h2 style="margin-top:22px">Cấu hình trường bắt buộc</h2>
-    <p class="muted">Chọn trường nào bắt buộc nhập khi khảo sát viên tạo phiếu / thêm cây.
-      Riêng "Xã" luôn bắt buộc (dropdown) nên không có trong danh sách này. Nên luôn để
-      "Vị trí GPS" bắt buộc để dữ liệu dùng được cho thống kê & bản đồ.</p>
-    <div id="requiredFieldsBox"></div>
-    <button class="btn btn-primary" onclick="saveRequiredFields()">Lưu cấu hình trường bắt buộc</button>
+      <h2 style="margin-top:26px">Cấu hình danh sách Xã khảo sát</h2>
+      <p class="muted">Danh sách xã dưới đây sẽ hiện thành dropdown bắt buộc chọn khi khảo sát viên tạo
+        phiếu — giúp tránh gõ sai chính tả/trùng lặp tên xã (ví dụ "Cẩm Sơn" vs "Cẩm sơn").</p>
+      <div id="xaListRows"></div>
+      <button class="btn btn-outline" onclick="addXaListRow()">+ Thêm xã</button>
+      <button class="btn btn-primary" onclick="saveXaListConfig()">Lưu danh sách xã</button>
+
+      <h2 style="margin-top:22px">Cấu hình trường bắt buộc</h2>
+      <p class="muted">Chọn trường nào bắt buộc nhập khi khảo sát viên tạo phiếu / thêm cây.
+        Riêng "Xã" luôn bắt buộc (dropdown) nên không có trong danh sách này. Nên luôn để
+        "Vị trí GPS" bắt buộc để dữ liệu dùng được cho thống kê & bản đồ.</p>
+      <div id="requiredFieldsBox"></div>
+      <button class="btn btn-primary" onclick="saveRequiredFields()">Lưu cấu hình trường bắt buộc</button>
+    </div>
 
     <h2 style="margin-top:20px">Cấu hình mục tiêu KPI theo xã</h2>
     <div id="kpiTargetRows"></div>
     <button class="btn btn-outline" onclick="addKpiTargetRow()">+ Thêm xã</button>
     <button class="btn btn-primary" onclick="saveKpiTargets()">Lưu mục tiêu KPI</button>
 
-    <h2 style="margin-top:20px">Cấu hình phenology</h2>
-    <label>Tuổi thu hoạch trung bình T_max (tháng)</label>
-    <input type="number" step="0.1" id="cfgTmax" />
-    <label>Ngưỡng buồng hữu hiệu (tháng)</label>
-    <input type="number" step="0.1" id="cfgThreshold" />
-    <button class="btn btn-primary" style="margin-top:10px" onclick="savePhenologyConfig()">Lưu cấu hình phenology</button>
+    <h2 style="margin-top:26px">🧮 Tính cỡ mẫu khảo sát khuyến nghị (làm cơ sở thiết lập KPI)</h2>
+    <div class="chart-card" id="sampleSizeCard">
+      <div id="sampleSizeBox"></div>
+    </div>
 
-    <h2 style="margin-top:26px">📜 Nhật ký thay đổi tham số mô hình dự báo</h2>
-    <p class="muted">Mọi lần đổi T_max/ngưỡng buồng hữu hiệu ở trên đều được ghi lại tại đây — vì 2 tham số
-      này được tính sẵn vào kết quả dự báo của từng cây NGAY LÚC khảo sát viên tạo phiếu, đổi sau đó
-      <b>không</b> tự cập nhật lại các phiếu đã tạo trước. Dùng nhật ký này để đối chiếu khi thấy cách tính
-      khác nhau giữa các giai đoạn/dự án. Sau này khi có hệ số mô hình GLMM (mục 5.2 báo cáo phân tích)
-      cũng sẽ ghi vào cùng một chỗ như thế này.</p>
-    <div id="modelParamHistoryBox"><p class="muted">Đang tải…</p></div>
+    <div class="admin-only-settings">
+      <h2 style="margin-top:20px">Cấu hình phenology</h2>
+      <label>Tuổi thu hoạch trung bình T_max (tháng)</label>
+      <input type="number" step="0.1" id="cfgTmax" />
+      <label>Ngưỡng buồng hữu hiệu (tháng)</label>
+      <input type="number" step="0.1" id="cfgThreshold" />
+      <button class="btn btn-primary" style="margin-top:10px" onclick="savePhenologyConfig()">Lưu cấu hình phenology</button>
+
+      <h2 style="margin-top:26px">📜 Nhật ký thay đổi tham số mô hình dự báo</h2>
+      <p class="muted">Mọi lần đổi T_max/ngưỡng buồng hữu hiệu ở trên đều được ghi lại tại đây — vì 2 tham số
+        này được tính sẵn vào kết quả dự báo của từng cây NGAY LÚC khảo sát viên tạo phiếu, đổi sau đó
+        <b>không</b> tự cập nhật lại các phiếu đã tạo trước. Dùng nhật ký này để đối chiếu khi thấy cách tính
+        khác nhau giữa các giai đoạn/dự án. Sau này khi có hệ số mô hình GLMM (mục 5.2 báo cáo phân tích)
+        cũng sẽ ghi vào cùng một chỗ như thế này.</p>
+      <div id="modelParamHistoryBox"><p class="muted">Đang tải…</p></div>
+    </div>
 
     <div class="error hidden" id="settingsError"></div>
   </section>
@@ -871,6 +917,7 @@ let chartOptions = {
   line: { labels:false, smooth:false, color:'#1F5C3B', labelPos:'above' },
   bar:  { labels:false, colors: Object.assign({}, { 'Tơ':'#2a78d6', 'Ổn định NS':'#eb6834', 'Già cỗi/thanh lý':'#1baf7a' }) },
   hist: { labels:false, color:'#2C7A4B' },
+  histXa: { labels:false, color:'#2a78d6' },
 };
 
 // Trường nào có thể cấu hình bắt buộc/không bắt buộc (Admin chỉnh trong Bảng điều khiển).
@@ -897,6 +944,14 @@ let requiredFieldsConfig = JSON.parse(JSON.stringify(DEFAULT_REQUIRED_FIELDS));
 // TIỆN ÍCH
 // ============================================================================
 function $(id){ return document.getElementById(id); }
+// v1.7 — Quyền "Quản lý": cấp THÊM (không thay role) cho 1 tài khoản đã duyệt — xem chi
+// tiết dự án, tải báo cáo, thiết lập KPI, xem (không loại trừ) dữ liệu đầu vào. Admin luôn
+// có đủ mọi quyền này nên isAdminOrManager() dùng để gộp điều kiện hiển thị khu vực Admin;
+// isManagerOnly() dùng riêng để ẨN các thao tác chỉ Admin mới được làm bên trong khu vực đó.
+function isAdminUser(){ return !!(currentUserDoc && currentUserDoc.role === 'admin'); }
+function isManagerUser(){ return !!(currentUserDoc && currentUserDoc.managerAccess); }
+function isAdminOrManager(){ return isAdminUser() || isManagerUser(); }
+function isManagerOnly(){ return !isAdminUser() && isManagerUser(); }
 const ADMIN_WIDE_VIEWS = ['view-admin-hub', 'view-admin-project', 'view-admin-settings'];
 function showView(id){
   document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
@@ -1023,13 +1078,16 @@ auth.onAuthStateChanged(async user => {
   }
 
   $('headerSub').textContent = currentUserDoc.name + ' · ' +
-    (currentUserDoc.role === 'admin' ? 'Admin' : 'Khảo sát viên');
+    (isAdminUser() ? 'Admin' : (isManagerUser() ? 'Khảo sát viên · Quản lý' : 'Khảo sát viên'));
   $('tabbar').classList.remove('hidden');
 
   await loadGlobalConfig();
 
-  if (currentUserDoc.role === 'admin'){
+  if (isAdminOrManager()){
     $('tabAdmin').classList.remove('hidden');
+    $('tabAdmin').textContent = isAdminUser() ? '📊 Admin' : '📊 Quản lý';
+  }
+  if (isAdminUser()){
     showAdminHub();
   } else {
     showHome();
@@ -1510,16 +1568,22 @@ async function showAdminHub(){
   showView('view-admin-hub');
   clearError('hubError');
   $('hubProjectsList').innerHTML = '<p class="muted">Đang tải…</p>';
+  // Quyền Quản lý (không phải Admin thật) chỉ được XEM dự án — ẩn hẳn khối duyệt tài
+  // khoản/yêu cầu chỉnh sửa & nút tạo dự án (Rules cũng chặn ghi các mục này ở server).
+  document.querySelectorAll('.admin-only-hub').forEach(el => el.classList.toggle('hidden', isManagerOnly()));
+  $('hubManagerNotice').classList.toggle('hidden', !isManagerOnly());
   try{
     await loadProjectsAdmin();
-    await checkAndPurgeExpiredTrash();
     await loadAllSurveysAndTrees();
-    await Promise.all([loadPendingUsers(), loadEditRequests()]);
-    $('hubPendingBadge').textContent = pendingUsersCount;
-    $('hubEditReqBadge').textContent = pendingEditReqCount;
+    if (isAdminUser()){
+      await checkAndPurgeExpiredTrash();
+      await Promise.all([loadPendingUsers(), loadEditRequests()]);
+      $('hubPendingBadge').textContent = pendingUsersCount;
+      $('hubEditReqBadge').textContent = pendingEditReqCount;
+    }
     renderHubKpiGrid();
     renderProjectsHubList();
-    renderTrashSection();
+    if (isAdminUser()) renderTrashSection();
   }catch(e){
     showError('hubError', 'Không tải được danh mục dự án: ' + e.message);
   }
@@ -1562,10 +1626,10 @@ function renderProjectsHubList(){
       </div>
       <div class="pj-actions">
         <button class="btn btn-primary" onclick="openProjectDetail('${p.id}')">Xem chi tiết →</button>
-        ${isLegacy ? '' : (p.status==='archived'
+        ${(isLegacy || isManagerOnly()) ? '' : (p.status==='archived'
           ? `<button class="btn btn-outline" onclick="restoreProject('${p.id}')">Khôi phục</button>`
           : `<button class="btn btn-outline" onclick="archiveProject('${p.id}')">Lưu trữ</button>`)}
-        ${isLegacy ? '' : `<button class="btn btn-danger" onclick="trashProject('${p.id}')">🗑 Xoá</button>`}
+        ${(isLegacy || isManagerOnly()) ? '' : `<button class="btn btn-danger" onclick="trashProject('${p.id}')">🗑 Xoá</button>`}
       </div>
     </div>`;
   }).join('');
@@ -1644,9 +1708,12 @@ async function openProjectDetail(id){
   clearError('adminError');
   renderProjectDetailHeader();
   resetDeepStatsGate();
+  resetDeepStatsXaGate();
   $('userTargetsBoxWrap').classList.add('hidden'); $('userTargetsBoxWrap').innerHTML = '';
   clearHistBinFilter();
   await loadAllSurveysAndTrees();
+  updateAnalysisGateStats();
+  updateAnalysisGateXaStats();
   await Promise.all([loadAdminOverview(), loadLatestForecast()]);
   renderPipeline();
   renderProjectDetailHeader();
@@ -1679,13 +1746,18 @@ function renderProjectDetailHeader(){
 async function showAdminSettings(){
   showView('view-admin-settings');
   clearError('settingsError');
-  loadRequiredFieldsForm();
+  document.querySelectorAll('.admin-only-settings').forEach(el => el.classList.toggle('hidden', isManagerOnly()));
+  $('settingsManagerNotice').classList.toggle('hidden', !isManagerOnly());
   loadKpiTargetsForm();
-  loadXaListForm();
-  $('cfgTmax').value = phenologyConfig.tMax;
-  $('cfgThreshold').value = phenologyConfig.threshold;
-  loadModelParamHistoryForm();
-  await Promise.all([loadPendingUsers(), loadEditRequests()]);
+  renderSampleSizeCalculator();
+  if (isAdminUser()){
+    loadRequiredFieldsForm();
+    loadXaListForm();
+    $('cfgTmax').value = phenologyConfig.tMax;
+    $('cfgThreshold').value = phenologyConfig.threshold;
+    loadModelParamHistoryForm();
+    await Promise.all([loadPendingUsers(), loadEditRequests(), loadManagerAccessList()]);
+  }
 }
 
 // ---- Luồng thông tin từng công đoạn (trực quan hoá cho Admin) ----
@@ -1854,6 +1926,40 @@ async function rejectUser(uid){
   }catch(e){ alert('Không từ chối được: ' + e.message); }
 }
 
+// ---- v1.7: Quyền Quản lý (managerAccess) — cấp THÊM cho tài khoản field đã duyệt,
+// không đổi role, không ảnh hưởng việc nhập phiếu bình thường của họ. ----
+async function loadManagerAccessList(){
+  const box = $('managerAccessList'); if (!box) return;
+  box.innerHTML = '<p class="muted">Đang tải…</p>';
+  try{
+    const q = await db.collection('users').where('status', '==', 'approved').get();
+    const list = q.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.role !== 'admin');
+    if (!list.length){ box.innerHTML = '<p class="muted">Chưa có tài khoản khảo sát viên nào đã duyệt.</p>'; return; }
+    list.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+    box.innerHTML = list.map(u => {
+      const on = !!u.managerAccess;
+      return `<div class="tree-item">
+        <div><b>${escapeHtml(u.name) || '(chưa rõ tên)'}</b>
+          <div class="meta">${escapeHtml(u.email) || ''} · ${on
+            ? '<span class="badge badge-approved">Đang có quyền Quản lý</span>'
+            : '<span class="muted">Khảo sát viên</span>'}</div></div>
+        <div class="row" style="flex:none;gap:6px">
+          <button class="btn ${on ? 'btn-outline' : 'btn-primary'}" style="width:auto;padding:8px 12px"
+            onclick="toggleManagerAccess('${u.id}', ${!on})">${on ? 'Thu hồi quyền Quản lý' : 'Cấp quyền Quản lý'}</button>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    box.innerHTML = '<p class="muted">Không tải được danh sách: ' + e.message + '</p>';
+  }
+}
+async function toggleManagerAccess(uid, next){
+  try{
+    await db.collection('users').doc(uid).update({ managerAccess: next });
+    loadManagerAccessList();
+  }catch(e){ alert('Không cập nhật được: ' + e.message); }
+}
+
 async function loadAdminOverview(){
   const grid = $('adminKpiGrid');
   const byXaBox = $('adminByXa');
@@ -1942,11 +2048,19 @@ async function loadLatestForecast(){
   renderForecastBarChart(d);
 }
 
+// v1.7 — bổ sung 2 cột "chỉ số cơ sở" (mật độ TB, năng suất TB trái/cây/tháng — trung bình có
+// trọng số diện tích theo tầng, cùng cách gộp với yEstimate ở bước ④) để thấy được TỪ ĐÂU ra
+// con số dự báo trái/ha, không chỉ thấy mỗi kết quả cuối. Kết quả tính TRƯỚC v1.7 (chưa chạy lại
+// script) sẽ chưa có 2 trường này — hiện "—" thay vì báo lỗi, giống cách app đã xử lý ciLow/ciHigh
+// còn thiếu. Mỗi hàng có thể mở rộng xem breakdown theo từng tầng (Xã × Nhóm tuổi cây).
 function renderForecastTable(d){
   const rows = d.forecastByMonth || [];
   if (!rows.length){ $('forecastTable').innerHTML = '<p class="muted">Không có dữ liệu.</p>'; return; }
   const maxVal = Math.max(...rows.map(r => r.value ?? -Infinity));
-  let html = '<table><tr><th>Tháng</th><th>Dự báo (trái/ha)</th><th>Khoảng tin cậy 95%</th><th>Xu hướng</th></tr>';
+  const hasBaseMetrics = rows.some(r => r.matDoTb != null || r.soTraiTbCayThang != null);
+  let html = '<table><tr><th>Tháng</th>' +
+    (hasBaseMetrics ? '<th>Mật độ TB (cây/ha)</th><th>NS TB (trái/cây/tháng)</th>' : '') +
+    '<th>Dự báo (trái/ha)</th><th>Khoảng tin cậy 95%</th><th>Xu hướng</th><th></th></tr>';
   rows.forEach((row, i) => {
     const prev = i > 0 ? rows[i-1].value : null;
     let trend = '<span class="muted">—</span>';
@@ -1956,13 +2070,42 @@ function renderForecastTable(d){
       else trend = '<span class="muted">≈ đi ngang</span>';
     }
     const isMax = row.value === maxVal;
+    const detailRow = (d.detail || []).find(r => r.month === row.month);
+    const hasStrata = detailRow && detailRow.strata && detailRow.strata.length;
     html += `<tr><td>${tagToLabel(row.month)}</td>
+      ${hasBaseMetrics ? `<td>${row.matDoTb != null ? Math.round(row.matDoTb) : '—'}</td>
+      <td>${row.soTraiTbCayThang != null ? row.soTraiTbCayThang.toFixed(1) : '—'}</td>` : ''}
       <td class="${isMax ? 'cell-max' : ''}">${Math.round(row.value ?? 0)}${isMax ? ' 🏆' : ''}</td>
       <td>${row.ciLow != null ? Math.round(row.ciLow) : '—'} – ${row.ciHigh != null ? Math.round(row.ciHigh) : '—'}</td>
-      <td>${trend}</td></tr>`;
+      <td>${trend}</td>
+      <td>${hasStrata ? `<button class="btn btn-outline" style="width:auto;padding:4px 8px;font-size:11px"
+        onclick="toggleForecastMonthDetail('${row.month}')">Chi tiết theo Xã ▾</button>` : ''}</td></tr>
+      <tr class="hidden" id="forecastMonthDetail_${row.month}"><td colspan="${hasBaseMetrics?7:5}" style="padding:0">
+        ${hasStrata ? buildForecastStratumDetailHtml(detailRow.strata) : ''}
+      </td></tr>`;
   });
   html += '</table>';
   $('forecastTable').innerHTML = html;
+}
+function buildForecastStratumDetailHtml(strata){
+  const hasBase = strata.some(s => s.matDoTb != null || s.soTraiTbCayThang != null);
+  let html = '<div class="table-wrap" style="margin:4px 0 10px"><table><tr><th>Xã</th><th>Nhóm tuổi cây</th>' +
+    (hasBase ? '<th>Mật độ TB (cây/ha)</th><th>NS TB (trái/cây/tháng)</th>' : '') +
+    '<th>Dự báo (trái/ha)</th><th>KTC 95%</th><th>Trọng số diện tích</th></tr>';
+  strata.forEach(s => {
+    html += `<tr><td>${escapeHtml(s.xa)}</td><td>${escapeHtml(s.nhomTuoiCay)}</td>
+      ${hasBase ? `<td>${s.matDoTb != null ? Math.round(s.matDoTb) : '—'}</td>
+      <td>${s.soTraiTbCayThang != null ? s.soTraiTbCayThang.toFixed(1) : '—'}</td>` : ''}
+      <td>${Math.round(s.yEstimate ?? 0)}</td>
+      <td>${s.ciLow != null ? Math.round(s.ciLow) : '—'} – ${s.ciHigh != null ? Math.round(s.ciHigh) : '—'}</td>
+      <td>${s.weight != null ? (s.weight*100).toFixed(1)+'%' : '—'}</td></tr>`;
+  });
+  html += '</table></div>';
+  return html;
+}
+function toggleForecastMonthDetail(monthTag){
+  const row = $('forecastMonthDetail_' + monthTag);
+  if (row) row.classList.toggle('hidden');
 }
 
 // ============================================================================
@@ -2291,6 +2434,189 @@ async function saveKpiTargets(){
     await db.collection('config').doc('kpiTargets').set({ targets }, { merge: true });
     if (viewProjectId) loadAdminOverview();
   }catch(e){ showError('settingsError', 'Không lưu được mục tiêu KPI: ' + e.message); }
+}
+
+// ============================================================================
+// TÍNH CỠ MẪU KHUYẾN NGHỊ (v1.7) — làm căn cứ khách quan khi điền "Số cây mục tiêu" ở
+// mục KPI ngay trên, thay vì chọn 1 con số tuỳ ý. Giải quyết đúng vấn đề đã nêu ở mục 3.1
+// báo cáo phân tích ("Hai công thức tính cỡ mẫu đang dùng song song, cho 2 kết quả khác
+// nhau") — ở đây CHỈ 1 quy trình duy nhất, đúng thiết kế mẫu CỤM có phân tầng (mục 3.2 &
+// 5.1 báo cáo): n₀ (Cochran hoặc theo SD thực tế) × DEFF (hệ số thiết kế do lấy mẫu theo
+// CỤM vườn, không phải từng cây độc lập) [× hiệu chỉnh tổng thể hữu hạn nếu biết N].
+// ============================================================================
+const Z_TABLE = { '90': 1.645, '95': 1.96, '99': 2.576 };
+
+// Ước lượng SD/cỡ cụm trung bình/ICC trực tiếp từ dữ liệu đã khảo sát TOÀN HỆ THỐNG (không
+// giới hạn theo 1 dự án — mục đích là lập KPI chung). Dùng "tháng thứ 1" theo VỊ TRÍ TƯƠNG
+// ĐỐI (cùng quy ước với phần "Phân tích chuyên sâu cấp cây") để mỗi cây chỉ đóng góp ĐÚNG 1
+// giá trị — tránh lẫn cấu trúc đo lặp (nhiều tháng/cây) vào ước lượng ICC theo vườn.
+function buildSampleSizePilotStats(){
+  const trees = (allTreesCache || []).filter(t => !t.excludedFromAnalysis);
+  const bySurvey = {};
+  trees.forEach(t => {
+    const tags = Object.keys(t.forecast || {}).sort();
+    if (!tags.length) return;
+    const v = t.forecast[tags[0]];
+    if (v == null) return;
+    (bySurvey[t.surveyId] = bySurvey[t.surveyId] || []).push(v);
+  });
+  const surveyIds = Object.keys(bySurvey);
+  const allVals = surveyIds.flatMap(sid => bySurvey[sid]);
+  const nTrees = allVals.length, nSurveys = surveyIds.length;
+  if (nTrees < 4 || nSurveys < 2) return null;
+  const mean = allVals.reduce((a,b)=>a+b,0) / nTrees;
+  const sd = Math.sqrt(allVals.reduce((s,v)=>s+(v-mean)**2,0) / (nTrees-1 || 1));
+  const cvPct = mean > 0 ? (sd/mean*100) : null;
+  const mBar = nTrees / nSurveys;
+  // ICC theo phương pháp ANOVA 1 yếu tố (Fisher / Snijders & Bosker) — dùng lại đúng hàm
+  // oneWayAnovaBetween() của phần "Phân tích chuyên sâu cấp xã", chỉ đổi nhóm từ Xã sang Vườn.
+  const anova = oneWayAnovaBetween(bySurvey, surveyIds);
+  let icc = null;
+  if (isFinite(anova.msW) && anova.msW >= 0 && mBar > 1 && (anova.msB + (mBar-1)*anova.msW) > 0){
+    icc = (anova.msB - anova.msW) / (anova.msB + (mBar - 1) * anova.msW);
+    icc = Math.max(0, Math.min(1, icc));
+  }
+  return { nTrees, nSurveys, mean, sd, cvPct, mBar, icc };
+}
+
+function renderSampleSizeCalculator(){
+  const box = $('sampleSizeBox'); if (!box) return;
+  const pilot = buildSampleSizePilotStats();
+  box.innerHTML = `
+    <div class="chart-sub" style="margin-bottom:10px">Tính cỡ mẫu (số cây, số vườn cần khảo sát) theo
+      ĐÚNG thiết kế mẫu cụm có phân tầng đang dùng cho hệ thống này (mục 3.2 &amp; 5.1 báo cáo phân
+      tích) — dùng số này làm căn cứ khách quan khi điền "Số cây mục tiêu" ở mục KPI ngay bên trên,
+      thay vì chọn một con số tuỳ ý.</div>
+    <div class="stat-narrative" style="margin-bottom:12px">
+      <p><b>4 khái niệm chính (đọc trước khi dùng):</b></p>
+      <p>• <b>Độ tin cậy (1−α) và giá trị Z:</b> xác suất khoảng ước lượng chứa đúng giá trị thật của
+      tổng thể nếu lặp lại khảo sát nhiều lần. 95% (Z=1,96) là mức chuẩn phổ biến nhất trong nghiên cứu
+      nông nghiệp.</p>
+      <p>• <b>Sai số biên (margin of error):</b> độ "lệch cho phép" giữa số liệu mẫu và giá trị thật của
+      tổng thể — chọn NHỎ hơn cho kết quả chính xác hơn nhưng đòi hỏi cỡ mẫu LỚN hơn rất nhanh (tỷ lệ
+      nghịch với BÌNH PHƯƠNG sai số biên).</p>
+      <p>• <b>Độ lệch chuẩn (SD)/Hệ số biến thiên (CV%):</b> đo mức biến động thực tế của số trái/cây
+      giữa các cây — biến động càng lớn thì càng cần nhiều mẫu để đạt cùng độ chính xác. Nên ước lượng
+      từ dữ liệu thí điểm thực tế (tự động điền bên dưới nếu đã có ≥2 vườn khảo sát) thay vì đoán.</p>
+      <p>• <b>Hệ số thiết kế (DEFF) do lấy mẫu theo CỤM:</b> vì khảo sát chọn VƯỜN rồi đếm nhiều CÂY
+      trong cùng vườn (không chọn ngẫu nhiên độc lập từng cây trong toàn vùng), các cây cùng vườn có xu
+      hướng giống nhau hơn cây khác vườn — đo bằng hệ số tương quan nội lớp (ICC). DEFF = 1 + (m̄−1)×ICC,
+      m̄ = số cây trung bình/vườn. Cỡ mẫu THỰC TẾ cần nhân thêm hệ số này so với mẫu ngẫu nhiên đơn giản,
+      nếu không sẽ ước lượng THẤP hơn mức cần thiết — đây đúng là điểm công thức cũ còn thiếu (mục
+      3.1–3.2 báo cáo phân tích).</p>
+    </div>
+    <div class="row" style="flex-wrap:wrap;gap:14px">
+      <label>Độ tin cậy
+        <select id="ss_confidence">
+          <option value="90">90%</option>
+          <option value="95" selected>95%</option>
+          <option value="99">99%</option>
+        </select>
+      </label>
+      <label>Cách ước lượng n₀
+        <select id="ss_mode" onchange="onSampleSizeModeChange()">
+          <option value="variance"${pilot ? ' selected' : ''}>Theo SD thực tế (khuyến nghị — cần dữ liệu thí điểm)</option>
+          <option value="cochran"${pilot ? '' : ' selected'}>Cochran bảo thủ p=0,5 (khi CHƯA có dữ liệu thí điểm)</option>
+        </select>
+      </label>
+    </div>
+    <div id="ss_varianceInputs" class="row" style="flex-wrap:wrap;gap:14px;margin-top:8px">
+      <label>Độ lệch chuẩn ước lượng (SD, trái/cây)
+        <input type="number" step="0.01" id="ss_sd" value="${pilot ? pilot.sd.toFixed(2) : ''}"></label>
+      <label>Sai số biên mong muốn (trái/cây, giá trị tuyệt đối)
+        <input type="number" step="0.01" id="ss_marginAbs" value="${pilot ? (pilot.sd*0.3).toFixed(2) : ''}"></label>
+    </div>
+    <div id="ss_cochranInputs" class="row hidden" style="flex-wrap:wrap;gap:14px;margin-top:8px">
+      <label>Sai số biên (%) <input type="number" step="0.5" id="ss_marginPct" value="5"></label>
+    </div>
+    <div class="row" style="flex-wrap:wrap;gap:14px;margin-top:8px">
+      <label>Cỡ cụm trung bình (cây/vườn, m̄)
+        <input type="number" step="0.1" id="ss_mbar" value="${pilot ? pilot.mBar.toFixed(1) : '4'}"></label>
+      <label>ICC (hệ số tương quan nội lớp, 0–1)
+        <input type="number" step="0.01" min="0" max="1" id="ss_icc" value="${pilot && pilot.icc!=null ? pilot.icc.toFixed(2) : '0.15'}"></label>
+      <label>Tổng thể N (số cây toàn vùng, để trống nếu chưa rõ)
+        <input type="number" step="1" id="ss_popN" value=""></label>
+    </div>
+    <p class="muted" style="margin-top:6px">${pilot
+      ? `Đã tự ước lượng từ dữ liệu thí điểm hiện có: ${pilot.nTrees} cây / ${pilot.nSurveys} vườn
+         (toàn hệ thống) — Mean=${pilot.mean.toFixed(2)}, SD=${pilot.sd.toFixed(2)}
+         (CV=${pilot.cvPct!=null?pilot.cvPct.toFixed(0):'—'}%), m̄=${pilot.mBar.toFixed(1)} cây/vườn,
+         ICC≈${pilot.icc!=null?pilot.icc.toFixed(2):'chưa ước lượng được'}. Có thể sửa tay các số trên
+         nếu muốn dùng giả định khác.`
+      : `Chưa đủ dữ liệu thí điểm (cần ≥2 vườn có phiếu khảo sát) để tự ước lượng SD/ICC — đang dùng
+         Cochran bảo thủ (p=0,5) và ICC mặc định 0,15 (giá trị tham khảo phổ biến cho khảo sát nông
+         nghiệp theo cụm hộ/vườn — nên thay bằng số thực khi có dữ liệu thí điểm).`}</p>
+    <button class="btn btn-primary" style="width:auto;padding:9px 16px;margin-top:6px" onclick="computeSampleSize()">▶ Tính cỡ mẫu khuyến nghị</button>
+    <div id="sampleSizeResult" style="margin-top:14px"></div>`;
+  onSampleSizeModeChange();
+}
+function onSampleSizeModeChange(){
+  const mode = $('ss_mode').value;
+  $('ss_varianceInputs').classList.toggle('hidden', mode !== 'variance');
+  $('ss_cochranInputs').classList.toggle('hidden', mode !== 'cochran');
+}
+function computeSampleSize(){
+  const box = $('sampleSizeResult'); if (!box) return;
+  const Z = Z_TABLE[$('ss_confidence').value] || 1.96;
+  const mode = $('ss_mode').value;
+  const mBar = parseFloat($('ss_mbar').value) || 1;
+  const icc = Math.max(0, Math.min(1, parseFloat($('ss_icc').value) || 0));
+  const popN = parseFloat($('ss_popN').value) || null;
+
+  let n0, formulaNote;
+  if (mode === 'cochran'){
+    const e = (parseFloat($('ss_marginPct').value) || 5) / 100;
+    if (e <= 0){ box.innerHTML = '<p class="muted">Sai số biên phải lớn hơn 0.</p>'; return; }
+    n0 = (Z*Z*0.5*0.5) / (e*e);
+    formulaNote = `n₀ = Z²×p×(1−p)/e² = ${Z}²×0,5×0,5/${e.toFixed(3)}² = ${n0.toFixed(1)}`;
+  } else {
+    const sd = parseFloat($('ss_sd').value);
+    const marginAbs = parseFloat($('ss_marginAbs').value);
+    if (!(sd > 0) || !(marginAbs > 0)){
+      box.innerHTML = '<p class="muted">Cần nhập SD &gt; 0 và sai số biên &gt; 0.</p>'; return;
+    }
+    n0 = (Z*sd/marginAbs) ** 2;
+    formulaNote = `n₀ = (Z×SD/E)² = (${Z}×${sd.toFixed(2)}/${marginAbs.toFixed(2)})² = ${n0.toFixed(1)}`;
+  }
+  const deff = 1 + (mBar - 1) * icc;
+  const n1 = n0 * deff;
+  const nFpc = (popN && popN > 0) ? n1 / (1 + (n1-1)/popN) : n1;
+  const nTreesFinal = Math.max(1, Math.ceil(nFpc));
+  const nVuonFinal = Math.max(1, Math.ceil(nTreesFinal / mBar));
+
+  const xaCount = (xaListConfig || []).length;
+  const perXa = xaCount ? Math.ceil(nTreesFinal / xaCount) : null;
+  const allocRows = xaCount
+    ? xaListConfig.map(xa => `<tr><td>${escapeHtml(xa)}</td><td>${perXa}</td></tr>`).join('')
+    : '';
+
+  box.innerHTML = `
+    <div class="stat-narrative">
+      <p><b>Bước 1 — Cỡ mẫu chưa hiệu chỉnh cụm (n₀):</b> ${formulaNote}</p>
+      <p><b>Bước 2 — Hệ số thiết kế cụm:</b> DEFF = 1 + (m̄−1)×ICC = 1 + (${mBar.toFixed(1)}−1)×${icc.toFixed(2)}
+      = ${deff.toFixed(2)} → n₁ = n₀×DEFF = ${n1.toFixed(1)}</p>
+      ${popN ? `<p><b>Bước 3 — Hiệu chỉnh tổng thể hữu hạn (N=${popN}):</b> n = n₁/(1+(n₁−1)/N) = ${nFpc.toFixed(1)}</p>` : ''}
+      <p style="margin-top:8px"><b>➜ Cỡ mẫu khuyến nghị: ${nTreesFinal} cây</b>, tương đương khoảng
+      <b>${nVuonFinal} phiếu/vườn</b> (giả định trung bình ${mBar.toFixed(1)} cây/vườn như hiện tại).</p>
+    </div>
+    ${xaCount ? `
+    <h5 style="margin:12px 0 6px;font-size:12.5px;color:#1f2937">Phân bổ tham khảo theo Xã (chia đều — sửa tay nếu có căn cứ diện tích/ưu tiên khác)</h5>
+    <div class="table-wrap"><table><tr><th>Xã</th><th>Số cây mục tiêu</th></tr>${allocRows}</table></div>
+    <button class="btn btn-outline" style="width:auto;padding:8px 12px;margin-top:8px" onclick="applySampleSizeToKpi(${nTreesFinal})">Áp dụng vào mục tiêu KPI theo Xã ↓</button>
+    <p class="muted" style="margin-top:4px">Sẽ điền lại toàn bộ mục "Cấu hình mục tiêu KPI theo xã" ở
+    trên bằng phân bổ này — vẫn cần bấm "Lưu mục tiêu KPI" để áp dụng thật sự.</p>`
+      : '<p class="muted">Chưa cấu hình danh sách Xã (mục "Cấu hình danh sách Xã khảo sát") nên chưa phân bổ được theo xã — có thể tự chia thủ công.</p>'}
+    <p class="muted" style="margin-top:8px">⚠️ Đây là số liệu THAM KHẢO tính từ công thức thống kê chuẩn
+    — Admin/Quản lý vẫn nên cân nhắc thêm nguồn lực thực tế (số khảo sát viên, thời gian) khi chốt KPI
+    chính thức; nên tính lại khi có thêm dữ liệu thí điểm mới (SD/ICC ước lượng chính xác hơn).</p>`;
+}
+function applySampleSizeToKpi(nTreesFinal){
+  if (!xaListConfig || !xaListConfig.length) return;
+  const perXa = Math.ceil(nTreesFinal / xaListConfig.length);
+  const box = $('kpiTargetRows'); if (!box) return;
+  box.innerHTML = '';
+  xaListConfig.forEach(xa => addKpiTargetRow(xa, perXa, ''));
+  box.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // ---- Cấu hình phenology ----
@@ -2745,8 +3071,8 @@ function renderTreeTable(){
       <td>${excluded
         ? '<span class="badge badge-rejected">Đã loại trừ</span>'
         : '<span class="badge badge-approved">Đang phân tích</span>'}</td>
-      <td><button class="btn ${excluded?'btn-outline':'btn-danger'} tree-exclude-btn"
-            onclick="toggleTreeExclusion('${t.surveyId}','${t.id}')">${excluded ? '↩ Khôi phục' : '🚫 Loại trừ'}</button></td>
+      <td>${isManagerOnly() ? '' : `<button class="btn ${excluded?'btn-outline':'btn-danger'} tree-exclude-btn"
+            onclick="toggleTreeExclusion('${t.surveyId}','${t.id}')">${excluded ? '↩ Khôi phục' : '🚫 Loại trừ'}</button>`}</td>
     </tr>`;
   });
   html += '</table>';
@@ -2783,12 +3109,43 @@ function resetDeepStatsGate(){
   if (gate) gate.classList.remove('hidden');
   if (results) results.classList.add('hidden');
 }
+function updateAnalysisGateXaStats(){
+  const nEl = $('analysisGateXaN'), kEl = $('analysisGateXaK');
+  if (!nEl || !kEl) return;
+  const trees = analyzableTrees();
+  nEl.textContent = new Set(trees.map(t => t.surveyId)).size;
+  kEl.textContent = new Set(trees.map(t => t.xa || '(chưa rõ)')).size;
+}
+function resetDeepStatsXaGate(){
+  updateAnalysisGateXaStats();
+  const gate = $('analysisGateXa'), results = $('deepStatsXaResults');
+  if (gate) gate.classList.remove('hidden');
+  if (results) results.classList.add('hidden');
+}
 function runDeepStatsAnalysis(){
   const gate = $('analysisGate'), results = $('deepStatsResults');
   if (gate) gate.classList.add('hidden');
   if (results) results.classList.remove('hidden');
   renderDeepStats();
 }
+
+// ---- Phân tích thống kê chuyên sâu theo tháng (cấp xã) — v1.7 ----
+function xaStatsAvailableMonths(){
+  const tags = new Set();
+  analyzableTrees().forEach(t => Object.keys(t.forecast || {}).forEach(tag => tags.add(tag)));
+  return Array.from(tags).sort();
+}
+function runDeepStatsXaAnalysis(){
+  const gate = $('analysisGateXa'), results = $('deepStatsXaResults');
+  if (gate) gate.classList.add('hidden');
+  if (results) results.classList.remove('hidden');
+  const months = xaStatsAvailableMonths();
+  const sel = $('xaStatsMonthSelect');
+  sel.innerHTML = months.map(tag => `<option value="${tag}">${tagToLabel(tag)}</option>`).join('');
+  if (months.length) sel.value = months[0];
+  renderDeepStatsXa();
+}
+function onXaStatsMonthChange(){ renderDeepStatsXa(); }
 
 // ============================================================================
 // BẢN ĐỒ VỊ TRÍ CÂY KHẢO SÁT (Leaflet + OpenStreetMap) + TIMELINE (v1.5)
@@ -3450,6 +3807,224 @@ function renderDeepStats(){
   if ($('histOpt_labels')) chartOptions.hist.labels = $('histOpt_labels').checked;
   if ($('histOpt_color')) chartOptions.hist.color = $('histOpt_color').value;
   box.innerHTML = buildDeepStatsSectionHtml();
+}
+
+// ============================================================================
+// PHÂN TÍCH THỐNG KÊ CHUYÊN SÂU THEO THÁNG (CẤP XÃ) — v1.7
+// So sánh khác biệt NĂNG SUẤT (trái/ha) GIỮA CÁC XÃ cho 1 tháng dự báo chọn được — đối xứng
+// với phần "cấp cây" ở trên (vốn so sánh GIỮA CÁC THÁNG trên cùng 1 cây, thiết kế đo lặp).
+// Ở đây Xã là các nhóm ĐỘC LẬP (không đo lặp) nên dùng ANOVA 1 yếu tố (between-subjects) +
+// Kruskal-Wallis (thay thế khi lệch chuẩn/phương sai không đồng nhất), hậu kiểm Welch's t-test
+// (không giả định 2 xã cùng phương sai) — KHÔNG dùng lại nguyên bản ANOVA đo lặp/Bonferroni
+// paired-t ở trên vì đó là kiểm định cho 2 mẫu PHỤ THUỘC, sẽ sai nếu áp cho 2 xã khác nhau.
+// ============================================================================
+
+// Gộp về mức PHIẾU/VƯỜN trước khi so sánh — tôn trọng cấu trúc cụm (cây lồng trong vườn),
+// cùng nguyên tắc với bootstrap 2 cấp ở phần dự báo (mục 5.3 báo cáo phân tích). Mỗi vườn chỉ
+// đóng góp ĐÚNG 1 giá trị y (trung bình trái/ha của các cây trong vườn, tháng đang chọn) — không
+// dùng trực tiếp từng cây làm đơn vị quan sát, vì các cây cùng vườn tương quan với nhau.
+function buildXaStatsDataset(trees, monthTag){
+  const bySurvey = {};
+  trees.forEach(t => {
+    const c = t.forecast ? t.forecast[monthTag] : undefined;
+    if (c === undefined || c === null) return; // vườn này không "phủ" tới tháng đang chọn
+    const matDo = Number(t.matDo);
+    if (!isFinite(matDo)) return;
+    const key = t.surveyId;
+    if (!bySurvey[key]) bySurvey[key] = { xa: t.xa || '(chưa rõ)', ys: [] };
+    bySurvey[key].ys.push(Number(c) * matDo);
+  });
+  const groups = {};
+  Object.values(bySurvey).forEach(s => {
+    const y = s.ys.reduce((a,b)=>a+b,0) / s.ys.length;
+    (groups[s.xa] = groups[s.xa] || []).push(y);
+  });
+  const xaOrder = Object.keys(groups).sort();
+  const nTotal = xaOrder.reduce((s,xa) => s + groups[xa].length, 0);
+  return { groups, xaOrder, k: xaOrder.length, nTotal };
+}
+// ANOVA 1 yếu tố, nhóm ĐỘC LẬP (between-subjects) — thay thế Compare Means/One-Way ANOVA trong
+// SPSS. Khác với repeatedMeasuresAnova() ở trên (nhóm PHỤ THUỘC, cùng 1 cây đo lặp nhiều tháng).
+function oneWayAnovaBetween(groups, xaOrder){
+  const all = xaOrder.flatMap(xa => groups[xa]);
+  const N = all.length;
+  const grandMean = all.reduce((a,b)=>a+b,0) / N;
+  let SSb = 0, SSw = 0, dfW = 0;
+  xaOrder.forEach(xa => {
+    const vals = groups[xa], n = vals.length;
+    const mean = vals.reduce((a,b)=>a+b,0) / n;
+    SSb += n * (mean - grandMean) ** 2;
+    vals.forEach(v => SSw += (v - mean) ** 2);
+    dfW += Math.max(0, n - 1);
+  });
+  const dfB = xaOrder.length - 1;
+  const msB = SSb / dfB, msW = dfW > 0 ? SSw / dfW : NaN;
+  const F = (msW > 0) ? msB / msW : NaN;
+  const p = (dfW > 0 && isFinite(F)) ? fTestPValue(F, dfB, dfW) : NaN;
+  const eta2 = (SSb + SSw) > 0 ? SSb / (SSb + SSw) : NaN;
+  return { k: xaOrder.length, N, dfB, dfW, SSb, SSw, msB, msW, F, p, eta2 };
+}
+// Kiểm định đồng nhất phương sai Levene (bản Brown–Forsythe, dùng độ lệch tuyệt đối so với
+// MEDIAN từng nhóm thay vì mean — ổn định hơn khi dữ liệu lệch phân phối, đúng bản chất biến
+// đếm trái/ha). Cho biết ANOVA phía trên có đáng tin hay nên ưu tiên đọc Kruskal–Wallis.
+function leveneTest(groups, xaOrder){
+  const devGroups = {};
+  xaOrder.forEach(xa => {
+    const vals = groups[xa].slice().sort((a,b)=>a-b);
+    const n = vals.length;
+    const median = n%2 ? vals[(n-1)/2] : (vals[n/2-1]+vals[n/2])/2;
+    devGroups[xa] = groups[xa].map(v => Math.abs(v - median));
+  });
+  return oneWayAnovaBetween(devGroups, xaOrder);
+}
+// Kruskal–Wallis H — thay thế phi tham số cho ANOVA 1 yếu tố, không giả định phân phối chuẩn
+// hay phương sai bằng nhau — khuyến nghị đọc song song với ANOVA vì "số trái" là biến đếm,
+// thường lệch phải (xem mục 3.4 báo cáo phân tích).
+function kruskalWallisTest(groups, xaOrder){
+  const all = [];
+  xaOrder.forEach(xa => groups[xa].forEach(v => all.push({ v, xa })));
+  const N = all.length;
+  const sorted = all.slice().sort((a,b) => a.v - b.v);
+  const ranks = new Map();
+  let i = 0;
+  while (i < N){
+    let j = i;
+    while (j + 1 < N && sorted[j+1].v === sorted[i].v) j++;
+    const avgRank = (i + j) / 2 + 1;
+    for (let m = i; m <= j; m++) ranks.set(sorted[m], avgRank);
+    i = j + 1;
+  }
+  const rankSumByXa = {};
+  xaOrder.forEach(xa => rankSumByXa[xa] = 0);
+  all.forEach(item => { rankSumByXa[item.xa] += ranks.get(item); });
+  let H = 0;
+  xaOrder.forEach(xa => { H += (rankSumByXa[xa] ** 2) / groups[xa].length; });
+  H = (12 / (N * (N + 1))) * H - 3 * (N + 1);
+  const tieCounts = {};
+  sorted.forEach(item => { tieCounts[item.v] = (tieCounts[item.v] || 0) + 1; });
+  let tieSum = 0;
+  Object.values(tieCounts).forEach(t => { tieSum += t**3 - t; });
+  const C = 1 - tieSum / ((N**3 - N) || 1);
+  const Hc = C > 0 ? H / C : H;
+  const df = xaOrder.length - 1;
+  return { H: Hc, df, p: chiSquarePValue(Hc, df), N };
+}
+// So sánh từng cặp Xã bằng Welch's t-test (KHÔNG giả định 2 xã cùng phương sai — phù hợp vì số
+// vườn khảo sát thường lệch nhau nhiều giữa các xã), hiệu chỉnh Bonferroni cho nhiều phép so
+// sánh. Khác pairwiseBonferroni() ở trên (paired t-test cho 2 mẫu PHỤ THUỘC).
+function pairwiseWelchBonferroni(groups, xaOrder){
+  const k = xaOrder.length, m = k*(k-1)/2 || 1, pairs = [];
+  for (let a=0; a<k; a++) for (let b=a+1; b<k; b++){
+    const xaA = xaOrder[a], xaB = xaOrder[b];
+    const va = groups[xaA], vb = groups[xaB];
+    const na = va.length, nb = vb.length;
+    if (na < 2 || nb < 2){
+      pairs.push({ xaA, xaB, meanDiff: (va.reduce((s,v)=>s+v,0)/na) - (vb.reduce((s,v)=>s+v,0)/nb),
+        t: null, df: null, pAdj: null, note: 'Chưa đủ dữ liệu (cần ≥2 vườn/xã)' });
+      continue;
+    }
+    const meanA = va.reduce((s,v)=>s+v,0)/na, meanB = vb.reduce((s,v)=>s+v,0)/nb;
+    const varA = va.reduce((s,v)=>s+(v-meanA)**2,0)/(na-1);
+    const varB = vb.reduce((s,v)=>s+(v-meanB)**2,0)/(nb-1);
+    const meanDiff = meanA - meanB;
+    const seA2 = varA/na, seB2 = varB/nb, se = Math.sqrt(seA2 + seB2);
+    const t = se>0 ? meanDiff/se : 0;
+    const df = se>0 ? (seA2+seB2)**2 / ((seA2**2)/(na-1) + (seB2**2)/(nb-1)) : (na+nb-2);
+    const pRaw = tTestPValue(t, df);
+    pairs.push({ xaA, xaB, meanDiff, t, df, pRaw, pAdj: Math.min(1, pRaw*m), note: null });
+  }
+  return pairs;
+}
+function buildXaDeepStatsSectionHtml(){
+  const monthTag = $('xaStatsMonthSelect') ? $('xaStatsMonthSelect').value : null;
+  if (!monthTag) return '<p class="muted">Dự án chưa có tháng dự báo nào trong dữ liệu cây hiện có.</p>';
+  const trees = analyzableTrees();
+  const { groups, xaOrder, k, nTotal } = buildXaStatsDataset(trees, monthTag);
+  if (k < 2 || nTotal < 3){
+    return `<p class="muted">Cần tối thiểu 2 xã và tổng cộng ≥3 phiếu/vườn có dữ liệu ở
+      ${tagToLabel(monthTag)} để so sánh — hiện có ${k} xã, ${nTotal} phiếu/vườn trong phạm vi đang xem.
+      Chọn tháng khác hoặc chờ thêm dữ liệu khảo sát.</p>`;
+  }
+
+  let descRows = '', histHtml = '<div class="hist-grid">';
+  const descs = {}, jbs = {};
+  xaOrder.forEach(xa => {
+    const col = groups[xa];
+    const d = describeColumn(col);
+    descs[xa] = d;
+    const jb = col.length >= 3 ? jarqueBeraTest(col) : null;
+    jbs[xa] = jb;
+    descRows += `<tr><td>${escapeHtml(xa)}</td><td>${d.n}</td><td>${Math.round(d.mean)}</td>
+      <td>${d.n>1 ? Math.round(d.ciLow)+' – '+Math.round(d.ciHigh) : '—'}</td>
+      <td>${Math.round(d.median)}</td><td>${d.n>1 ? Math.round(d.sd) : '—'}</td>
+      <td>${Math.round(d.min)}–${Math.round(d.max)}</td>
+      <td>${jb ? (jb.p<0.001?'<0,001':jb.p.toFixed(3)) + (jb.p<0.05?' (lệch chuẩn)':' (không bác bỏ chuẩn)') : 'Cần N≥3'}</td></tr>`;
+    if (col.length >= 2){
+      histHtml += `<div class="hist-cell"><h5>${escapeHtml(xa)} (N=${col.length} vườn)</h5>` +
+        `${buildHistogramSvg(col, Object.assign({}, chartOptions.histXa, { monthIndex: null }))}</div>`;
+    }
+  });
+  histHtml += '</div>';
+
+  const levene = leveneTest(groups, xaOrder);
+  const anova = oneWayAnovaBetween(groups, xaOrder);
+  const kw = kruskalWallisTest(groups, xaOrder);
+  const pairwise = pairwiseWelchBonferroni(groups, xaOrder);
+  const pairwiseRows = pairwise.map(p => `<tr><td>${escapeHtml(p.xaA)} − ${escapeHtml(p.xaB)}</td>
+    <td>${p.meanDiff!=null ? Math.round(p.meanDiff) : '—'}</td>
+    <td>${p.t!=null ? p.t.toFixed(2) : '—'}</td>
+    <td>${p.pAdj!=null ? (p.pAdj<0.001?'<0,001':p.pAdj.toFixed(3)) : '—'}</td>
+    <td>${p.note ? p.note : (p.pAdj<0.05 ? 'Có ý nghĩa' : 'Chưa đủ bằng chứng')}</td></tr>`).join('');
+
+  const testedXa = xaOrder.filter(xa => jbs[xa]);
+  const normalViolated = testedXa.filter(xa => jbs[xa].p < 0.05).length;
+  const narrative = `
+    <p><b>Đơn vị quan sát:</b> mỗi phiếu/vườn đóng góp đúng 1 giá trị (trung bình trái/ha của các cây
+    trong vườn, tại ${tagToLabel(monthTag)}) — KHÔNG dùng trực tiếp từng cây, để tránh vi phạm giả định
+    độc lập (cây trong cùng vườn tương quan với nhau, xem mục 3.2 báo cáo). N = ${nTotal} vườn thuộc
+    ${k} xã.</p>
+    <p><b>Đồng nhất phương sai (Levene/Brown–Forsythe):</b>
+    F(${levene.dfB},${levene.dfW}) = ${isFinite(levene.F)?levene.F.toFixed(2):'—'},
+    p ${isFinite(levene.p)?(levene.p<0.001?'< 0,001':'= '+levene.p.toFixed(3)):'—'} —
+    ${(isFinite(levene.p) && levene.p<0.05)
+      ? 'phương sai KHÔNG đồng nhất giữa các xã — kết quả ANOVA bên dưới nên đọc thận trọng, ưu tiên tham khảo Kruskal–Wallis (không giả định phương sai bằng nhau).'
+      : 'chưa đủ bằng chứng phương sai khác nhau giữa các xã — điều kiện ANOVA phù hợp.'}</p>
+    <p><b>So sánh giữa các Xã (ANOVA 1 yếu tố, nhóm độc lập):</b>
+    F(${anova.dfB},${anova.dfW}) = ${isFinite(anova.F)?anova.F.toFixed(2):'—'},
+    p ${isFinite(anova.p)?(anova.p<0.001?'< 0,001':'= '+anova.p.toFixed(3)):'—'},
+    η² = ${isFinite(anova.eta2)?anova.eta2.toFixed(3):'—'} —
+    ${(isFinite(anova.p) && anova.p<0.05)
+      ? 'có bằng chứng khác biệt có ý nghĩa thống kê giữa ít nhất 1 cặp xã.'
+      : 'CHƯA đủ bằng chứng khác biệt có ý nghĩa thống kê giữa các xã ở mức 5% với cỡ mẫu hiện tại.'}</p>
+    <p><b>Kiểm định thay thế phi tham số (Kruskal–Wallis)</b> — dùng khi dữ liệu lệch chuẩn hoặc phương
+    sai không đồng nhất, phù hợp với biến đếm trái/ha vốn hay lệch phải: H(${kw.df}) = ${kw.H.toFixed(2)},
+    p ${kw.p<0.001?'< 0,001':'= '+kw.p.toFixed(3)} —
+    ${(kw.p<0.05) === (isFinite(anova.p) && anova.p<0.05) ? 'đồng thuận' : 'KHÔNG đồng thuận'} với kết
+    luận ANOVA ở trên.${normalViolated ? ` (${normalViolated}/${testedXa.length} xã có bằng chứng lệch
+    phân phối chuẩn — nên ưu tiên đọc kết quả Kruskal–Wallis.)` : ''}</p>
+    <p><b>So sánh từng cặp Xã (Welch's t-test, hiệu chỉnh Bonferroni):</b>
+    ${pairwise.filter(p=>p.pAdj!=null && p.pAdj<0.05).length}/${pairwise.length} cặp có khác biệt có ý
+    nghĩa sau hiệu chỉnh — xem bảng bên dưới. Dùng Welch (không giả định 2 xã cùng phương sai) vì số vườn
+    khảo sát thường khác nhau nhiều giữa các xã.</p>
+    <p class="muted" style="margin-top:8px">⚠️ Thống kê này tính trực tiếp từ dữ liệu hiện có trong phạm
+    vi đang xem, KHÔNG phải trích xuất từ file SPSS gốc — nên đối chiếu độc lập trước khi dùng cho kết
+    luận chính thức, đặc biệt khi số vườn/xã còn nhỏ (dưới 5 vườn/xã, khoảng tin cậy & kiểm định thường
+    rất rộng/kém ổn định).</p>`;
+
+  return `
+    <div class="table-wrap"><table><tr><th>Xã</th><th>N (vườn)</th><th>Mean (trái/ha)</th>
+      <th>95% CI</th><th>Median</th><th>SD</th><th>Min–Max</th><th>Jarque–Bera p</th></tr>${descRows}</table></div>
+    ${histHtml}
+    <h5 style="margin:14px 0 6px;font-size:12.5px;color:#1f2937">So sánh cặp Xã (Welch + Bonferroni)</h5>
+    <div class="table-wrap"><table><tr><th>Cặp so sánh</th><th>Chênh lệch TB (trái/ha)</th><th>t</th>
+      <th>p (hiệu chỉnh)</th><th>Kết luận</th></tr>${pairwiseRows || '<tr><td colspan="5" class="muted">Chỉ có 1 xã, không so sánh được.</td></tr>'}</table></div>
+    <div class="stat-narrative">${narrative}</div>`;
+}
+function renderDeepStatsXa(){
+  const box = $('deepStatsXaBox'); if (!box) return;
+  if ($('histXaOpt_labels')) chartOptions.histXa.labels = $('histXaOpt_labels').checked;
+  if ($('histXaOpt_color')) chartOptions.histXa.color = $('histXaOpt_color').value;
+  box.innerHTML = buildXaDeepStatsSectionHtml();
 }
 </script>
 </body>
