@@ -1,4 +1,4 @@
-# Hệ thống khảo sát & dự báo năng suất dừa — Bản v1.3
+# Hệ thống khảo sát & dự báo năng suất dừa — Bản v1.4
 
 Web app khảo sát năng suất dừa qua điện thoại, hoạt động offline, đồng bộ
 real-time qua Firebase — theo đúng thiết kế trong "Báo cáo phân tích &
@@ -138,6 +138,57 @@ Bảng điều khiển Admin chỉ hiển thị & xuất lại kết quả đó,
 lại bằng JavaScript trong bản chính thức (tránh 2 cách tính khác nhau cùng
 tồn tại). Sau khi đổi tên xã cũ, nên chạy lại script Python 1 lần để kết quả
 dự báo phản ánh đúng tên xã đã chuẩn hoá.*
+
+## Bản v1.4 — Quản lý theo Dự án, KPI từng khảo sát viên, tuỳ chỉnh biểu đồ, thống kê chuyên sâu
+
+Bản này chuyển toàn bộ cách vận hành sang **quản lý theo dự án khảo sát**
+(thay vì 1 luồng dữ liệu chung duy nhất), đồng thời nâng chiều sâu phân tích
+và cá nhân hoá biểu đồ theo yêu cầu thực tế:
+
+1. **Dự án khảo sát (mở/đóng theo đợt, theo phạm vi xã, theo mốc thời gian).**
+   Admin tạo dự án mới ở mục "🗂 Quản lý dự án" (Bảng điều khiển): đặt tên,
+   mô tả, ngày bắt đầu/kết thúc, số tháng dự báo mỗi cây (có thể khác nhau
+   giữa các dự án, VD dự án 3 tháng vs. 7 tháng), và phạm vi xã áp dụng (toàn
+   bộ xã, hoặc chỉ một số xã cụ thể). Có thể **mở nhiều dự án song song** —
+   mỗi khảo sát viên chọn đúng dự án đang nhập liệu ở Trang chủ, dropdown "Xã"
+   tự lọc theo đúng phạm vi của dự án đó. "Lưu trữ" dự án chỉ ẩn khỏi danh
+   sách đang mở (theo đúng yêu cầu — **không xoá dữ liệu**), Admin vẫn xem/
+   xuất báo cáo lại bất cứ lúc nào qua mục "Dự án đang xem", và có thể khôi
+   phục lại thành đang mở. Toàn bộ phiếu/cây dữ liệu trước khi có tính năng
+   này đã được gộp vào "Dự án 0 (dữ liệu trước khi có tính năng Dự án)" ở
+   trạng thái lưu trữ, không mất dữ liệu cũ.
+2. **KPI theo từng khảo sát viên, riêng theo từng dự án.** Ở mỗi dự án, Admin
+   đặt chỉ tiêu số phiếu / số cây cho từng khảo sát viên (mục "🎯 Chỉ tiêu
+   KPI" trong khung quản lý dự án). Mục "Hiệu suất từng khảo sát viên" so
+   sánh trực tiếp số thực hiện so với chỉ tiêu (thanh tiến độ %), và callout
+   "Tiến độ dự án" so sánh **% thời gian dự án đã qua** với **% khối lượng
+   công việc đã hoàn thành so với chỉ tiêu**, tự cảnh báo màu (bình thường /
+   chậm nhẹ / chậm đáng kể) để phân bổ lại công việc kịp thời.
+3. **Tuỳ chỉnh biểu đồ trực tiếp trên Bảng điều khiển.** Biểu đồ đường (dự
+   báo) và biểu đồ cột (theo tầng) đều có thanh tuỳ chọn: bật/tắt nhãn số
+   liệu (data labels), vị trí nhãn (trên/dưới điểm), làm mượt đường (smoothed
+   line), đổi màu. Tuỳ chỉnh áp dụng nhất quán cho cả biểu đồ xem trực tiếp
+   và biểu đồ trong các file báo cáo xuất ra (HTML).
+4. **Báo cáo phân tích chuyên sâu theo thống kê (mục "Phân tích thống kê
+   chuyên sâu theo tháng" trong báo cáo chi tiết).** Bổ sung: bảng mô tả
+   thống kê chuẩn kiểu SPSS (trung bình, độ lệch chuẩn, trung vị, tứ phân vị,
+   skewness/kurtosis có hiệu chỉnh sai số chuẩn) và biểu đồ histogram cho
+   từng tháng dự báo; kiểm định Jarque-Bera đánh giá phân phối chuẩn; phân
+   tích phương sai đo lặp một yếu tố (repeated-measures ANOVA) so sánh khác
+   biệt năng suất **giữa các tháng trên cùng một cây** kèm hệ số ảnh hưởng
+   (partial eta²); so sánh cặp tháng có hiệu chỉnh Bonferroni để xác định cụ
+   thể cặp tháng nào khác biệt có ý nghĩa thống kê. Toàn bộ tính theo **vị trí
+   tháng tương đối** (tháng thứ 1, 2, 3... kể từ lúc khảo sát) thay vì tháng
+   lịch tuyệt đối, để tránh gộp nhầm dữ liệu từ các phiếu tạo ở thời điểm
+   khác nhau.
+
+*Giới hạn đã biết: script Python `aggregate_trai_ha_thang.py` (mục "Kết quả
+dự báo") và các báo cáo do script này tạo (biểu đồ đường/cột chính, bảng dự
+báo, tóm tắt Ban lãnh đạo) **chưa lọc theo từng dự án** — vẫn tính trên toàn
+bộ dữ liệu như trước. Phần lọc theo dự án trong bản v1.4 áp dụng cho: luồng
+thông tin 6 công đoạn, KPI theo xã/theo khảo sát viên, tiến độ dự án, phân
+tích thống kê chuyên sâu, và xuất dữ liệu thô CSV. Sẽ nâng cấp script Python
+để nhận biết dự án khi có nhu cầu tách báo cáo dự báo riêng theo từng dự án.*
 
 ## Bước 4 — Đưa web lên GitHub Pages
 
