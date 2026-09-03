@@ -611,9 +611,29 @@
     </div>
 
     <h2 style="margin-top:26px">📊 Báo cáo phân tích &amp; dự báo năng suất (trái/ha/tháng)</h2>
-    <div id="forecastEmpty" class="muted">
-      Chưa có kết quả phân tích riêng cho dự án này — chạy <code>scripts/aggregate_trai_ha_thang.py</code>
-      (bản v1.6 đã tính & ghi kết quả riêng theo từng dự án) trên laptop để cập nhật (xem README).
+    <div id="forecastEmpty" class="glmm-placeholder">
+      <h4>⏳ Chưa có kết quả cho dự án này <span class="badge-pending">Cần chạy script trên laptop</span></h4>
+      <p class="muted" style="margin:0 0 6px">
+        Mỗi dự án (kể cả dự án mới tạo) chỉ có kết quả ở mục này sau khi chạy tay script
+        <code>scripts/aggregate_trai_ha_thang.py</code> trên laptop — <b>app không tự tính</b>.
+        Các bước (chi tiết đầy đủ nằm ngay trong file script):
+      </p>
+      <ol class="glmm-preview-list">
+        <li>Mở Terminal/Command Prompt, vào đúng thư mục <code>webapp</code> của dự án trên máy.</li>
+        <li>(Chỉ 1 lần) Cài thư viện: <code>pip install firebase-admin pandas numpy</code></li>
+        <li>(Chỉ 1 lần) Vào Firebase Console → ⚙️ Project settings → Service accounts →
+          "Generate new private key" → tải file .json về, đổi tên thành
+          <code>service-account.json</code>, để cùng thư mục <code>scripts</code>
+          (giữ kín, không chia sẻ/đưa lên GitHub).</li>
+        <li>Chạy: <code>python scripts/aggregate_trai_ha_thang.py</code></li>
+        <li>Chạy xong, tải lại (F5) trang này — kết quả của <b>tất cả</b> dự án (kể cả dự án
+          mới) sẽ tự hiện ra, không cần thao tác gì thêm trên giao diện.</li>
+      </ol>
+      <p class="muted" style="margin:6px 0 0">
+        Script tính riêng cho từng dự án trong 1 lần chạy — nên chỉ cần chạy lại script này
+        (không cần làm gì khác) mỗi khi: tạo dự án mới, hoặc muốn cập nhật số liệu mới
+        (khảo sát viên vừa nhập thêm phiếu/cây) — ví dụ mỗi tuần/mỗi tháng.
+      </p>
     </div>
     <div id="forecastSection" class="hidden">
       <p class="muted" id="forecastComputedAt"></p>
