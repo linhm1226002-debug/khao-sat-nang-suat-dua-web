@@ -83,6 +83,54 @@
   .badge-rejected{background:#FBEDEB;color:var(--red-600);}
   .table-wrap{overflow-x:auto;}
   .table-wrap table{white-space:nowrap;}
+
+  body.admin-wide main{max-width:980px;}
+  .admin-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+  .admin-toolbar .btn{width:auto;padding:9px 14px;}
+
+  /* ---- Pipeline (luồng thông tin từng công đoạn) ---- */
+  .pipeline{display:flex;flex-wrap:wrap;gap:0;align-items:stretch;margin:4px 0 18px;}
+  .pipeline-stage{flex:1 1 150px;background:var(--grey-100);border:1px solid var(--grey-300);
+    border-radius:10px;padding:12px 10px;min-width:130px;position:relative;}
+  .pipeline-stage .stage-no{font-size:11px;font-weight:800;color:var(--green-700);
+    letter-spacing:.04em;}
+  .pipeline-stage .stage-icon{font-size:20px;margin:2px 0 4px;}
+  .pipeline-stage .stage-title{font-size:12.5px;font-weight:700;color:#1f2937;line-height:1.25;}
+  .pipeline-stage .stage-desc{font-size:11px;color:var(--grey-700);margin-top:3px;line-height:1.35;}
+  .pipeline-stage .stage-metric{margin-top:8px;font-size:11px;font-weight:700;
+    display:inline-flex;align-items:center;gap:5px;border-radius:6px;padding:3px 7px;}
+  .stage-metric.ok{background:var(--green-100);color:var(--green-700);}
+  .stage-metric.warn{background:#FEF3C7;color:#92400E;}
+  .stage-metric.idle{background:var(--grey-300);color:var(--grey-700);}
+  .pipeline-arrow{flex:0 0 22px;display:flex;align-items:center;justify-content:center;
+    color:var(--grey-300);font-size:18px;}
+  @media (max-width:680px){ .pipeline-arrow{display:none;} .pipeline-stage{flex:1 1 45%;} }
+
+  .methodology{background:var(--green-100);border-radius:10px;padding:14px 16px;margin-bottom:16px;}
+  .methodology h3{margin:0 0 8px;font-size:14px;color:var(--green-700);}
+  .methodology ol{margin:0;padding-left:18px;font-size:13px;line-height:1.55;color:#1f2937;}
+  .methodology ol li{margin-bottom:8px;}
+  .methodology ol li b{color:var(--green-700);}
+  .methodology .caveat{margin-top:8px;font-size:12px;color:var(--grey-700);
+    border-top:1px solid rgba(31,92,59,.15);padding-top:8px;}
+
+  .chart-card{border:1px solid var(--grey-300);border-radius:10px;padding:14px;margin-bottom:16px;
+    background:#fff;}
+  .chart-card h4{margin:0 0 4px;font-size:13.5px;color:#1f2937;}
+  .chart-card .chart-sub{font-size:11.5px;color:var(--grey-700);margin-bottom:8px;}
+  .chart-legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;font-size:12px;color:var(--grey-700);}
+  .chart-legend .lg-item{display:inline-flex;align-items:center;gap:6px;}
+  .chart-legend .lg-swatch{width:11px;height:11px;border-radius:3px;display:inline-block;}
+  .chart-legend .lg-line{width:16px;height:0;border-top:2px solid;display:inline-block;}
+  .kpi-hl{font-weight:800;color:var(--green-700);}
+  td.cell-max{background:var(--green-100);font-weight:800;color:var(--green-700);}
+  .export-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;}
+  .export-row .btn{width:auto;flex:1 1 200px;padding:11px 12px;}
+  .export-card{border:1px dashed var(--grey-300);border-radius:10px;padding:12px;font-size:12px;
+    color:var(--grey-700);margin-top:4px;}
+  .xa-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
+  .xa-row input{flex:1;}
+  .xa-row button{width:auto;padding:9px 12px;flex:0 0 auto;}
 </style>
 </head>
 <body>
@@ -183,12 +231,13 @@
       <div id="gpsResult" style="margin-top:8px">Chưa lấy vị trí.</div>
     </div>
 
-    <label id="lblXa" data-base="Xã">Xã</label>
-    <input type="text" id="fXa" list="xaList" placeholder="Ví dụ: Hưng Lễ" />
-    <datalist id="xaList">
-      <option value="Hưng Lễ"></option><option value="Cẩm Sơn"></option>
-      <option value="Ngãi Đăng"></option><option value="Hương Mỹ"></option>
-    </datalist>
+    <label id="lblXa" data-base="Xã">Xã *</label>
+    <select id="fXa">
+      <option value="">— Chọn xã —</option>
+    </select>
+    <p class="muted" id="xaEmptyHint" style="margin-top:4px" hidden>
+      Chưa có xã nào trong danh sách — Admin cần vào Bảng điều khiển, mục
+      "Cấu hình danh sách Xã khảo sát" để thêm trước khi tạo phiếu.</p>
 
     <div class="row">
       <div><label id="lblChuVuon" data-base="Chủ vườn">Chủ vườn</label><input type="text" id="fChuVuon" /></div>
@@ -241,7 +290,13 @@
     <h2>Nhập số liệu cây <span class="badge" id="treeFormLabel"></span></h2>
 
     <label id="lblMaCay" data-base="Mã cây">Mã cây</label>
-    <input type="text" id="tMaCay" />
+    <div class="row" style="align-items:flex-start">
+      <input type="text" id="tMaCay" />
+      <button type="button" class="btn btn-outline" style="width:auto;padding:11px 12px;flex:0 0 auto"
+        onclick="suggestMaCay()" title="Sinh lại mã tự động theo thứ tự">🔄 Tự sinh</button>
+    </div>
+    <p class="muted" style="margin-top:4px">Mã được gợi ý tự động theo thứ tự cây trong phiếu để tránh
+      trùng/sai — anh/chị có thể sửa lại nếu cần.</p>
 
     <label>Tình trạng cây</label>
     <select id="tTinhTrang">
@@ -267,27 +322,94 @@
 
   <!-- ============ ADMIN ============ -->
   <section id="view-admin" class="card hidden">
-    <h2>Bảng điều khiển Admin</h2>
+    <div class="admin-toolbar">
+      <h2 style="margin:0">Bảng điều khiển Admin</h2>
+      <button class="btn btn-outline" onclick="showAdmin()">↻ Làm mới dữ liệu</button>
+    </div>
+    <p class="muted" style="margin-top:6px">Luồng thông tin từ hiện trường đến báo cáo — từng công đoạn
+      và trạng thái hiện tại:</p>
+    <div class="pipeline" id="adminPipeline"></div>
+
     <div class="kpi-grid" id="adminKpiGrid"></div>
 
-    <h2 style="margin-top:20px">Tài khoản chờ duyệt <span class="badge" id="pendingCountBadge">0</span></h2>
+    <h2 style="margin-top:22px">Tài khoản chờ duyệt <span class="badge" id="pendingCountBadge">0</span></h2>
     <div id="pendingUsersList"><p class="muted">Đang tải…</p></div>
 
     <h2 style="margin-top:20px">Yêu cầu chỉnh sửa phiếu <span class="badge" id="editReqCountBadge">0</span></h2>
     <div id="editRequestsList"><p class="muted">Đang tải…</p></div>
 
-    <h2 style="margin-top:20px">Tiến độ theo xã</h2>
+    <h2 style="margin-top:20px">Tiến độ khảo sát theo xã</h2>
     <div id="adminByXa"><p class="muted">Đang tải…</p></div>
 
-    <h2 style="margin-top:20px">Kết quả dự báo mới nhất (trái/ha/tháng)</h2>
-    <div id="adminForecast">
-      <p class="muted">Chưa có kết quả — chạy <code>scripts/aggregate_trai_ha_thang.py</code>
-      để cập nhật (xem README).</p>
+    <h2 style="margin-top:26px">📊 Báo cáo phân tích & dự báo năng suất (trái/ha/tháng)</h2>
+    <div id="forecastEmpty" class="muted">
+      Chưa có kết quả — chạy <code>scripts/aggregate_trai_ha_thang.py</code> để cập nhật (xem README).
+    </div>
+    <div id="forecastSection" class="hidden">
+      <p class="muted" id="forecastComputedAt"></p>
+
+      <div class="methodology">
+        <h3>Phương pháp luận (4 bước)</h3>
+        <ol>
+          <li><b>① Cấp cây</b> — Với mỗi cây khảo sát, đếm số trái dự kiến chín trong từng tháng dựa trên
+            số buồng hữu hiệu và tuổi buồng (theo hướng dẫn đếm buồng).</li>
+          <li><b>② Quy đổi & gộp theo tầng</b> — Nhân số trái mỗi cây với mật độ trồng của vườn để quy về
+            đơn vị trái/ha, sau đó lấy trung bình theo từng "tầng" (tổ hợp Xã × Nhóm tuổi cây).</li>
+          <li><b>③ Khoảng tin cậy 95%</b> — Ước lượng bằng bootstrap 2 cấp (lặp lại 1.000 lần): chọn lại
+            có lặp theo PHIẾU/VƯỜN trước, rồi giữ nguyên toàn bộ cây trong vườn được chọn — phù hợp vì
+            cây "lồng" trong vườn (dữ liệu cụm), không dùng công thức thống kê thông thường.</li>
+          <li><b>④ Gộp theo vùng</b> — Lấy trung bình có trọng số theo diện tích của từng tầng (diện tích
+            thực tế nếu có, hoặc diện tích mẫu đã khảo sát) để ra kết quả chung toàn vùng dự án.</li>
+        </ol>
+        <div class="caveat">⚠️ Kết quả là mức <b>"trần"</b> — CHƯA trừ hao hụt phát sinh sau khảo sát
+          (sâu bệnh, gãy đổ, thời tiết…). Sẽ được hiệu chỉnh khi có dữ liệu thu mua thực tế (mục 5.4
+          báo cáo phân tích).</div>
+      </div>
+
+      <div class="chart-card">
+        <h4>Dự báo năng suất theo tháng</h4>
+        <div class="chart-sub">Đường dự báo (trái/ha) kèm dải khoảng tin cậy 95% — càng hẹp, độ tin cậy
+          càng cao.</div>
+        <div id="chartForecastLine"></div>
+      </div>
+
+      <div class="chart-card">
+        <h4>So sánh theo Xã × Nhóm tuổi cây</h4>
+        <div class="chart-sub" id="chartBarSub">Ước tính trái/ha theo từng tầng, tháng gần nhất.</div>
+        <div id="chartForecastBar"></div>
+      </div>
+
+      <h4 style="margin:16px 0 8px;font-size:13.5px">Bảng kết quả theo tháng</h4>
+      <div class="table-wrap" id="forecastTable"></div>
+
+      <h4 style="margin:16px 0 8px;font-size:13.5px">Xuất dữ liệu / báo cáo</h4>
+      <div class="export-row">
+        <button class="btn btn-secondary" onclick="exportRawDataCsv()">⬇️ Dữ liệu thô (CSV)</button>
+        <button class="btn btn-secondary" onclick="exportDetailedReport()">⬇️ Báo cáo chi tiết từng bước (HTML)</button>
+        <button class="btn btn-primary" onclick="exportExecutiveSummary()">⬇️ Tóm tắt cho Ban lãnh đạo (HTML)</button>
+      </div>
+      <div class="export-card">
+        <b>Dữ liệu thô (CSV):</b> đúng bảng dữ liệu cấp cây × tháng dùng làm đầu vào phân tích (surveyId,
+        xã, nhóm tuổi, mật độ, mã cây, tháng, số trái, quy đổi trái/ha) — mở bằng Excel để kiểm tra/đối
+        chiếu độc lập.<br>
+        <b>Báo cáo chi tiết:</b> trình bày đầy đủ 4 bước phương pháp luận kèm bảng số liệu & biểu đồ —
+        dùng khi cần giải trình cách tính.<br>
+        <b>Tóm tắt Ban lãnh đạo:</b> 1 trang, nêu con số & nhận định chính, kèm 1 biểu đồ — dùng để báo
+        cáo nhanh cấp quản lý.
+      </div>
     </div>
 
-    <h2 style="margin-top:20px">Cấu hình trường bắt buộc</h2>
+    <h2 style="margin-top:26px">Cấu hình danh sách Xã khảo sát</h2>
+    <p class="muted">Danh sách xã dưới đây sẽ hiện thành dropdown bắt buộc chọn khi khảo sát viên tạo
+      phiếu — giúp tránh gõ sai chính tả/trùng lặp tên xã (ví dụ "Cẩm Sơn" vs "Cẩm sơn").</p>
+    <div id="xaListRows"></div>
+    <button class="btn btn-outline" onclick="addXaListRow()">+ Thêm xã</button>
+    <button class="btn btn-primary" onclick="saveXaListConfig()">Lưu danh sách xã</button>
+
+    <h2 style="margin-top:22px">Cấu hình trường bắt buộc</h2>
     <p class="muted">Chọn trường nào bắt buộc nhập khi khảo sát viên tạo phiếu / thêm cây.
-      Nên luôn để "Xã" và "Vị trí GPS" bắt buộc để dữ liệu dùng được cho thống kê & bản đồ.</p>
+      Riêng "Xã" luôn bắt buộc (dropdown) nên không có trong danh sách này. Nên luôn để
+      "Vị trí GPS" bắt buộc để dữ liệu dùng được cho thống kê & bản đồ.</p>
     <div id="requiredFieldsBox"></div>
     <button class="btn btn-primary" onclick="saveRequiredFields()">Lưu cấu hình trường bắt buộc</button>
 
@@ -331,11 +453,16 @@ let currentTreeId = null;
 let editingSurveyId = null;  // != null khi đang ở chế độ sửa phiếu (sau khi Admin duyệt yêu cầu)
 let phenologyConfig = { tMax: 12.5, threshold: 6 };
 let monthTags = [];          // 7 tag "YYYY-MM" tính từ ngày khảo sát hiện tại
+let xaListConfig = [];       // danh sách xã do Admin cấu hình — nguồn cho dropdown Xã bắt buộc
+let latestResultsDoc = null; // doc { computedAt, forecastByMonth, detail, note } mới nhất từ 'results'
+let currentTreeCodes = [];   // mã cây đã có trong phiếu đang xem — dùng để cảnh báo trùng mã
 
 // Trường nào có thể cấu hình bắt buộc/không bắt buộc (Admin chỉnh trong Bảng điều khiển).
+// Lưu ý: "Xã" KHÔNG có trong danh sách này — từ v1.3 Xã luôn bắt buộc (dropdown chọn từ
+// config/xaList) nên không cần Admin bật/tắt riêng.
 const REQUIRED_FIELD_DEFS = {
   survey: [
-    { key:'xa', label:'Xã' }, { key:'chuVuon', label:'Chủ vườn' },
+    { key:'chuVuon', label:'Chủ vườn' },
     { key:'sdt', label:'Số điện thoại' }, { key:'giongDua', label:'Giống dừa' },
     { key:'namTrong', label:'Năm trồng' }, { key:'tuoiVuon', label:'Tuổi vườn' },
     { key:'matDo', label:'Mật độ trồng' }, { key:'dienTichDua', label:'Diện tích dừa' },
@@ -357,6 +484,7 @@ function $(id){ return document.getElementById(id); }
 function showView(id){
   document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
   $(id).classList.remove('hidden');
+  document.body.classList.toggle('admin-wide', id === 'view-admin');
 }
 function showError(elId, msg){ const el = $(elId); el.textContent = msg; el.classList.remove('hidden'); }
 function clearError(elId){ $(elId).classList.add('hidden'); }
@@ -503,10 +631,39 @@ async function loadGlobalConfig(){
     }
   }catch(e){ /* dùng mặc định */ }
   applyRequiredFieldMarkers();
+
+  try{
+    const doc3 = await db.collection('config').doc('xaList').get();
+    xaListConfig = doc3.exists ? (doc3.data().list || []) : [];
+  }catch(e){ xaListConfig = []; }
+  populateXaSelect();
+}
+
+// Đổ danh sách xã (config/xaList, do Admin quản lý) vào dropdown bắt buộc chọn của phiếu khảo sát.
+function populateXaSelect(){
+  const sel = $('fXa'); if (!sel) return;
+  const keepValue = sel.value;
+  sel.innerHTML = '<option value="">— Chọn xã —</option>' +
+    xaListConfig.map(xa => `<option value="${xa}">${xa}</option>`).join('');
+  if (keepValue) ensureXaOptionExists(keepValue);
+  const hint = $('xaEmptyHint');
+  if (hint) hint.hidden = xaListConfig.length > 0;
+}
+// Nếu phiếu cũ có giá trị Xã không còn trong danh sách hiện tại (đã bị Admin xoá/đổi tên), vẫn
+// hiện đúng giá trị cũ trong dropdown (đánh dấu rõ) thay vì âm thầm bỏ trống — tránh mất dữ liệu.
+function ensureXaOptionExists(xa){
+  const sel = $('fXa'); if (!sel || !xa) return;
+  const exists = [...sel.options].some(o => o.value === xa);
+  if (!exists){
+    const opt = document.createElement('option');
+    opt.value = xa; opt.textContent = xa + ' (không còn trong danh sách)';
+    sel.appendChild(opt);
+  }
+  sel.value = xa;
 }
 
 function applyRequiredFieldMarkers(){
-  const svLabelIds = { xa:'lblXa', chuVuon:'lblChuVuon', sdt:'lblSdt', giongDua:'lblGiong',
+  const svLabelIds = { chuVuon:'lblChuVuon', sdt:'lblSdt', giongDua:'lblGiong',
     namTrong:'lblNamTrong', tuoiVuon:'lblTuoiVuon', matDo:'lblMatDo', dienTichDua:'lblDienTich' };
   Object.keys(svLabelIds).forEach(k => {
     const el = $(svLabelIds[k]); if (!el) return;
@@ -590,7 +747,8 @@ function startEditSurvey(surveyId, data){
   $('gpsResult').innerHTML = capturedGps
     ? `<span class="gps-ok">Lat ${capturedGps.lat.toFixed(6)}, Lng ${capturedGps.lng.toFixed(6)}</span>`
     : 'Chưa lấy vị trí.';
-  $('fXa').value = data.xa || '';
+  $('fXa').value = '';
+  if (data.xa) ensureXaOptionExists(data.xa);
   $('fChuVuon').value = data.chuVuon || '';
   $('fSdt').value = data.sdt || '';
   $('fGiong').value = data.giongDua || '';
@@ -638,7 +796,7 @@ function captureGps(){
 function validateSurveyRequiredFields(data){
   const rf = requiredFieldsConfig.survey;
   const missing = [];
-  if (rf.xa && !data.xa) missing.push('Xã');
+  if (!data.xa) missing.push('Xã');   // luôn bắt buộc — dropdown chọn từ danh sách Admin cấu hình
   if (rf.chuVuon && !data.chuVuon) missing.push('Chủ vườn');
   if (rf.sdt && !data.sdt) missing.push('Số điện thoại');
   if (rf.giongDua && !data.giongDua) missing.push('Giống dừa');
@@ -789,12 +947,14 @@ async function requestSurveyEdit(){
 async function refreshTreeList(){
   const box = $('treeListItems');
   box.innerHTML = '<p class="muted">Đang tải…</p>';
+  currentTreeCodes = [];
   try{
     const q = await db.collection('surveys').doc(currentSurveyId)
       .collection('trees').orderBy('createdAt','desc').get();
     if (q.empty){ box.innerHTML = '<p class="muted">Chưa có cây nào.</p>'; return; }
 
     const trees = q.docs.map(doc => doc.data());
+    currentTreeCodes = trees.map(t => t.maCay).filter(Boolean);
     const allTags = new Set();
     trees.forEach(t => Object.keys(t.forecast || {}).forEach(tag => allTags.add(tag)));
     const sortedTags = [...allTags].sort();
@@ -818,7 +978,7 @@ async function refreshTreeList(){
 function startNewTree(){
   clearError('treeError');
   currentTreeId = null;
-  $('tMaCay').value = '';
+  suggestMaCay();
   $('tTinhTrang').selectedIndex = 0;
   $('tSoBuong').value = 0;
   const today = new Date();
@@ -843,10 +1003,24 @@ function startNewTree(){
 
 function cancelTreeForm(){ showView('view-tree-list'); }
 
+// Gợi ý mã cây kế tiếp theo thứ tự trong phiếu (VD: "Cây 01", "Cây 02"…), tự động bỏ qua mã đã
+// dùng để không đề xuất trùng — vẫn cho phép anh/chị sửa lại thủ công nếu muốn đặt mã khác.
+function suggestMaCay(){
+  const used = new Set(currentTreeCodes);
+  let n = ((currentSurveyData && currentSurveyData.treeCount) || 0) + 1;
+  let code = 'Cây ' + String(n).padStart(2, '0');
+  while (used.has(code)){ n++; code = 'Cây ' + String(n).padStart(2, '0'); }
+  $('tMaCay').value = code;
+}
+
 async function saveTree(){
   clearError('treeError');
   const maCay = $('tMaCay').value.trim();
   if (requiredFieldsConfig.tree.maCay && !maCay) return showError('treeError', 'Vui lòng nhập Mã cây.');
+  if (maCay && currentTreeCodes.includes(maCay)){
+    return showError('treeError',
+      `Mã cây "${maCay}" đã tồn tại trong phiếu này — vui lòng đổi mã khác để tránh trùng lặp dữ liệu.`);
+  }
 
   const forecast = {};
   monthTags.forEach(tag => { forecast[tag] = parseInt($('m_'+tag).value || '0', 10); });
@@ -880,16 +1054,60 @@ async function saveTree(){
 // ============================================================================
 // ADMIN DASHBOARD
 // ============================================================================
+let totalSurveysCount = 0, totalTreesCount = 0, totalXaCount = 0;
+let pendingUsersCount = 0, pendingEditReqCount = 0;
+
 async function showAdmin(){
   showView('view-admin');
-  loadAdminOverview();
-  loadPendingUsers();
-  loadEditRequests();
   loadRequiredFieldsForm();
   loadKpiTargetsForm();
+  loadXaListForm();
   $('cfgTmax').value = phenologyConfig.tMax;
   $('cfgThreshold').value = phenologyConfig.threshold;
-  loadLatestForecast();
+  await Promise.all([
+    loadAdminOverview(),
+    loadPendingUsers(),
+    loadEditRequests(),
+    loadLatestForecast(),
+  ]);
+  renderPipeline();
+}
+
+// ---- Luồng thông tin từng công đoạn (trực quan hoá cho Admin) ----
+function renderPipeline(){
+  const box = $('adminPipeline'); if (!box) return;
+  const hasResults = !!latestResultsDoc;
+  const stages = [
+    { icon:'📱', title:'Thu thập dữ liệu hiện trường',
+      desc:'Khảo sát viên nhập phiếu vườn & cây khảo sát qua ứng dụng.',
+      metric:`${totalSurveysCount} phiếu · ${totalTreesCount} cây`, cls: totalSurveysCount ? 'ok' : 'idle' },
+    { icon:'🔒', title:'Kiểm soát quyền & đồng bộ',
+      desc:'Dữ liệu được xác thực & lưu vào Firestore đúng quyền hạn (Rules).',
+      metric: pendingUsersCount ? `${pendingUsersCount} TK chờ duyệt` : 'Đã đồng bộ',
+      cls: pendingUsersCount ? 'warn' : 'ok' },
+    { icon:'✅', title:'Admin kiểm duyệt',
+      desc:'Duyệt tài khoản mới & yêu cầu chỉnh sửa phiếu trước khi đưa vào phân tích.',
+      metric: pendingEditReqCount ? `${pendingEditReqCount} yêu cầu chờ` : 'Không tồn đọng',
+      cls: pendingEditReqCount ? 'warn' : 'ok' },
+    { icon:'📐', title:'Phân tích thống kê',
+      desc:'Script Python: bootstrap 2 cấp, gộp theo tầng & vùng (4 bước phương pháp luận).',
+      metric: hasResults ? 'Đã chạy' : 'Chưa chạy', cls: hasResults ? 'ok' : 'idle' },
+    { icon:'📈', title:'Kết quả dự báo',
+      desc:'Năng suất dự kiến theo tháng (trái/ha), kèm khoảng tin cậy 95%.',
+      metric: hasResults ? `${(latestResultsDoc.forecastByMonth||[]).length} tháng` : 'Chưa có',
+      cls: hasResults ? 'ok' : 'idle' },
+    { icon:'📤', title:'Báo cáo & xuất dữ liệu',
+      desc:'Xuất dữ liệu thô, báo cáo chi tiết từng bước, tóm tắt cho Ban lãnh đạo.',
+      metric: hasResults ? 'Sẵn sàng xuất' : 'Chờ có kết quả', cls: hasResults ? 'ok' : 'idle' },
+  ];
+  box.innerHTML = stages.map((s, i) => `
+    <div class="pipeline-stage">
+      <div class="stage-no">CÔNG ĐOẠN ${i+1}</div>
+      <div class="stage-icon">${s.icon}</div>
+      <div class="stage-title">${s.title}</div>
+      <div class="stage-desc">${s.desc}</div>
+      <div class="stage-metric ${s.cls}">${s.metric}</div>
+    </div>${i < stages.length-1 ? '<div class="pipeline-arrow">→</div>' : ''}`).join('');
 }
 
 // ---- Yêu cầu chỉnh sửa phiếu (khảo sát viên gửi, Admin duyệt) ----
@@ -899,6 +1117,7 @@ async function loadEditRequests(){
   try{
     const q = await db.collection('surveys').where('editRequestStatus', '==', 'pending').get();
     $('editReqCountBadge').textContent = q.size;
+    pendingEditReqCount = q.size;
     if (q.empty){ box.innerHTML = '<p class="muted">Không có yêu cầu nào chờ duyệt.</p>'; return; }
     box.innerHTML = '';
     q.forEach(doc => {
@@ -984,6 +1203,7 @@ async function loadPendingUsers(){
   try{
     const q = await db.collection('users').where('status', '==', 'pending').get();
     $('pendingCountBadge').textContent = q.size;
+    pendingUsersCount = q.size;
     if (q.empty){ box.innerHTML = '<p class="muted">Không có tài khoản nào chờ duyệt.</p>'; return; }
     box.innerHTML = '';
     q.forEach(doc => {
@@ -1027,20 +1247,28 @@ async function loadAdminOverview(){
   try{
     const surveysSnap = await db.collection('surveys').get();
     const treesSnap = await db.collectionGroup('trees').get();
-
-    grid.innerHTML = `
-      <div class="kpi-tile"><div class="num">${surveysSnap.size}</div><div class="lbl">Phiếu khảo sát</div></div>
-      <div class="kpi-tile"><div class="num">${treesSnap.size}</div><div class="lbl">Cây đã khảo sát</div></div>`;
+    totalSurveysCount = surveysSnap.size;
+    totalTreesCount = treesSnap.size;
 
     const byXa = {};
     treesSnap.forEach(doc => {
       const xa = doc.data().xa || '(chưa rõ)';
       byXa[xa] = (byXa[xa] || 0) + 1;
     });
+    totalXaCount = Object.keys(byXa).length;
 
     const targetsDoc = await db.collection('config').doc('kpiTargets').get();
     const targets = targetsDoc.exists ? (targetsDoc.data().targets || []) : [];
     const targetMap = {}; targets.forEach(t => targetMap[t.xa] = t);
+    const totalTarget = targets.reduce((s,t) => s + (t.targetTrees || 0), 0);
+    const overallPct = totalTarget ? Math.min(100, Math.round(totalTreesCount/totalTarget*100)) : null;
+
+    grid.innerHTML = `
+      <div class="kpi-tile"><div class="num">${totalSurveysCount}</div><div class="lbl">Phiếu khảo sát</div></div>
+      <div class="kpi-tile"><div class="num">${totalTreesCount}</div><div class="lbl">Cây đã khảo sát</div></div>
+      <div class="kpi-tile"><div class="num">${totalXaCount}</div><div class="lbl">Xã có dữ liệu</div></div>
+      <div class="kpi-tile"><div class="num">${overallPct !== null ? overallPct + '%' : '—'}</div>
+        <div class="lbl">Tiến độ mục tiêu chung</div></div>`;
 
     const xaSet = new Set([...Object.keys(byXa), ...targets.map(t=>t.xa)]);
     if (xaSet.size === 0){ byXaBox.innerHTML = '<p class="muted">Chưa có dữ liệu.</p>'; return; }
@@ -1064,20 +1292,222 @@ async function loadAdminOverview(){
 }
 
 async function loadLatestForecast(){
-  const box = $('adminForecast');
   try{
     const q = await db.collection('results').orderBy('computedAt','desc').limit(1).get();
-    if (q.empty) return; // giữ placeholder mặc định trong HTML
-    const d = q.docs[0].data();
-    let html = `<p class="muted">Tính lúc: ${d.computedAt?.toDate?.().toLocaleString('vi-VN') || ''}</p>
-      <table><tr><th>Tháng</th><th>Dự báo (trái/ha)</th><th>Khoảng tin cậy 95%</th></tr>`;
-    (d.forecastByMonth || []).forEach(row => {
-      html += `<tr><td>${row.month}</td><td>${row.value?.toFixed?.(0) ?? row.value}</td>
-        <td>${row.ciLow?.toFixed?.(0) ?? '—'} – ${row.ciHigh?.toFixed?.(0) ?? '—'}</td></tr>`;
+    if (q.empty){
+      latestResultsDoc = null;
+      $('forecastEmpty').classList.remove('hidden');
+      $('forecastSection').classList.add('hidden');
+      return;
+    }
+    latestResultsDoc = q.docs[0].data();
+  }catch(e){
+    latestResultsDoc = null;
+    $('forecastEmpty').classList.remove('hidden');
+    $('forecastSection').classList.add('hidden');
+    return;
+  }
+
+  $('forecastEmpty').classList.add('hidden');
+  $('forecastSection').classList.remove('hidden');
+  const d = latestResultsDoc;
+  $('forecastComputedAt').textContent = 'Tính lúc: ' +
+    (d.computedAt?.toDate?.().toLocaleString('vi-VN') || '—') + (d.note ? ' · ' + d.note : '');
+
+  renderForecastTable(d);
+  renderForecastLineChart(d);
+  renderForecastBarChart(d);
+}
+
+function renderForecastTable(d){
+  const rows = d.forecastByMonth || [];
+  if (!rows.length){ $('forecastTable').innerHTML = '<p class="muted">Không có dữ liệu.</p>'; return; }
+  const maxVal = Math.max(...rows.map(r => r.value ?? -Infinity));
+  let html = '<table><tr><th>Tháng</th><th>Dự báo (trái/ha)</th><th>Khoảng tin cậy 95%</th><th>Xu hướng</th></tr>';
+  rows.forEach((row, i) => {
+    const prev = i > 0 ? rows[i-1].value : null;
+    let trend = '<span class="muted">—</span>';
+    if (prev !== null && row.value !== null && row.value !== undefined){
+      if (row.value > prev) trend = '<span style="color:#1F5C3B">▲ tăng</span>';
+      else if (row.value < prev) trend = '<span style="color:#B23A2E">▼ giảm</span>';
+      else trend = '<span class="muted">≈ đi ngang</span>';
+    }
+    const isMax = row.value === maxVal;
+    html += `<tr><td>${tagToLabel(row.month)}</td>
+      <td class="${isMax ? 'cell-max' : ''}">${Math.round(row.value ?? 0)}${isMax ? ' 🏆' : ''}</td>
+      <td>${row.ciLow != null ? Math.round(row.ciLow) : '—'} – ${row.ciHigh != null ? Math.round(row.ciHigh) : '—'}</td>
+      <td>${trend}</td></tr>`;
+  });
+  html += '</table>';
+  $('forecastTable').innerHTML = html;
+}
+
+// ============================================================================
+// BIỂU ĐỒ SVG (dùng chung cho Dashboard & 3 file xuất — mã màu hex cố định,
+// KHÔNG dùng biến CSS var(--...) để các file HTML xuất ra vẫn hiển thị đúng
+// màu khi mở độc lập, ngoài app).
+// ============================================================================
+function buildLineBandChart(rows){
+  if (!rows || !rows.length) return '<p class="muted">Không có dữ liệu.</p>';
+  const W = 640, H = 260, padL = 46, padR = 16, padT = 16, padB = 34;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const los = rows.map(r => r.ciLow ?? r.value ?? 0);
+  const his = rows.map(r => r.ciHigh ?? r.value ?? 0);
+  let minY = Math.min(...los), maxY = Math.max(...his);
+  if (minY === maxY){ minY -= 1; maxY += 1; }
+  minY = Math.max(0, minY * 0.9); maxY = maxY * 1.1;
+  const xFor = i => padL + (rows.length === 1 ? innerW/2 : innerW * i/(rows.length-1));
+  const yFor = v => padT + innerH - ((v - minY)/(maxY - minY || 1)) * innerH;
+
+  const bandTop = rows.map((r,i) => `${xFor(i)},${yFor(r.ciHigh ?? r.value ?? 0)}`).join(' L ');
+  const bandBot = rows.slice().reverse().map((r,i) => {
+    const idx = rows.length - 1 - i;
+    return `${xFor(idx)},${yFor(rows[idx].ciLow ?? rows[idx].value ?? 0)}`;
+  }).join(' L ');
+  const bandPath = `M ${bandTop} L ${bandBot} Z`;
+  const linePath = 'M ' + rows.map((r,i) => `${xFor(i)},${yFor(r.value ?? 0)}`).join(' L ');
+
+  let gridlines = '';
+  const ticks = 4;
+  for (let t = 0; t <= ticks; t++){
+    const v = minY + (maxY - minY) * t/ticks;
+    const y = yFor(v);
+    gridlines += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#D1D5DB" stroke-width="1" opacity="0.6"/>
+      <text x="${padL-8}" y="${y+4}" font-size="10" fill="#4B5563" text-anchor="end">${Math.round(v)}</text>`;
+  }
+  const xlabels = rows.map((r,i) => `<text x="${xFor(i)}" y="${H-10}" font-size="10" fill="#4B5563"
+      text-anchor="middle">${tagToLabel(r.month).replace('Tháng ','T')}</text>`).join('');
+  const points = rows.map((r,i) => {
+    const lo = r.ciLow != null ? Math.round(r.ciLow) : Math.round(r.value ?? 0);
+    const hi = r.ciHigh != null ? Math.round(r.ciHigh) : Math.round(r.value ?? 0);
+    return `<circle cx="${xFor(i)}" cy="${yFor(r.value ?? 0)}" r="4.5" fill="#1F5C3B" stroke="#fff" stroke-width="1.5">
+      <title>${tagToLabel(r.month)}: ${Math.round(r.value ?? 0)} trái/ha (KTC ${lo}–${hi})</title></circle>`;
+  }).join('');
+
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img"
+      aria-label="Biểu đồ dự báo năng suất theo tháng">
+      ${gridlines}
+      <path d="${bandPath}" fill="#2C7A4B" opacity="0.15" stroke="none"/>
+      <path d="${linePath}" fill="none" stroke="#1F5C3B" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${points}
+      ${xlabels}
+      <line x1="${padL}" y1="${padT+innerH}" x2="${W-padR}" y2="${padT+innerH}" stroke="#D1D5DB" stroke-width="1"/>
+    </svg>
+    <div class="chart-legend">
+      <span class="lg-item"><span class="lg-line" style="border-color:#1F5C3B"></span>Dự báo (trái/ha)</span>
+      <span class="lg-item"><span class="lg-swatch" style="background:#2C7A4B;opacity:.3"></span>Khoảng tin cậy 95%</span>
+    </div>`;
+}
+
+const NHOM_TUOI_COLORS = { 'Tơ':'#2a78d6', 'Ổn định NS':'#eb6834', 'Già cỗi/thanh lý':'#1baf7a' };
+const NHOM_TUOI_ORDER = ['Tơ','Ổn định NS','Già cỗi/thanh lý'];
+
+function buildStratumBarChart(strata){
+  if (!strata || !strata.length) return '<p class="muted">Không có dữ liệu.</p>';
+  const xaList = [...new Set(strata.map(s => s.xa))].sort();
+  const nhomList = NHOM_TUOI_ORDER.filter(n => strata.some(s => s.nhomTuoiCay === n));
+  if (!nhomList.length) return '<p class="muted">Không có dữ liệu.</p>';
+  const dataMap = {};
+  strata.forEach(s => { dataMap[s.xa + '|' + s.nhomTuoiCay] = s; });
+
+  const W = 640, H = 280, padL = 46, padR = 16, padT = 16, padB = 46;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const maxVal = Math.max(1, ...strata.map(s => s.yEstimate || 0)) * 1.15;
+  const groupW = innerW / xaList.length;
+  const barGap = 3;
+  const barW = Math.min(26, (groupW - 12 - (nhomList.length-1)*barGap) / nhomList.length);
+
+  let bars = '', xlabels = '';
+  xaList.forEach((xa, gi) => {
+    const groupX = padL + gi*groupW + (groupW - (nhomList.length*barW + (nhomList.length-1)*barGap))/2;
+    nhomList.forEach((nhom, ni) => {
+      const s = dataMap[xa + '|' + nhom];
+      const val = s ? (s.yEstimate || 0) : 0;
+      const barH = Math.max(0, (val/maxVal) * innerH);
+      const x = groupX + ni*(barW + barGap);
+      const y = padT + innerH - barH;
+      const color = NHOM_TUOI_COLORS[nhom];
+      const title = s
+        ? `${xa} · ${nhom}: ${Math.round(val)} trái/ha (KTC ${s.ciLow ?? '—'}–${s.ciHigh ?? '—'})`
+        : `${xa} · ${nhom}: không có dữ liệu`;
+      bars += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="3" fill="${color}"><title>${title}</title></rect>`;
     });
-    html += '</table>';
-    box.innerHTML = html;
-  }catch(e){ /* giữ placeholder */ }
+    xlabels += `<text x="${padL+gi*groupW+groupW/2}" y="${H-14}" font-size="10.5" fill="#4B5563"
+        text-anchor="middle">${xa}</text>`;
+  });
+
+  let gridlines = '';
+  const ticks = 4;
+  for (let t = 0; t <= ticks; t++){
+    const v = maxVal * t/ticks;
+    const y = padT + innerH - (v/maxVal) * innerH;
+    gridlines += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#D1D5DB" stroke-width="1" opacity="0.6"/>
+      <text x="${padL-8}" y="${y+4}" font-size="10" fill="#4B5563" text-anchor="end">${Math.round(v)}</text>`;
+  }
+  const legend = nhomList.map(n =>
+    `<span class="lg-item"><span class="lg-swatch" style="background:${NHOM_TUOI_COLORS[n]}"></span>${n}</span>`
+  ).join('');
+
+  return `<div class="chart-legend">${legend}</div>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img"
+        aria-label="Biểu đồ so sánh theo xã và nhóm tuổi cây">
+      ${gridlines}
+      <line x1="${padL}" y1="${padT+innerH}" x2="${W-padR}" y2="${padT+innerH}" stroke="#D1D5DB" stroke-width="1"/>
+      ${bars}
+      ${xlabels}
+    </svg>`;
+}
+
+function renderForecastLineChart(d){
+  $('chartForecastLine').innerHTML = buildLineBandChart(d.forecastByMonth || []);
+}
+function renderForecastBarChart(d){
+  const detail = d.detail || [];
+  if (!detail.length){ $('chartForecastBar').innerHTML = '<p class="muted">Không có dữ liệu.</p>'; return; }
+  const last = detail[detail.length - 1];
+  $('chartBarSub').textContent = `Ước tính trái/ha theo từng tầng — tháng ${tagToLabel(last.month)}.`;
+  $('chartForecastBar').innerHTML = buildStratumBarChart(last.strata);
+}
+
+// ---- Cấu hình danh sách Xã khảo sát (nguồn cho dropdown bắt buộc) ----
+async function loadXaListForm(){
+  const box = $('xaListRows'); if (!box) return;
+  box.innerHTML = '';
+  const doc = await db.collection('config').doc('xaList').get();
+  const list = doc.exists ? (doc.data().list || []) : [];
+  if (list.length === 0) addXaListRow();
+  else list.forEach(xa => addXaListRow(xa));
+}
+function addXaListRow(value=''){
+  const box = $('xaListRows');
+  const row = document.createElement('div');
+  row.className = 'xa-row';
+  row.innerHTML = `<input type="text" class="xa-name" placeholder="Tên xã (VD: Cẩm Sơn)" value="${value}">
+    <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()">Xoá</button>`;
+  box.appendChild(row);
+}
+async function saveXaListConfig(){
+  clearError('adminError');
+  const inputs = document.querySelectorAll('.xa-name');
+  const seen = new Set(), dups = [], list = [];
+  inputs.forEach(inp => {
+    const v = inp.value.trim();
+    if (!v) return;
+    const key = v.toLowerCase();
+    if (seen.has(key)){ dups.push(v); return; }
+    seen.add(key);
+    list.push(v);
+  });
+  if (dups.length){
+    return showError('adminError',
+      'Có tên xã trùng lặp (chỉ khác hoa/thường, dễ gây sai lệch thống kê như "Cẩm Sơn"/"Cẩm sơn"): ' +
+      dups.join(', ') + '. Vui lòng gộp lại thành một tên trước khi lưu.');
+  }
+  try{
+    await db.collection('config').doc('xaList').set({ list }, { merge: true });
+    xaListConfig = list;
+    populateXaSelect();
+  }catch(e){ showError('adminError', 'Không lưu được danh sách xã: ' + e.message); }
 }
 
 // ---- Cấu hình mục tiêu KPI theo xã ----
@@ -1129,6 +1559,238 @@ async function savePhenologyConfig(){
     $('guideThreshold').textContent = threshold;
     $('guideTmax').textContent = tMax;
   }catch(e){ showError('adminError', 'Không lưu được cấu hình: ' + e.message); }
+}
+
+// ============================================================================
+// XUẤT DỮ LIỆU / BÁO CÁO (3 file, hoàn toàn phía client — app không có backend)
+// ============================================================================
+function downloadBlob(filename, content, mime){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+function csvEscape(v){
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+function rowsToCsv(headers, rows){
+  const lines = [headers.map(csvEscape).join(',')];
+  rows.forEach(r => lines.push(headers.map(h => csvEscape(r[h])).join(',')));
+  return '﻿' + lines.join('\r\n'); // BOM để Excel mở đúng tiếng Việt UTF-8
+}
+
+// (i) Dữ liệu thô — đúng bảng cấp cây × tháng dùng làm đầu vào cho script phân tích.
+async function exportRawDataCsv(){
+  clearError('adminError');
+  try{
+    const treesSnap = await db.collectionGroup('trees').get();
+    const rows = [];
+    treesSnap.forEach(doc => {
+      const t = doc.data();
+      const forecast = t.forecast || {};
+      Object.keys(forecast).sort().forEach(month => {
+        const count = forecast[month] || 0;
+        const matDo = t.matDo || 0;
+        rows.push({
+          surveyId: t.surveyId || '',
+          xa: t.xa || '',
+          nhomTuoiCay: t.nhomTuoiCay || '',
+          matDo,
+          maCay: t.maCay || '',
+          thang: month,
+          soTraiDemDuoc: count,
+          quyDoiTraiHa: Math.round(count * matDo * 100) / 100,
+        });
+      });
+    });
+    if (!rows.length) return alert('Chưa có dữ liệu cây nào để xuất.');
+    const headers = ['surveyId','xa','nhomTuoiCay','matDo','maCay','thang','soTraiDemDuoc','quyDoiTraiHa'];
+    const csv = rowsToCsv(headers, rows);
+    const ts = new Date().toISOString().slice(0,10);
+    downloadBlob(`du-lieu-tho-phan-tich_${ts}.csv`, csv, 'text/csv;charset=utf-8');
+  }catch(e){ showError('adminError', 'Không xuất được dữ liệu thô: ' + e.message); }
+}
+
+function reportShellStyles(){
+  return `body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1f2937;
+      margin:0;background:#F5F7F6;}
+    .wrap{max-width:900px;margin:0 auto;padding:28px 24px 60px;}
+    h1{color:#1F5C3B;font-size:22px;margin:0 0 4px;}
+    h2{color:#1F5C3B;font-size:16px;margin:26px 0 10px;border-bottom:2px solid #EAF3EC;padding-bottom:6px;}
+    .meta{color:#4B5563;font-size:13px;margin-bottom:18px;}
+    table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0 4px;}
+    th,td{padding:8px 10px;border-bottom:1px solid #D1D5DB;text-align:left;}
+    th{background:#EAF3EC;color:#1F5C3B;}
+    .cell-max{background:#EAF3EC;font-weight:800;color:#1F5C3B;}
+    .card{background:#fff;border:1px solid #D1D5DB;border-radius:10px;padding:16px 18px;margin-bottom:18px;}
+    .caveat{background:#FEF3C7;color:#92400E;border-radius:8px;padding:10px 12px;font-size:12.5px;margin-top:10px;}
+    .chart-legend{display:flex;gap:14px;font-size:12px;color:#4B5563;margin:8px 0;flex-wrap:wrap;}
+    .lg-item{display:inline-flex;align-items:center;gap:6px;}
+    .lg-line{width:16px;height:0;border-top:2px solid;display:inline-block;}
+    .lg-swatch{width:11px;height:11px;border-radius:3px;display:inline-block;}
+    footer{color:#4B5563;font-size:11.5px;margin-top:30px;border-top:1px solid #D1D5DB;padding-top:12px;}`;
+}
+
+// (ii) Báo cáo chi tiết từng bước — đầy đủ phương pháp luận, bảng số liệu & biểu đồ.
+function exportDetailedReport(){
+  if (!latestResultsDoc) return alert('Chưa có kết quả phân tích để xuất báo cáo.');
+  const d = latestResultsDoc;
+  const computedAt = d.computedAt?.toDate?.().toLocaleString('vi-VN') || '—';
+  const genAt = new Date().toLocaleString('vi-VN');
+
+  let strataRows = '';
+  (d.detail || []).forEach(monthBlock => {
+    (monthBlock.strata || []).forEach(s => {
+      strataRows += `<tr><td>${tagToLabel(monthBlock.month)}</td><td>${s.xa}</td><td>${s.nhomTuoiCay}</td>
+        <td>${s.yEstimate ?? '—'}</td><td>${s.ciLow ?? '—'}</td><td>${s.ciHigh ?? '—'}</td>
+        <td>${s.weight != null ? (s.weight*100).toFixed(1) + '%' : '—'}</td></tr>`;
+    });
+  });
+
+  const rows = d.forecastByMonth || [];
+  const maxVal = rows.length ? Math.max(...rows.map(r => r.value ?? -Infinity)) : null;
+  const forecastRows = rows.map(r => `<tr><td>${tagToLabel(r.month)}</td>
+      <td class="${r.value === maxVal ? 'cell-max' : ''}">${Math.round(r.value ?? 0)}${r.value === maxVal ? ' 🏆' : ''}</td>
+      <td>${r.ciLow != null ? Math.round(r.ciLow) : '—'} – ${r.ciHigh != null ? Math.round(r.ciHigh) : '—'}</td></tr>`
+    ).join('');
+
+  const lineChart = buildLineBandChart(rows);
+  const detailArr = d.detail || [];
+  const lastDetail = detailArr[detailArr.length - 1];
+  const barChart = lastDetail ? buildStratumBarChart(lastDetail.strata) : '<p>Không có dữ liệu.</p>';
+
+  const html = `<!doctype html><html lang="vi"><head><meta charset="UTF-8">
+<title>Báo cáo phân tích chi tiết — Dự báo năng suất dừa</title>
+<style>${reportShellStyles()}</style></head><body><div class="wrap">
+<h1>🥥 Báo cáo phân tích chi tiết — Dự báo năng suất dừa</h1>
+<div class="meta">Kết quả tính lúc: ${computedAt} · Báo cáo xuất lúc: ${genAt}${d.note ? ' · ' + d.note : ''}</div>
+
+<div class="card">
+  <h2 style="margin-top:0;border:none">Phương pháp luận (4 bước)</h2>
+  <ol style="line-height:1.6;font-size:13.5px">
+    <li><b>① Cấp cây</b> — đếm số trái dự kiến chín mỗi tháng cho từng cây khảo sát, dựa trên số buồng
+      hữu hiệu và tuổi buồng.</li>
+    <li><b>② Quy đổi & gộp theo tầng</b> — nhân số trái mỗi cây với mật độ trồng của vườn (trái/ha), lấy
+      trung bình theo tầng (Xã × Nhóm tuổi cây).</li>
+    <li><b>③ Khoảng tin cậy 95%</b> — bootstrap 2 cấp (1.000 lần lặp), resample theo phiếu/vườn trước rồi
+      theo cây trong vườn được chọn (dữ liệu cụm).</li>
+    <li><b>④ Gộp theo vùng</b> — trung bình có trọng số theo diện tích của từng tầng.</li>
+  </ol>
+  <div class="caveat">⚠️ Kết quả là mức "trần" — chưa trừ hao hụt phát sinh sau khảo sát (sâu bệnh, gãy
+    đổ, thời tiết…). Sẽ được hiệu chỉnh khi có dữ liệu thu mua thực tế.</div>
+</div>
+
+<h2>Bước ①–② : Kết quả theo tầng (Xã × Nhóm tuổi cây), từng tháng</h2>
+<div class="card"><table><tr><th>Tháng</th><th>Xã</th><th>Nhóm tuổi cây</th><th>Ước tính (trái/ha)</th>
+  <th>KTC dưới</th><th>KTC trên</th><th>Trọng số diện tích</th></tr>${strataRows}</table></div>
+
+<h2>Bước ③ : Biểu đồ dự báo kèm khoảng tin cậy</h2>
+<div class="card">${lineChart}</div>
+
+<h2>So sánh trực quan theo tầng (tháng gần nhất)</h2>
+<div class="card">${barChart}</div>
+
+<h2>Bước ④ : Kết quả gộp toàn vùng theo tháng</h2>
+<div class="card"><table><tr><th>Tháng</th><th>Dự báo (trái/ha)</th><th>Khoảng tin cậy 95%</th></tr>
+  ${forecastRows}</table></div>
+
+<footer>Nguồn: hệ thống Khảo sát năng suất dừa · script <code>aggregate_trai_ha_thang.py</code> ·
+  Báo cáo được tạo tự động từ dữ liệu Firestore, không chỉnh sửa thủ công.</footer>
+</div></body></html>`;
+
+  const ts = new Date().toISOString().slice(0,10);
+  downloadBlob(`bao-cao-chi-tiet-phan-tich_${ts}.html`, html, 'text/html;charset=utf-8');
+}
+
+// (iii) Tóm tắt cho Ban lãnh đạo — 1 trang, con số & nhận định chính, kèm 1 biểu đồ.
+function exportExecutiveSummary(){
+  if (!latestResultsDoc) return alert('Chưa có kết quả phân tích để xuất tóm tắt.');
+  const d = latestResultsDoc;
+  const rows = d.forecastByMonth || [];
+  const computedAt = d.computedAt?.toDate?.().toLocaleString('vi-VN') || '—';
+  const genAt = new Date().toLocaleString('vi-VN');
+
+  const avg = rows.length ? rows.reduce((s,r) => s + (r.value || 0), 0) / rows.length : 0;
+  const first = rows[0], last = rows[rows.length - 1];
+  const trendPct = (first && last && first.value)
+    ? Math.round((last.value - first.value) / first.value * 100) : null;
+  const maxRow = rows.reduce((m,r) => (!m || (r.value ?? -Infinity) > m.value) ? r : m, null);
+
+  const detailArr = d.detail || [];
+  const lastDetail = detailArr[detailArr.length - 1];
+  let topXa = null, lowXa = null;
+  if (lastDetail){
+    const byXaAvg = {};
+    (lastDetail.strata || []).forEach(s => {
+      byXaAvg[s.xa] = byXaAvg[s.xa] || [];
+      byXaAvg[s.xa].push(s.yEstimate || 0);
+    });
+    const avgByXa = Object.entries(byXaAvg)
+      .map(([xa, vals]) => ({ xa, avg: vals.reduce((a,b)=>a+b,0) / vals.length }));
+    avgByXa.sort((a,b) => b.avg - a.avg);
+    topXa = avgByXa[0]; lowXa = avgByXa[avgByXa.length - 1];
+  }
+
+  const lineChart = buildLineBandChart(rows);
+  const highlights = [
+    `Dự báo trung bình <b>${Math.round(avg)} trái/ha/tháng</b> trong ${rows.length} tháng tới (mức
+      trần, chưa trừ hao hụt).`,
+    trendPct !== null
+      ? `Xu hướng ${trendPct >= 0 ? 'tăng' : 'giảm'} khoảng <b>${Math.abs(trendPct)}%</b> từ
+          ${tagToLabel(first.month)} đến ${tagToLabel(last.month)}.` : '',
+    maxRow ? `Tháng dự kiến cao điểm: <b>${tagToLabel(maxRow.month)}</b>
+        (~${Math.round(maxRow.value)} trái/ha).` : '',
+    topXa ? `Xã dẫn đầu năng suất ước tính: <b>${topXa.xa}</b> (~${Math.round(topXa.avg)} trái/ha).` : '',
+    (lowXa && topXa && lowXa.xa !== topXa.xa)
+      ? `Xã cần chú ý thêm: <b>${lowXa.xa}</b> (~${Math.round(lowXa.avg)} trái/ha) — nên ưu tiên khảo
+          sát bổ sung / kiểm tra chăm sóc.` : '',
+    `Cơ sở dữ liệu: ${totalSurveysCount} phiếu khảo sát, ${totalTreesCount} cây, tại ${totalXaCount} xã.`,
+  ].filter(Boolean).map(h => `<li>${h}</li>`).join('');
+
+  const html = `<!doctype html><html lang="vi"><head><meta charset="UTF-8">
+<title>Tóm tắt điều hành — Dự báo năng suất dừa</title>
+<style>
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1f2937;margin:0;background:#fff;}
+  .wrap{max-width:760px;margin:0 auto;padding:36px 32px 50px;}
+  .brand{color:#1F5C3B;font-weight:800;font-size:13px;letter-spacing:.04em;text-transform:uppercase;}
+  h1{color:#123524;font-size:24px;margin:6px 0 4px;}
+  .meta{color:#4B5563;font-size:12.5px;margin-bottom:22px;}
+  .headline{background:#EAF3EC;border-radius:12px;padding:20px 22px;margin-bottom:22px;}
+  .headline .num{font-size:34px;font-weight:800;color:#1F5C3B;}
+  .headline .lbl{font-size:13px;color:#1F5C3B;margin-top:2px;}
+  ul.hl{padding-left:20px;font-size:14.5px;line-height:1.7;color:#1f2937;}
+  .chart-legend{display:flex;gap:14px;font-size:12px;color:#4B5563;margin:8px 0;flex-wrap:wrap;}
+  .lg-item{display:inline-flex;align-items:center;gap:6px;}
+  .lg-line{width:16px;height:0;border-top:2px solid;display:inline-block;}
+  .lg-swatch{width:11px;height:11px;border-radius:3px;display:inline-block;}
+  footer{color:#9CA3AF;font-size:11px;margin-top:34px;border-top:1px solid #D1D5DB;padding-top:12px;}
+</style></head><body><div class="wrap">
+<div class="brand">Bộ phận NC-PT & Cải tiến Nông nghiệp</div>
+<h1>🥥 Tóm tắt dự báo năng suất dừa</h1>
+<div class="meta">Kết quả tính lúc: ${computedAt} · Báo cáo xuất lúc: ${genAt}</div>
+
+<div class="headline">
+  <div class="num">${Math.round(avg)} trái/ha</div>
+  <div class="lbl">Dự báo trung bình / tháng (mức trần, chưa trừ hao hụt sau khảo sát)</div>
+</div>
+
+<h3 style="color:#1F5C3B;font-size:14px;margin-bottom:6px">Điểm chính</h3>
+<ul class="hl">${highlights}</ul>
+
+<h3 style="color:#1F5C3B;font-size:14px;margin:20px 0 6px">Diễn biến dự báo theo tháng</h3>
+${lineChart}
+
+<footer>Phương pháp: bootstrap 2 cấp trên dữ liệu khảo sát vườn/cây, gộp theo Xã × Nhóm tuổi cây và
+  trọng số diện tích. Xem "Báo cáo chi tiết từng bước" để biết đầy đủ phương pháp luận & số liệu.
+  Nguồn dữ liệu: hệ thống Khảo sát năng suất dừa.</footer>
+</div></body></html>`;
+
+  const ts = new Date().toISOString().slice(0,10);
+  downloadBlob(`tom-tat-lanh-dao_${ts}.html`, html, 'text/html;charset=utf-8');
 }
 </script>
 </body>
