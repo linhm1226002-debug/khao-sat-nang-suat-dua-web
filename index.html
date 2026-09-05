@@ -393,6 +393,186 @@
     </table>
     <p class="muted">Tuổi thu hoạch trung bình (T_max) hiện đặt ở <b id="guideTmax">12,5</b> tháng —
       Admin có thể hiệu chỉnh trong mục Cấu hình khi có dữ liệu hậu kiểm mới.</p>
+
+    <button class="btn btn-outline" style="margin-top:16px" id="guideDeepDiveBtn" onclick="toggleGuideDeepDive()">
+      🔬 Xem cơ sở khoa học &amp; cách xác định chiều xoắn ngoài vườn ▾</button>
+    <div id="guideDeepDive" class="hidden" style="margin-top:14px">
+
+      <h3 style="margin-bottom:6px">Vì sao suy ra được tuổi buồng chỉ từ vị trí trên cây?</h3>
+      <p style="font-size:14px;line-height:1.6">
+        Lá dừa mọc theo một đường xoắn ốc duy nhất quanh thân (gọi là <b>diệp tự</b>): mỗi lá mới
+        lệch khoảng <b>137,5°</b> (góc vàng) so với lá liền trước. Lá mới và buồng hoa hình thành
+        <b>đồng thời</b> tại mỗi nách lá, theo đúng thứ tự của đường xoắn đó — ở cây sinh trưởng tốt,
+        khoảng cách giữa 2 lá/buồng liên tiếp trung bình <b>25–30 ngày (~0,83 tháng)</b>. Vì vậy chỉ
+        cần xác định đúng <b>thứ tự hình thành</b> (không cần đo góc bằng dụng cụ) là suy ra được tuổi
+        tương đối của từng buồng. Trái cần khoảng <b>11–12 tháng</b> để chín; phần lớn hiện tượng rụng
+        hoa/trái non xảy ra trong <b>3–6 tháng đầu</b>, sau đó số trái còn lại tương đối ổn định.</p>
+      <p class="muted" style="margin-top:-4px">Nguồn: Liyanage (1950, dẫn qua ScienceDirect); Abeywardene
+        &amp; Mathes (1971, Tạp chí COCOS); tổng quan phân số Fibonacci trong diệp tự, PMC6408360; Phyllotactic
+        handedness in Palms — T.A. Davis, ResearchGate.</p>
+
+      <h3 style="margin:18px 0 6px">Lưu ý bắt buộc: chiều xoắn nhìn thấy đảo ngược khi đổi hướng nhìn</h3>
+      <p style="font-size:14px;line-height:1.6">
+        Hai sơ đồ dưới đây vẽ <b>CÙNG MỘT CÂY</b>, chỉ khác góc nhìn — chứng minh vì sao phải luôn xác
+        định lại chiều xoắn ngay tại từng cây, không suy từ cây bên cạnh:</p>
+      <div class="gps-box" style="padding:14px">
+        <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
+          <div style="flex:1;min-width:160px;max-width:230px;text-align:center">
+            <div style="font-size:12px;font-weight:700;color:#1F5C3B;margin-bottom:4px">Nhìn từ TRÊN xuống ngọn</div>
+            <svg viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:200px">
+            <line x1="320" y1="320" x2="320.0" y2="252.0" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="376.4" y2="381.6" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="221.4" y2="311.4" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="410.8" y2="250.3" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="297.4" y2="448.0" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="241.8" y2="197.3" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="475.5" y2="361.7" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="163.4" y2="401.5" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="385.7" y2="139.6" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="399.4" y2="511.7" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="117.9" y2="225.8" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="547.5" y2="248.3" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="193.0" y2="540.0" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="261.7" y2="56.9" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="553.5" y2="483.5" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="22.1" y2="359.2" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <path d="M 320.0,286.0 L 325.2,285.4 L 330.6,285.7 L 336.1,286.8 L 341.4,288.7 L 346.5,291.6 L 351.2,295.3 L 355.4,299.7 L 358.9,304.9 L 361.7,310.6 L 363.6,316.9 L 364.5,323.5 L 364.4,330.4 L 363.3,337.2 L 361.1,344.0 L 357.8,350.5 L 353.4,356.5 L 348.2,361.9 L 342.0,366.5 L 335.1,370.2 L 327.5,372.8 L 319.6,374.3 L 311.3,374.6 L 302.9,373.6 L 294.7,371.3 L 286.7,367.8 L 279.3,363.0 L 272.6,357.0 L 266.7,350.0 L 261.9,342.0 L 258.4,333.3 L 256.1,324.0 L 255.2,314.3 L 255.9,304.5 L 258.0,294.7 L 261.7,285.2 L 266.8,276.3 L 273.2,268.1 L 281.0,260.9 L 289.8,254.9 L 299.6,250.2 L 310.2,246.9 L 321.2,245.3 L 332.5,245.4 L 343.8,247.2 L 354.9,250.7 L 365.4,255.9 L 375.2,262.7 L 383.9,271.0 L 391.3,280.6 L 397.3,291.4 L 401.7,303.1 L 404.2,315.4 L 405.0,328.1 L 403.7,341.0 L 400.5,353.6 L 395.4,365.8 L 388.5,377.2 L 379.8,387.5 L 369.6,396.5 L 358.0,403.9 L 345.3,409.6 L 331.8,413.3 L 317.7,415.0 L 303.3,414.5 L 289.1,411.9 L 275.3,407.1 L 262.2,400.2 L 250.2,391.4 L 239.5,380.7 L 230.5,368.5 L 223.3,354.9 L 218.2,340.2 L 215.4,324.9 L 214.9,309.1 L 216.8,293.2 L 221.0,277.7 L 227.6,262.9 L 236.5,249.1 L 247.3,236.7 L 260.1,226.0 L 274.4,217.2 L 290.0,210.6 L 306.6,206.4 L 323.8,204.7 L 341.1,205.6 L 358.3,209.1 L 374.9,215.2 L 390.5,223.8 L 404.8,234.8 L 417.3,247.8 L 427.9,262.7 L 436.2,279.2 L 441.9,296.8 L 445.0,315.2 L 445.2,334.1 L 442.7,352.9 L 437.3,371.2 L 429.1,388.7 L 418.4,404.9 L 405.2,419.3 L 389.9,431.8 L 372.8,441.9 L 354.3,449.3 L 334.7,453.9 L 314.4,455.6 L 294.1,454.2 L 274.0,449.7 L 254.7,442.3 L 236.5,431.9 L 220.1,418.8 L 205.6,403.4 L 193.6,385.8 L 184.3,366.5 L 177.9,345.9 L 174.7,324.4 L 174.7,302.5 L 178.0,280.7 L 184.6,259.5 L 194.3,239.4 L 207.0,220.9 L 222.5,204.4 L 240.3,190.3 L 260.2,179.0 L 281.7,170.7 L 304.4,165.7 L 327.7,164.1 L 351.1,166.1 L 374.0,171.5 L 396.1,180.4 L 416.7,192.6 L 435.3,207.8 L 451.6,225.7 L 465.1,246.0 L 475.4,268.2 L 482.4,291.8 L 485.7,316.4 L 485.4,341.3 L 481.2,366.0 L 473.4,390.0 L 462.1,412.7 L 447.3,433.5 L 429.6,452.0 L 409.1,467.7 L 386.4,480.3 L 361.9,489.4 L 336.2,494.7 L 309.9,496.1 L 283.5,493.6 L 257.6,487.1 L 232.9,476.7 L 209.9,462.7 L 189.1,445.3 L 171.0,424.9 L 156.1,401.9 L 144.8,376.8 L 137.3,350.2 L 133.9,322.5 L 134.7,294.6 L 139.6,266.9 L 148.7,240.1 L 161.8,214.9 L 178.5,191.8 L 198.7,171.3 L 221.7,154.0 L 247.3,140.3 L 274.7,130.5 L 303.5,124.9 L 332.9,123.7 L 362.3,126.9 L 391.0,134.4 L 418.4,146.3 L 443.9,162.2 L 466.8,181.8 L 486.6,204.7 L 502.8,230.5 L 515.0,258.5 L 523.0,288.2 L 526.4,318.9 L 525.2,349.9 L 519.4,380.5 L 509.0,410.0 L 494.2,437.8 L 475.4,463.2 L 452.9,485.5 L 427.1,504.4 L 398.7,519.2 L 368.3,529.7 L 336.5,535.5 L 304.0,536.5 L 271.6,532.6 L 240.1,523.9 L 210.0,510.5 L 182.2,492.7 L 157.2,470.8 L 135.7,445.4 L 118.1,416.8 L 105.0,385.9 L 96.6,353.1 L 93.2,319.4 L 94.9,285.4 L 101.7,251.8 L 113.4,219.5 L 130.0,189.3 L 150.9,161.7 L 175.9,137.4 L 204.3,117.1 L 235.6,101.2 L 269.0,90.1 L 303.9,84.1 L 339.4,83.4 L 374.8,88.0 L 409.2,97.9 L 441.9,112.8 L 472.1,132.6 L 499.1,156.8 L 522.3,184.9 L 541.1,216.2 L 555.0,250.1 L 563.8,285.9 L 567.1,322.7 L 564.9,359.7 L 557.1,396.2 L 543.9,431.2 L 525.6,464.0 L 502.5,493.7 L 475.1,519.8 L 443.9,541.6 L 409.8,558.5 L 373.3,570.2 L 335.4,576.4 L 296.8,576.7 L 258.5,571.3 L 221.3,560.2 L 186.0,543.6 L 153.5,521.8 L 124.4,495.3 L 99.6,464.6 L 79.6,430.5 L 64.9,393.6 L 55.8,354.8" fill="none" stroke="#8a8a8a" stroke-width="2.2" stroke-dasharray="1,7" stroke-linecap="round"/>
+    <circle cx="320.0" cy="286.0" r="19" fill="#FFC000" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="320.0" y="290.0" font-size="11" font-weight="700" text-anchor="middle" fill="#5c4200">Nở</text>
+    <circle cx="353.4" cy="356.5" r="16" fill="#FFC000" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="353.4" y="360.5" font-size="11" font-weight="700" text-anchor="middle" fill="#5c4200">-1</text>
+    <circle cx="255.2" cy="314.3" r="16" fill="#FFC000" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="255.2" y="318.3" font-size="11" font-weight="700" text-anchor="middle" fill="#5c4200">-2</text>
+    <circle cx="383.9" cy="271.0" r="16" fill="#FFC000" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="383.9" y="275.0" font-size="11" font-weight="700" text-anchor="middle" fill="#5c4200">-3</text>
+    <circle cx="303.3" cy="414.5" r="16" fill="#FFC000" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="303.3" y="418.5" font-size="11" font-weight="700" text-anchor="middle" fill="#5c4200">-4</text>
+    <circle cx="260.1" cy="226.0" r="16" fill="#0070C0" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="260.1" y="230.0" font-size="11" font-weight="700" text-anchor="middle" fill="#ffffff">-5</text>
+    <circle cx="442.7" cy="352.9" r="16" fill="#0070C0" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="442.7" y="356.9" font-size="11" font-weight="700" text-anchor="middle" fill="#ffffff">-6</text>
+    <circle cx="193.6" cy="385.8" r="16" fill="#0070C0" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="193.6" y="389.8" font-size="11" font-weight="700" text-anchor="middle" fill="#ffffff">-7</text>
+    <circle cx="374.0" cy="171.5" r="16" fill="#0070C0" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="374.0" y="175.5" font-size="11" font-weight="700" text-anchor="middle" fill="#ffffff">-8</text>
+    <circle cx="386.4" cy="480.3" r="16" fill="#0070C0" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="386.4" y="484.3" font-size="11" font-weight="700" text-anchor="middle" fill="#ffffff">-9</text>
+    <circle cx="148.7" cy="240.1" r="16" fill="#00B050" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="148.7" y="244.1" font-size="10" font-weight="700" text-anchor="middle" fill="#ffffff">-10</text>
+    <circle cx="515.0" cy="258.5" r="16" fill="#00B050" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="515.0" y="262.5" font-size="10" font-weight="700" text-anchor="middle" fill="#ffffff">-11</text>
+    <circle cx="210.0" cy="510.5" r="16" fill="#00B050" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="210.0" y="514.5" font-size="10" font-weight="700" text-anchor="middle" fill="#ffffff">-12</text>
+    <circle cx="269.0" cy="90.1" r="16" fill="#00B050" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="269.0" y="94.1" font-size="10" font-weight="700" text-anchor="middle" fill="#ffffff">-13</text>
+    <circle cx="525.6" cy="464.0" r="16" fill="#00B050" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="525.6" y="468.0" font-size="10" font-weight="700" text-anchor="middle" fill="#ffffff">-14</text>
+    <circle cx="55.8" cy="354.8" r="16" fill="#00B050" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="55.8" y="358.8" font-size="10" font-weight="700" text-anchor="middle" fill="#ffffff">-15</text>
+          </svg>
+          </div>
+          <div style="flex:1;min-width:160px;max-width:230px;text-align:center">
+            <div style="font-size:12px;font-weight:700;color:#1F5C3B;margin-bottom:4px">Nhìn từ DƯỚI lên — cùng 1 cây</div>
+            <svg viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:200px">
+            <line x1="320" y1="320" x2="320.0" y2="252.0" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="263.6" y2="381.6" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="418.6" y2="311.4" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="229.2" y2="250.3" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="342.6" y2="448.0" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="398.2" y2="197.3" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="164.5" y2="361.7" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="476.6" y2="401.5" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="254.3" y2="139.6" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="240.6" y2="511.7" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="522.1" y2="225.8" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="92.5" y2="248.3" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="447.0" y2="540.0" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="378.3" y2="56.9" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="86.5" y2="483.5" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <line x1="320" y1="320" x2="617.9" y2="359.2" stroke="#BFE3A6" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+    <path d="M 320.0,286.0 L 314.8,285.4 L 309.4,285.7 L 303.9,286.8 L 298.6,288.7 L 293.5,291.6 L 288.8,295.3 L 284.6,299.7 L 281.1,304.9 L 278.3,310.6 L 276.4,316.9 L 275.5,323.5 L 275.6,330.4 L 276.7,337.2 L 278.9,344.0 L 282.2,350.5 L 286.6,356.5 L 291.8,361.9 L 298.0,366.5 L 304.9,370.2 L 312.5,372.8 L 320.4,374.3 L 328.7,374.6 L 337.1,373.6 L 345.3,371.3 L 353.3,367.8 L 360.7,363.0 L 367.4,357.0 L 373.3,350.0 L 378.1,342.0 L 381.6,333.3 L 383.9,324.0 L 384.8,314.3 L 384.1,304.5 L 382.0,294.7 L 378.3,285.2 L 373.2,276.3 L 366.8,268.1 L 359.0,260.9 L 350.2,254.9 L 340.4,250.2 L 329.8,246.9 L 318.8,245.3 L 307.5,245.4 L 296.2,247.2 L 285.1,250.7 L 274.6,255.9 L 264.8,262.7 L 256.1,271.0 L 248.7,280.6 L 242.7,291.4 L 238.3,303.1 L 235.8,315.4 L 235.0,328.1 L 236.3,341.0 L 239.5,353.6 L 244.6,365.8 L 251.5,377.2 L 260.2,387.5 L 270.4,396.5 L 282.0,403.9 L 294.7,409.6 L 308.2,413.3 L 322.3,415.0 L 336.7,414.5 L 350.9,411.9 L 364.7,407.1 L 377.8,400.2 L 389.8,391.4 L 400.5,380.7 L 409.5,368.5 L 416.7,354.9 L 421.8,340.2 L 424.6,324.9 L 425.1,309.1 L 423.2,293.2 L 419.0,277.7 L 412.4,262.9 L 403.5,249.1 L 392.7,236.7 L 379.9,226.0 L 365.6,217.2 L 350.0,210.6 L 333.4,206.4 L 316.2,204.7 L 298.9,205.6 L 281.7,209.1 L 265.1,215.2 L 249.5,223.8 L 235.2,234.8 L 222.7,247.8 L 212.1,262.7 L 203.8,279.2 L 198.1,296.8 L 195.0,315.2 L 194.8,334.1 L 197.3,352.9 L 202.7,371.2 L 210.9,388.7 L 221.6,404.9 L 234.8,419.3 L 250.1,431.8 L 267.2,441.9 L 285.7,449.3 L 305.3,453.9 L 325.6,455.6 L 345.9,454.2 L 366.0,449.7 L 385.3,442.3 L 403.5,431.9 L 419.9,418.8 L 434.4,403.4 L 446.4,385.8 L 455.7,366.5 L 462.1,345.9 L 465.3,324.4 L 465.3,302.5 L 462.0,280.7 L 455.4,259.5 L 445.7,239.4 L 433.0,220.9 L 417.5,204.4 L 399.7,190.3 L 379.8,179.0 L 358.3,170.7 L 335.6,165.7 L 312.3,164.1 L 288.9,166.1 L 266.0,171.5 L 243.9,180.4 L 223.3,192.6 L 204.7,207.8 L 188.4,225.7 L 174.9,246.0 L 164.6,268.2 L 157.6,291.8 L 154.3,316.4 L 154.6,341.3 L 158.8,366.0 L 166.6,390.0 L 177.9,412.7 L 192.7,433.5 L 210.4,452.0 L 230.9,467.7 L 253.6,480.3 L 278.1,489.4 L 303.8,494.7 L 330.1,496.1 L 356.5,493.6 L 382.4,487.1 L 407.1,476.7 L 430.1,462.7 L 450.9,445.3 L 469.0,424.9 L 483.9,401.9 L 495.2,376.8 L 502.7,350.2 L 506.1,322.5 L 505.3,294.6 L 500.4,266.9 L 491.3,240.1 L 478.2,214.9 L 461.5,191.8 L 441.3,171.3 L 418.3,154.0 L 392.7,140.3 L 365.3,130.5 L 336.5,124.9 L 307.1,123.7 L 277.7,126.9 L 249.0,134.4 L 221.6,146.3 L 196.1,162.2 L 173.2,181.8 L 153.4,204.7 L 137.2,230.5 L 125.0,258.5 L 117.0,288.2 L 113.6,318.9 L 114.8,349.9 L 120.6,380.5 L 131.0,410.0 L 145.8,437.8 L 164.6,463.2 L 187.1,485.5 L 212.9,504.4 L 241.3,519.2 L 271.7,529.7 L 303.5,535.5 L 336.0,536.5 L 368.4,532.6 L 399.9,523.9 L 430.0,510.5 L 457.8,492.7 L 482.8,470.8 L 504.3,445.4 L 521.9,416.8 L 535.0,385.9 L 543.4,353.1 L 546.8,319.4 L 545.1,285.4 L 538.3,251.8 L 526.6,219.5 L 510.0,189.3 L 489.1,161.7 L 464.1,137.4 L 435.7,117.1 L 404.4,101.2 L 371.0,90.1 L 336.1,84.1 L 300.6,83.4 L 265.2,88.0 L 230.8,97.9 L 198.1,112.8 L 167.9,132.6 L 140.9,156.8 L 117.7,184.9 L 98.9,216.2 L 85.0,250.1 L 76.2,285.9 L 72.9,322.7 L 75.1,359.7 L 82.9,396.2 L 96.1,431.2 L 114.4,464.0 L 137.5,493.7 L 164.9,519.8 L 196.1,541.6 L 230.2,558.5 L 266.7,570.2 L 304.6,576.4 L 343.2,576.7 L 381.5,571.3 L 418.7,560.2 L 454.0,543.6 L 486.5,521.8 L 515.6,495.3 L 540.4,464.6 L 560.4,430.5 L 575.1,393.6 L 584.2,354.8" fill="none" stroke="#8a8a8a" stroke-width="2.2" stroke-dasharray="1,7" stroke-linecap="round"/>
+    <circle cx="320.0" cy="286.0" r="19" fill="#FFC000" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="320.0" y="290.0" font-size="11" font-weight="700" text-anchor="middle" fill="#5c4200">Nở</text>
+    <circle cx="286.6" cy="356.5" r="16" fill="#FFC000" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="286.6" y="360.5" font-size="11" font-weight="700" text-anchor="middle" fill="#5c4200">-1</text>
+    <circle cx="384.8" cy="314.3" r="16" fill="#FFC000" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="384.8" y="318.3" font-size="11" font-weight="700" text-anchor="middle" fill="#5c4200">-2</text>
+    <circle cx="256.1" cy="271.0" r="16" fill="#FFC000" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="256.1" y="275.0" font-size="11" font-weight="700" text-anchor="middle" fill="#5c4200">-3</text>
+    <circle cx="336.7" cy="414.5" r="16" fill="#FFC000" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="336.7" y="418.5" font-size="11" font-weight="700" text-anchor="middle" fill="#5c4200">-4</text>
+    <circle cx="379.9" cy="226.0" r="16" fill="#0070C0" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="379.9" y="230.0" font-size="11" font-weight="700" text-anchor="middle" fill="#ffffff">-5</text>
+    <circle cx="197.3" cy="352.9" r="16" fill="#0070C0" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="197.3" y="356.9" font-size="11" font-weight="700" text-anchor="middle" fill="#ffffff">-6</text>
+    <circle cx="446.4" cy="385.8" r="16" fill="#0070C0" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="446.4" y="389.8" font-size="11" font-weight="700" text-anchor="middle" fill="#ffffff">-7</text>
+    <circle cx="266.0" cy="171.5" r="16" fill="#0070C0" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="266.0" y="175.5" font-size="11" font-weight="700" text-anchor="middle" fill="#ffffff">-8</text>
+    <circle cx="253.6" cy="480.3" r="16" fill="#0070C0" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="253.6" y="484.3" font-size="11" font-weight="700" text-anchor="middle" fill="#ffffff">-9</text>
+    <circle cx="491.3" cy="240.1" r="16" fill="#00B050" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="491.3" y="244.1" font-size="10" font-weight="700" text-anchor="middle" fill="#ffffff">-10</text>
+    <circle cx="125.0" cy="258.5" r="16" fill="#00B050" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="125.0" y="262.5" font-size="10" font-weight="700" text-anchor="middle" fill="#ffffff">-11</text>
+    <circle cx="430.0" cy="510.5" r="16" fill="#00B050" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="430.0" y="514.5" font-size="10" font-weight="700" text-anchor="middle" fill="#ffffff">-12</text>
+    <circle cx="371.0" cy="90.1" r="16" fill="#00B050" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="371.0" y="94.1" font-size="10" font-weight="700" text-anchor="middle" fill="#ffffff">-13</text>
+    <circle cx="114.4" cy="464.0" r="16" fill="#00B050" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="114.4" y="468.0" font-size="10" font-weight="700" text-anchor="middle" fill="#ffffff">-14</text>
+    <circle cx="584.2" cy="354.8" r="16" fill="#00B050" stroke="#ffffff" stroke-width="2.2"/>
+    <text x="584.2" y="358.8" font-size="10" font-weight="700" text-anchor="middle" fill="#ffffff">-15</text>
+          </svg>
+          </div>
+        </div>
+        <div class="legend" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:12px">
+          <span><i style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#FFC000;margin-right:4px"></i>Chưa ổn định (0–3,3 th)</span>
+          <span><i style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#0070C0;margin-right:4px"></i>Theo dõi tỷ lệ đậu trái (4,2–7,5 th)</span>
+          <span><i style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#00B050;margin-right:4px"></i>Hữu hiệu (8,3–12,5 th)</span>
+        </div>
+        <p class="muted" style="margin-top:10px;margin-bottom:0">Thứ tự -1, -2, -3… quay theo <b>chiều kim
+          đồng hồ</b> ở sơ đồ bên trái (nhìn từ trên), nhưng quay <b>ngược chiều kim đồng hồ</b> ở sơ đồ bên
+          phải (nhìn từ dưới) — giống hệt việc xem một chiếc đinh vít/lò xo từ hai đầu đối diện: ren vẫn vặn
+          một chiều duy nhất trong không gian, nhưng nhìn từ hai đầu sẽ thấy vặn ngược nhau. Đây là hiệu ứng
+          thị giác tất yếu khi đổi hướng nhìn dọc trục xoắn, không phải hai cây khác nhau. Ngoài vườn, khảo
+          sát viên luôn đứng dưới gốc nhìn <b>lên</b> — có thể gặp 1 trong 2 chiều xoắn (thuận hoặc ngược
+          chiều kim đồng hồ) tuỳ từng cây, cần quan sát thực tế trên đúng cây đang đếm để chọn đúng chiều.</p>
+      </div>
+
+      <h3 style="margin:18px 0 6px">4 bước áp dụng ngoài vườn</h3>
+      <ol style="font-size:14px;line-height:1.7;padding-left:20px;margin-top:0">
+        <li><b>Xác định buồng mốc (0 tháng):</b> tìm buồng có mo (spathe) vừa nứt, hoa đực bắt đầu bung
+          phấn ở đầu gié.</li>
+        <li><b>Xác định chiều xoắn của CÂY đang xét:</b> đứng dưới gốc nhìn lên ngọn, quan sát hướng vặn
+          của các bẹ lá quanh thân — mỗi cây có thể khác nhau, không suy từ cây bên cạnh.</li>
+        <li><b>Đếm tuần tự theo đúng thứ tự xoắn:</b> từ buồng mốc, đi theo chiều xoắn xuống các nách lá
+          già hơn, đánh số -1, -2, -3… mỗi buồng kế tiếp già hơn buồng trước ~0,8–1 tháng.</li>
+        <li><b>Đối chiếu Bảng phân loại</b> (bảng tuổi buồng ở trên) để xác định buồng nào đã "hữu hiệu",
+          ghi số trái đếm được vào đúng ô tháng dự báo tương ứng.</li>
+      </ol>
+      <p class="muted" style="margin-top:-6px"><b>Mẹo kiểm tra:</b> với diệp tự phổ biến ở dừa (13 lá ≈ 5
+        vòng xoắn), buồng thứ <b>-13</b> thường nằm gần thẳng hàng phía trên buồng mốc — có thể dùng làm
+        điểm kiểm tra chéo khi đếm, nhưng diệp tự thực tế có thể khác tuỳ cây/giống nên vẫn cần quan sát
+        trực tiếp, không áp dụng máy móc.</p>
+
+      <div class="gps-box" style="border-color:#e8a33d;background:#fff9ee;margin-top:16px">
+        <h3 style="margin:0 0 8px;color:#a85d00">⚠ Ba giới hạn cần nhớ</h3>
+        <ul style="font-size:13px;line-height:1.6;padding-left:18px;margin:0">
+          <li><b>~0,83 tháng/buồng là giá trị trung bình quốc tế</b> (25–30 ngày/lá-buồng); thực tế thay
+            đổi theo giống, tuổi cây, mùa vụ, dinh dưỡng và khí hậu ĐBSCL — nên đối chiếu/hiệu chỉnh bằng
+            cách đánh dấu buồng và theo dõi thực tế tại vườn trước khi dùng để tính sản lượng chính xác.</li>
+          <li><b>Góc và chiều xoắn là đặc điểm riêng của từng cây</b> — sơ đồ trên chỉ minh hoạ nguyên lý
+            chung, không áp dụng máy móc một góc hay một điểm thẳng hàng cố định cho mọi cây.</li>
+          <li><b>Đây là phương pháp ước lượng tuổi tương đối</b> theo thứ tự hình thành, không thay thế
+            nhật ký theo dõi/đánh dấu buồng khi cần độ chính xác cao cho mục đích nghiên cứu khoa học.</li>
+        </ul>
+      </div>
+      <p class="muted" style="margin-top:10px;font-size:11px">Nguồn tham khảo đầy đủ: Herrick &amp; Thomas
+        (ScienceDirect); Abeywardene &amp; Mathes 1971 (Tạp chí COCOS); phân số Fibonacci trong diệp tự
+        (PMC6408360); diệp tự dừa qua nghiên cứu ve dừa <i>Aceria guerreronis</i> (PMC12894133); Phyllotactic
+        handedness in Palms — T.A. Davis (ResearchGate); Coconut Handbook — Tetra Pak.</p>
+    </div>
     <button class="btn btn-secondary" onclick="showHome()">← Quay lại</button>
   </section>
 
@@ -421,7 +601,13 @@
     </div>
 
     <label id="lblGiong" data-base="Giống dừa">Giống dừa</label>
-    <input type="text" id="fGiong" placeholder="Ta xanh, Xiêm xanh…" />
+    <select id="fGiong" onchange="onGiongSelectChange()">
+      <option value="">— Chọn giống (hoặc để trống) —</option>
+    </select>
+    <input type="text" id="fGiongOther" placeholder="Nhập tên giống khác…" style="margin-top:6px" hidden />
+    <p class="muted" id="giongEmptyHint" style="margin-top:4px" hidden>
+      Chưa có giống nào trong danh mục — Admin có thể vào Bảng điều khiển, mục
+      "Cấu hình danh mục Giống dừa" để thêm (vẫn chọn được "Khác" để nhập tay).</p>
 
     <div class="row">
       <div><label id="lblNamTrong" data-base="Năm trồng">Năm trồng</label><input type="number" id="fNamTrong" oninput="autoTuoiVuon()" /></div>
@@ -503,6 +689,7 @@
       <h2 style="margin:0">📁 Danh mục dự án</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-outline" style="width:auto;padding:9px 14px" onclick="showAdminSettings()">⚙️ Cài đặt hệ thống</button>
+        <button class="btn btn-outline" style="width:auto;padding:9px 14px" onclick="openCompareProjects()">📈 So sánh dự án</button>
         <button class="btn btn-outline" style="width:auto;padding:9px 14px" onclick="showAdminHub()">↻ Làm mới</button>
         <button class="btn btn-primary admin-only-hub" style="width:auto;padding:9px 14px" onclick="openProjectWizard()">+ Tạo dự án mới</button>
       </div>
@@ -526,6 +713,23 @@
     <div id="hubTrashSection" style="margin-top:22px"></div>
 
     <div class="error hidden" id="hubError"></div>
+  </section>
+
+  <!-- ============ SO SÁNH XU HƯỚNG NĂNG SUẤT GIỮA CÁC DỰ ÁN/MÙA VỤ (v1.9) ============ -->
+  <section id="view-compare-projects" class="card hidden">
+    <div class="admin-toolbar">
+      <div>
+        <button class="pd-back" onclick="showAdminHub()">← Danh mục dự án</button>
+        <h2 style="margin:2px 0 0">📈 So sánh xu hướng năng suất giữa các dự án/mùa vụ</h2>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:8px">Chọn từ 2 dự án trở lên để so sánh trên cùng biểu đồ — đối
+      chiếu theo <b>tháng lịch thực tế</b> (nên dùng để so sánh mùa vụ khác nhau, ví dụ cùng là tháng
+      10-12 nhưng ở 2 năm khác nhau). Giá trị là số trái/cây/tháng trung bình (chưa quy đổi theo mật độ),
+      tính trực tiếp từ dữ liệu cây hiện có trong phạm vi anh/chị được xem.</p>
+    <div id="compareProjectChecklist" class="hub-projects-grid" style="margin-top:10px"></div>
+    <button class="btn btn-primary" style="width:auto;padding:9px 18px;margin-top:12px" onclick="runProjectComparison()">So sánh</button>
+    <div id="compareProjectResults" style="margin-top:16px"></div>
   </section>
 
   <!-- ============ ADMIN: CHI TIẾT DỰ ÁN ============ -->
@@ -775,10 +979,11 @@
       <h2 style="margin-top:20px">Yêu cầu chỉnh sửa phiếu <span class="badge" id="editReqCountBadge">0</span></h2>
       <div id="editRequestsList"><p class="muted">Đang tải…</p></div>
 
-      <h2 style="margin-top:20px">Quyền Quản lý — cấp thêm cho tài khoản khảo sát viên</h2>
+      <h2 style="margin-top:20px">Danh mục người dùng & quyền Quản lý</h2>
       <p class="muted">Cấp thêm (không đổi vai trò) cho 1 tài khoản đã duyệt: xem chi tiết dự án, tải báo
-        cáo, thiết lập KPI, xem (không loại trừ) dữ liệu đầu vào. Tài khoản vẫn nhập phiếu bình thường như
-        trước — đây chỉ là quyền cộng thêm, không thay thế.</p>
+        cáo, thiết lập KPI (mục tiêu KPI theo xã — dùng chung, không tách theo dự án), xem (không loại trừ)
+        dữ liệu đầu vào. Tài khoản vẫn nhập phiếu bình thường như trước — đây chỉ là quyền cộng thêm, không
+        thay thế. Từ đây có thể chọn ĐÚNG những dự án nào 1 người được xem, thay vì cấp tất cả hoặc không gì.</p>
       <div id="managerAccessList"><p class="muted">Đang tải…</p></div>
 
       <h2 style="margin-top:26px">Cấu hình danh sách Xã khảo sát</h2>
@@ -787,6 +992,15 @@
       <div id="xaListRows"></div>
       <button class="btn btn-outline" onclick="addXaListRow()">+ Thêm xã</button>
       <button class="btn btn-primary" onclick="saveXaListConfig()">Lưu danh sách xã</button>
+
+      <h2 style="margin-top:26px">Cấu hình danh mục Giống dừa</h2>
+      <p class="muted">Danh sách giống dưới đây sẽ hiện thành lựa chọn khi khảo sát viên tạo phiếu (vẫn
+        giữ tuỳ chọn "Khác" để nhập tay) — giúp gộp nhóm/so sánh năng suất theo giống chính xác hơn, tránh
+        các biến thể chính tả rời rạc (ví dụ "Ta xanh" vs "ta xanh" vs "Xanh ta" bị tính thành 3 nhóm khác
+        nhau). Các phiếu cũ đã nhập tự do trước đây vẫn giữ nguyên giá trị, không bị mất dữ liệu.</p>
+      <div id="giongListRows"></div>
+      <button class="btn btn-outline" onclick="addGiongListRow()">+ Thêm giống</button>
+      <button class="btn btn-primary" onclick="saveGiongListConfig()">Lưu danh mục giống</button>
 
       <h2 style="margin-top:22px">Cấu hình trường bắt buộc</h2>
       <p class="muted">Chọn trường nào bắt buộc nhập khi khảo sát viên tạo phiếu / thêm cây.
@@ -850,11 +1064,12 @@
       </div>
       <div class="wizard-pane hidden" id="wPane2">
         <div class="row">
-          <div><label>Ngày bắt đầu</label><input type="date" id="wjStart" /></div>
+          <div><label>Ngày bắt đầu</label><input type="date" id="wjStart" oninput="updateWizardMonthPreview()" /></div>
           <div><label>Ngày kết thúc</label><input type="date" id="wjEnd" /></div>
         </div>
         <label>Số tháng dự báo mỗi cây (mặc định 7)</label>
-        <input type="number" id="wjForecastMonths" value="7" min="1" max="12" />
+        <input type="number" id="wjForecastMonths" value="7" min="1" max="12" oninput="updateWizardMonthPreview()" />
+        <div id="wjMonthPreview" class="gps-box" style="margin-top:10px;font-size:13px;line-height:1.6"></div>
       </div>
       <div class="wizard-pane hidden" id="wPane3">
         <label style="display:flex;align-items:center;gap:8px;font-size:14px;margin:8px 0;color:#1f2937">
@@ -901,6 +1116,7 @@ let editingSurveyId = null;  // != null khi đang ở chế độ sửa phiếu 
 let phenologyConfig = { tMax: 12.5, threshold: 6 };
 let monthTags = [];          // 7 tag "YYYY-MM" tính từ ngày khảo sát hiện tại
 let xaListConfig = [];       // danh sách xã do Admin cấu hình — nguồn cho dropdown Xã bắt buộc
+let giongListConfig = [];    // danh mục giống dừa do Admin cấu hình (v1.9) — nguồn cho dropdown Giống dừa
 let latestResultsDoc = null; // doc { computedAt, forecastByMonth, detail, note } mới nhất từ 'results'
 let currentTreeCodes = [];   // mã cây đã có trong phiếu đang xem — dùng để cảnh báo trùng mã
 
@@ -948,11 +1164,24 @@ function $(id){ return document.getElementById(id); }
 // tiết dự án, tải báo cáo, thiết lập KPI, xem (không loại trừ) dữ liệu đầu vào. Admin luôn
 // có đủ mọi quyền này nên isAdminOrManager() dùng để gộp điều kiện hiển thị khu vực Admin;
 // isManagerOnly() dùng riêng để ẨN các thao tác chỉ Admin mới được làm bên trong khu vực đó.
+// v1.8 — quyền Quản lý giờ CÓ THỂ giới hạn theo từng dự án cụ thể thay vì chỉ có "tất cả
+// hoặc không gì cả": managerProjectsOf() trả về mảng projectId được cấp (hoặc ['*'] nếu
+// Admin cấp "tất cả dự án", hoặc tương thích ngược từ managerAccess=true kiểu cũ).
 function isAdminUser(){ return !!(currentUserDoc && currentUserDoc.role === 'admin'); }
-function isManagerUser(){ return !!(currentUserDoc && currentUserDoc.managerAccess); }
+function managerProjectsOf(){
+  if (!currentUserDoc) return [];
+  if (currentUserDoc.managerAccess === true) return ['*'];
+  return Array.isArray(currentUserDoc.managerProjects) ? currentUserDoc.managerProjects : [];
+}
+function isGlobalManager(){ return managerProjectsOf().includes('*'); }
+function isManagerUser(){ return managerProjectsOf().length > 0; }
+function isManagerForProject(projectId){
+  const mp = managerProjectsOf();
+  return mp.includes('*') || mp.includes(projectId);
+}
 function isAdminOrManager(){ return isAdminUser() || isManagerUser(); }
 function isManagerOnly(){ return !isAdminUser() && isManagerUser(); }
-const ADMIN_WIDE_VIEWS = ['view-admin-hub', 'view-admin-project', 'view-admin-settings'];
+const ADMIN_WIDE_VIEWS = ['view-admin-hub', 'view-admin-project', 'view-admin-settings', 'view-compare-projects'];
 function showView(id){
   document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
   $(id).classList.remove('hidden');
@@ -1122,6 +1351,12 @@ async function loadGlobalConfig(){
     xaListConfig = doc3.exists ? (doc3.data().list || []) : [];
   }catch(e){ xaListConfig = []; }
   populateXaSelect();
+
+  try{
+    const doc4 = await db.collection('config').doc('giongList').get();
+    giongListConfig = doc4.exists ? (doc4.data().list || []) : [];
+  }catch(e){ giongListConfig = []; }
+  populateGiongSelect();
 }
 
 // Đổ danh sách xã (config/xaList, do Admin quản lý) vào dropdown bắt buộc chọn của phiếu khảo sát.
@@ -1153,6 +1388,78 @@ function ensureXaOptionExists(xa){
   sel.value = xa;
 }
 
+// ---- Dropdown "Giống dừa" (v1.9) — nguồn config/giongList, luôn có tuỳ chọn "Khác" để nhập tay ----
+function populateGiongSelect(){
+  const sel = $('fGiong'); if (!sel) return;
+  const keepValue = sel.value;
+  sel.innerHTML = '<option value="">— Chọn giống (hoặc để trống) —</option>' +
+    giongListConfig.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('') +
+    '<option value="__other__">Khác (nhập tay)…</option>';
+  if (keepValue) sel.value = keepValue;
+  const hint = $('giongEmptyHint');
+  if (hint) hint.hidden = giongListConfig.length > 0;
+  toggleGiongOtherInput();
+}
+function toggleGiongOtherInput(){
+  const sel = $('fGiong'), other = $('fGiongOther');
+  if (!sel || !other) return;
+  other.hidden = sel.value !== '__other__';
+}
+function onGiongSelectChange(){ toggleGiongOtherInput(); }
+// Gán giá trị Giống dừa đã lưu vào select + ô nhập tay — nếu giá trị không có trong danh mục hiện
+// tại (kể cả phiếu cũ nhập tự do trước v1.9), tự chuyển sang chế độ "Khác" và giữ nguyên giá trị cũ.
+function setGiongDuaValue(val){
+  const sel = $('fGiong'), other = $('fGiongOther');
+  if (!sel) return;
+  if (!val){ sel.value = ''; if (other){ other.value = ''; other.hidden = true; } return; }
+  const exists = [...sel.options].some(o => o.value === val);
+  if (exists){ sel.value = val; if (other){ other.value = ''; other.hidden = true; } }
+  else { sel.value = '__other__'; if (other){ other.value = val; other.hidden = false; } }
+}
+function getGiongDuaValue(){
+  const sel = $('fGiong'); if (!sel) return '';
+  if (sel.value === '__other__') return ($('fGiongOther')?.value || '').trim();
+  return sel.value;
+}
+async function loadGiongListForm(){
+  const box = $('giongListRows'); if (!box) return;
+  box.innerHTML = '';
+  const doc = await db.collection('config').doc('giongList').get();
+  const list = doc.exists ? (doc.data().list || []) : [];
+  if (list.length === 0) addGiongListRow();
+  else list.forEach(g => addGiongListRow(g));
+}
+function addGiongListRow(value=''){
+  const box = $('giongListRows');
+  const row = document.createElement('div');
+  row.className = 'xa-row';
+  row.innerHTML = `<input type="text" class="giong-name" placeholder="Tên giống (VD: Ta xanh)" value="${escapeHtml(value)}">
+    <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()">Xoá</button>`;
+  box.appendChild(row);
+}
+async function saveGiongListConfig(){
+  clearError('settingsError');
+  const inputs = document.querySelectorAll('.giong-name');
+  const seen = new Set(), dups = [], list = [];
+  inputs.forEach(inp => {
+    const v = inp.value.trim();
+    if (!v) return;
+    const key = v.toLowerCase();
+    if (seen.has(key)){ dups.push(v); return; }
+    seen.add(key);
+    list.push(v);
+  });
+  if (dups.length){
+    return showError('settingsError',
+      'Có tên giống trùng lặp (chỉ khác hoa/thường): ' + dups.join(', ') + '. Vui lòng gộp lại trước khi lưu.');
+  }
+  try{
+    await db.collection('config').doc('giongList').set({ list }, { merge: true });
+    giongListConfig = list;
+    populateGiongSelect();
+  }catch(e){ showError('settingsError', 'Không lưu được danh mục giống: ' + e.message); }
+}
+
 function applyRequiredFieldMarkers(){
   const svLabelIds = { chuVuon:'lblChuVuon', sdt:'lblSdt', giongDua:'lblGiong',
     namTrong:'lblNamTrong', tuoiVuon:'lblTuoiVuon', matDo:'lblMatDo', dienTichDua:'lblDienTich' };
@@ -1176,6 +1483,18 @@ function showHome(){
   loadMySurveys();
 }
 function showGuide(){ showView('view-guide'); }
+// v1.8 — phần "cơ sở khoa học chi tiết" (nguồn: tài liệu xoắn diệp tự) mặc định ĐÓNG để trang
+// Hướng dẫn vẫn gọn, mở nhanh tại hiện trường — chỉ bung ra khi khảo sát viên chủ động bấm xem,
+// không ảnh hưởng luồng nhập liệu chính.
+function toggleGuideDeepDive(){
+  const box = $('guideDeepDive'); if (!box) return;
+  const willShow = box.classList.contains('hidden');
+  box.classList.toggle('hidden');
+  const btn = $('guideDeepDiveBtn');
+  if (btn) btn.textContent = willShow
+    ? '🔬 Ẩn bớt cơ sở khoa học & cách xác định chiều xoắn ▾'
+    : '🔬 Xem cơ sở khoa học & cách xác định chiều xoắn ngoài vườn ▾';
+}
 
 function editStatusBadge(d){
   const s = d.editRequestStatus;
@@ -1228,8 +1547,9 @@ function startNewSurvey(){
   editingSurveyId = null;
   capturedGps = null;
   $('gpsResult').textContent = 'Chưa lấy vị trí.';
-  ['fXa','fChuVuon','fSdt','fGiong','fNamTrong','fTuoiVuon','fMatDo','fDienTich']
+  ['fXa','fChuVuon','fSdt','fNamTrong','fTuoiVuon','fMatDo','fDienTich']
     .forEach(id => $(id).value = '');
+  setGiongDuaValue('');
   $('fNhomTuoi').selectedIndex = 0; $('fCanhTac').selectedIndex = 0;
   clearError('surveyError');
   $('surveyFormTitle').textContent = 'Thông tin vườn khảo sát';
@@ -1249,7 +1569,7 @@ function startEditSurvey(surveyId, data){
   if (data.xa) ensureXaOptionExists(data.xa);
   $('fChuVuon').value = data.chuVuon || '';
   $('fSdt').value = data.sdt || '';
-  $('fGiong').value = data.giongDua || '';
+  setGiongDuaValue(data.giongDua || '');
   $('fNamTrong').value = data.namTrong || '';
   $('fTuoiVuon').value = data.tuoiVuon || '';
   if (data.nhomTuoiCay) $('fNhomTuoi').value = data.nhomTuoiCay;
@@ -1312,7 +1632,7 @@ async function saveSurvey(){
     xa: $('fXa').value.trim(),
     chuVuon: $('fChuVuon').value.trim(),
     sdt: $('fSdt').value.trim(),
-    giongDua: $('fGiong').value.trim(),
+    giongDua: getGiongDuaValue(),
     namTrong: parseInt($('fNamTrong').value, 10) || null,
     tuoiVuon: parseInt($('fTuoiVuon').value, 10) || null,
     nhomTuoiCay: $('fNhomTuoi').value,
@@ -1535,6 +1855,7 @@ async function saveTree(){
     xa: currentSurveyData.xa,                 // denormalize để Admin dễ thống kê
     nhomTuoiCay: currentSurveyData.nhomTuoiCay,
     matDo: currentSurveyData.matDo,
+    tuoiVuon: currentSurveyData.tuoiVuon,      // denormalize (v1.9) — dùng cho phân tích hồi quy
     projectId: currentSurveyData.projectId || LEGACY_PROJECT_ID, // denormalize để lọc theo dự án
     surveyId: currentSurveyId,
     createdBy: currentUser.uid,
@@ -1591,7 +1912,11 @@ async function showAdminHub(){
 
 function renderHubKpiGrid(){
   const grid = $('hubKpiGrid'); if (!grid) return;
-  const activeCount = projectsCache.filter(p => p.status === 'active').length;
+  // v1.8: Quản lý bị giới hạn theo dự án cụ thể chỉ đếm "Dự án đang mở" trong đúng phạm vi
+  // được cấp — allSurveysCache/allTreesCache đã tự scope sẵn từ loadAllSurveysAndTrees().
+  const scoped = isManagerOnly() && !isGlobalManager();
+  const projList = scoped ? projectsCache.filter(p => managerProjectsOf().includes(p.id)) : projectsCache;
+  const activeCount = projList.filter(p => p.status === 'active').length;
   const xaSet = new Set(allTreesCache.map(t => t.xa || '(chưa rõ)'));
   grid.innerHTML = `
     <div class="kpi-tile"><div class="num">${activeCount}</div><div class="lbl">Dự án đang mở</div></div>
@@ -1602,9 +1927,17 @@ function renderHubKpiGrid(){
 
 function renderProjectsHubList(){
   const box = $('hubProjectsList'); if (!box) return;
-  const list = projectsCache.filter(p => p.status !== 'trashed');
+  let list = projectsCache.filter(p => p.status !== 'trashed');
+  // v1.8: Quản lý bị giới hạn theo dự án cụ thể chỉ thấy đúng (các) dự án được cấp quyền —
+  // Admin và Quản lý '*' (tất cả dự án) vẫn thấy toàn bộ như trước.
+  if (isManagerOnly() && !isGlobalManager()){
+    const scope = managerProjectsOf();
+    list = list.filter(p => scope.includes(p.id));
+  }
   if (!list.length){
-    box.innerHTML = '<p class="muted">Chưa có dự án nào — bấm "+ Tạo dự án mới" ở trên để bắt đầu.</p>';
+    box.innerHTML = (isManagerOnly() && !isGlobalManager())
+      ? '<p class="muted">Tài khoản của anh/chị chưa được Admin cấp quyền Quản lý cho dự án nào — liên hệ Admin để được cấp quyền.</p>'
+      : '<p class="muted">Chưa có dự án nào — bấm "+ Tạo dự án mới" ở trên để bắt đầu.</p>';
     return;
   }
   box.innerHTML = list.map(p => {
@@ -1633,6 +1966,132 @@ function renderProjectsHubList(){
       </div>
     </div>`;
   }).join('');
+}
+
+// ============================================================================
+// SO SÁNH XU HƯỚNG NĂNG SUẤT GIỮA CÁC DỰ ÁN/MÙA VỤ (v1.9) — đối chiếu theo THÁNG LỊCH thực tế
+// (khác phần "cấp cây" ở trên vốn so sánh theo VỊ TRÍ TƯƠNG ĐỐI trong phiếu) — phù hợp mục đích
+// so sánh mùa vụ (VD tháng 10-12 năm nay so với tháng 10-12 năm trước ở 2 dự án khác nhau).
+// ============================================================================
+const CROSS_PROJECT_COLORS = ['#1F5C3B','#2a78d6','#eb6834','#8b5cf6','#d6336c','#0891b2','#a16207','#4d7c0f'];
+function visibleProjectsForCompare(){
+  let list = projectsCache.filter(p => p.status !== 'trashed');
+  if (isManagerOnly() && !isGlobalManager()){
+    const scope = managerProjectsOf();
+    list = list.filter(p => scope.includes(p.id));
+  }
+  return list;
+}
+function openCompareProjects(){
+  showView('view-compare-projects');
+  renderCompareProjectChecklist();
+  $('compareProjectResults').innerHTML = '';
+}
+function renderCompareProjectChecklist(){
+  const box = $('compareProjectChecklist'); if (!box) return;
+  const list = visibleProjectsForCompare();
+  if (!list.length){
+    box.innerHTML = '<p class="muted">Chưa có dự án nào trong phạm vi anh/chị được xem.</p>';
+    return;
+  }
+  box.innerHTML = list.map(p => {
+    const nTrees = allTreesCache.filter(t => (t.projectId || LEGACY_PROJECT_ID) === p.id).length;
+    return `<label class="project-card" style="cursor:pointer;display:block">
+      <input type="checkbox" class="compare-project-cb" value="${p.id}" style="margin-right:8px;width:auto">
+      <b>${escapeHtml(p.name)}</b>
+      <div class="pj-meta">${escapeHtml(p.startDate)||'?'} → ${escapeHtml(p.endDate)||'?'} · ${nTrees} cây</div>
+    </label>`;
+  }).join('');
+}
+// Trung bình forecast (trái/cây) theo từng tháng LỊCH (tag 'YYYY-MM'), gộp mọi cây thuộc dự án
+// (không loại theo vị trí tương đối) — bỏ qua cây đã bị loại trừ khỏi phân tích.
+function computeProjectMonthlySeries(projectId){
+  const trees = allTreesCache.filter(t => (t.projectId || LEGACY_PROJECT_ID) === projectId && !t.excludedFromAnalysis);
+  const byMonth = {};
+  trees.forEach(t => {
+    Object.entries(t.forecast || {}).forEach(([tag, v]) => {
+      const num = Number(v);
+      if (!isFinite(num)) return;
+      (byMonth[tag] = byMonth[tag] || []).push(num);
+    });
+  });
+  return Object.keys(byMonth).sort().map(tag => ({
+    month: tag, value: byMonth[tag].reduce((a,b)=>a+b,0)/byMonth[tag].length, n: byMonth[tag].length,
+  }));
+}
+function buildMultiProjectLineChart(seriesList){
+  const allMonths = [...new Set(seriesList.flatMap(s => s.rows.map(r => r.month)))].sort();
+  if (!allMonths.length) return '<p class="muted">Không có dữ liệu.</p>';
+  const W = 680, H = 280, padL = 46, padR = 16, padT = 16, padB = 40;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const xFor = tag => {
+    const i = allMonths.indexOf(tag);
+    return padL + (allMonths.length === 1 ? innerW/2 : innerW * i/(allMonths.length-1));
+  };
+  const allVals = seriesList.flatMap(s => s.rows.map(r => r.value));
+  let minY = Math.min(0, ...allVals), maxY = Math.max(1, ...allVals);
+  if (minY === maxY) maxY += 1;
+  maxY *= 1.1;
+  const yFor = v => padT + innerH - ((v - minY)/(maxY - minY || 1)) * innerH;
+
+  let gridlines = '';
+  const ticks = 4;
+  for (let t=0;t<=ticks;t++){
+    const v = minY + (maxY-minY)*t/ticks;
+    const y = yFor(v);
+    gridlines += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#D1D5DB" stroke-width="1" opacity="0.6"/>
+      <text x="${padL-8}" y="${y+4}" font-size="10" fill="#4B5563" text-anchor="end">${v.toFixed(1)}</text>`;
+  }
+  const xlabels = allMonths.map(tag => `<text x="${xFor(tag)}" y="${H-padB+16}" font-size="9.5" fill="#4B5563"
+      text-anchor="middle">${tagToLabel(tag).replace('Tháng ','T')}</text>`).join('');
+
+  let paths = '', points = '', legend = '';
+  seriesList.forEach((s, si) => {
+    const color = s.color || CROSS_PROJECT_COLORS[si % CROSS_PROJECT_COLORS.length];
+    const sorted = s.rows.slice().sort((a,b) => a.month.localeCompare(b.month));
+    if (sorted.length){
+      const linePts = sorted.map(r => [xFor(r.month), yFor(r.value)]);
+      const path = 'M ' + linePts.map(p => p.join(',')).join(' L ');
+      paths += `<path d="${path}" fill="none" stroke="${color}" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"/>`;
+      points += sorted.map(r => `<circle cx="${xFor(r.month)}" cy="${yFor(r.value)}" r="3.8" fill="${color}"
+        stroke="#fff" stroke-width="1.2"><title>${escapeHtml(s.name)} — ${tagToLabel(r.month)}: ${r.value.toFixed(1)} trái/cây (N=${r.n})</title></circle>`).join('');
+    }
+    legend += `<span class="lg-item"><span class="lg-swatch" style="background:${color}"></span>${escapeHtml(s.name)}</span>`;
+  });
+
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img"
+      aria-label="Biểu đồ so sánh năng suất trung bình theo tháng lịch giữa các dự án">
+      ${gridlines}${paths}${points}${xlabels}
+    </svg>
+    <div class="chart-legend" style="margin-top:4px">${legend}</div>`;
+}
+function runProjectComparison(){
+  const ids = [...document.querySelectorAll('.compare-project-cb:checked')].map(cb => cb.value);
+  const box = $('compareProjectResults');
+  if (ids.length < 2){
+    box.innerHTML = '<p class="muted">Vui lòng chọn ít nhất 2 dự án để so sánh.</p>';
+    return;
+  }
+  const seriesList = ids.map(id => {
+    const p = projectsCache.find(pp => pp.id === id);
+    return { name: p ? p.name : id, rows: computeProjectMonthlySeries(id) };
+  });
+  const emptyOnes = seriesList.filter(s => !s.rows.length).map(s => s.name);
+  const summaryRows = seriesList.map(s => {
+    const totalMean = s.rows.reduce((a,r)=>a+r.value,0);
+    const range = s.rows.length ? `${tagToLabel(s.rows[0].month)} → ${tagToLabel(s.rows[s.rows.length-1].month)}` : '—';
+    return `<tr><td>${escapeHtml(s.name)}</td><td>${range}</td><td>${s.rows.length}</td><td>${totalMean.toFixed(1)}</td></tr>`;
+  }).join('');
+  box.innerHTML = `
+    ${buildMultiProjectLineChart(seriesList)}
+    <div class="table-wrap" style="margin-top:12px"><table><tr><th>Dự án</th><th>Khoảng tháng có dữ liệu</th>
+      <th>Số tháng</th><th>Tổng TB trái/cây cộng dồn các tháng</th></tr>${summaryRows}</table></div>
+    ${emptyOnes.length ? `<p class="muted" style="margin-top:8px">⚠️ Dự án chưa có dữ liệu dự báo để so sánh:
+      ${emptyOnes.map(escapeHtml).join(', ')}.</p>` : ''}
+    <p class="muted" style="margin-top:8px">Lưu ý: đây là trung bình số trái/cây/tháng thô, CHƯA quy đổi
+    theo mật độ trồng (trái/ha) và chưa loại trừ khác biệt về giống/đất/khí hậu giữa các dự án — dùng để
+    xem xu hướng tương đối theo mùa, không dùng để kết luận dự án nào "cho năng suất cao hơn" nếu điều
+    kiện canh tác giữa các dự án khác nhau đáng kể.</p>`;
 }
 
 function renderTrashSection(){
@@ -1702,6 +2161,12 @@ async function purgeProjectNow(id){
 // ADMIN — CHI TIẾT 1 DỰ ÁN (báo cáo / phân tích) — v1.5
 // ============================================================================
 async function openProjectDetail(id){
+  // v1.8: chặn phía client cho Quản lý bị giới hạn theo dự án cụ thể — Rules cũng chặn ở
+  // tầng server (isManagerForProject), đây chỉ là lớp UX để không hiện màn hình lỗi trống.
+  if (isManagerOnly() && !isGlobalManager() && !managerProjectsOf().includes(id)){
+    alert('Tài khoản của anh/chị chưa được Admin cấp quyền Quản lý cho dự án này.');
+    return;
+  }
   viewProjectId = id;
   localStorage.setItem('adminViewProjectId', viewProjectId);
   showView('view-admin-project');
@@ -1753,6 +2218,7 @@ async function showAdminSettings(){
   if (isAdminUser()){
     loadRequiredFieldsForm();
     loadXaListForm();
+    loadGiongListForm();
     $('cfgTmax').value = phenologyConfig.tMax;
     $('cfgThreshold').value = phenologyConfig.threshold;
     loadModelParamHistoryForm();
@@ -1926,26 +2392,55 @@ async function rejectUser(uid){
   }catch(e){ alert('Không từ chối được: ' + e.message); }
 }
 
-// ---- v1.7: Quyền Quản lý (managerAccess) — cấp THÊM cho tài khoản field đã duyệt,
-// không đổi role, không ảnh hưởng việc nhập phiếu bình thường của họ. ----
+// ---- v1.8: Quyền Quản lý theo TỪNG DỰ ÁN (managerProjects) — cấp THÊM cho tài khoản
+// field đã duyệt, không đổi role, không ảnh hưởng việc nhập phiếu bình thường của họ.
+// Admin chọn đúng những dự án nào 1 người được xem, hoặc tick "Tất cả dự án" (tương
+// thích với managerAccess=true kiểu v1.7 cũ). Xem ghi chú kỹ thuật ở firestore.rules
+// (vì sao Rules không thể "lọc bớt" mà chỉ có thể cho/không cho theo từng dự án).
 async function loadManagerAccessList(){
   const box = $('managerAccessList'); if (!box) return;
   box.innerHTML = '<p class="muted">Đang tải…</p>';
   try{
+    if (!projectsCache.length) await loadProjectsAdmin();
+    const activeProjects = projectsCache.filter(p => p.id !== LEGACY_PROJECT_ID && p.status !== 'trashed');
     const q = await db.collection('users').where('status', '==', 'approved').get();
     const list = q.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.role !== 'admin');
     if (!list.length){ box.innerHTML = '<p class="muted">Chưa có tài khoản khảo sát viên nào đã duyệt.</p>'; return; }
     list.sort((a,b) => (a.name||'').localeCompare(b.name||''));
     box.innerHTML = list.map(u => {
-      const on = !!u.managerAccess;
-      return `<div class="tree-item">
-        <div><b>${escapeHtml(u.name) || '(chưa rõ tên)'}</b>
-          <div class="meta">${escapeHtml(u.email) || ''} · ${on
-            ? '<span class="badge badge-approved">Đang có quyền Quản lý</span>'
-            : '<span class="muted">Khảo sát viên</span>'}</div></div>
-        <div class="row" style="flex:none;gap:6px">
-          <button class="btn ${on ? 'btn-outline' : 'btn-primary'}" style="width:auto;padding:8px 12px"
-            onclick="toggleManagerAccess('${u.id}', ${!on})">${on ? 'Thu hồi quyền Quản lý' : 'Cấp quyền Quản lý'}</button>
+      const mp = u.managerAccess === true ? ['*'] : (Array.isArray(u.managerProjects) ? u.managerProjects : []);
+      const isAll = mp.includes('*');
+      const scopeLabel = isAll
+        ? '<span class="badge badge-approved">Tất cả dự án</span>'
+        : (mp.length
+          ? mp.map(pid => {
+              const p = activeProjects.find(x => x.id === pid);
+              return `<span class="badge badge-approved">${escapeHtml(p ? p.name : '(dự án đã xoá)')}</span>`;
+            }).join(' ')
+          : '<span class="muted">Khảo sát viên (chưa có quyền Quản lý)</span>');
+      const projectCheckboxes = activeProjects.length ? activeProjects.map(p => `
+          <label style="display:flex;align-items:center;gap:8px;font-size:14px;margin:4px 0">
+            <input type="checkbox" class="mgr-proj-check" data-uid="${u.id}" value="${escapeHtml(p.id)}"
+              ${mp.includes(p.id) ? 'checked' : ''} style="width:17px;height:17px">
+            ${escapeHtml(p.name)}${p.status==='archived' ? ' <span class="muted">(đã lưu trữ)</span>' : ''}
+          </label>`).join('') : '<p class="muted" style="margin:4px 0">Chưa có dự án nào để chọn.</p>';
+      return `<div class="tree-item" style="flex-direction:column;align-items:stretch">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <div><b>${escapeHtml(u.name) || '(chưa rõ tên)'}</b>
+            <div class="meta">${escapeHtml(u.email) || ''}</div>
+            <div style="margin-top:4px">${scopeLabel}</div></div>
+          <button class="btn btn-outline" style="width:auto;padding:8px 12px;flex:none"
+            onclick="toggleManagerEditBox('${u.id}')">Chỉnh sửa quyền theo dự án</button>
+        </div>
+        <div id="mgrEdit_${u.id}" class="hidden" style="margin-top:12px;padding-top:12px;border-top:1px dashed #ddd">
+          <label style="display:flex;align-items:center;gap:8px;font-size:14px;margin:4px 0;font-weight:600">
+            <input type="checkbox" class="mgr-all-check" data-uid="${u.id}" ${isAll?'checked':''}
+              onchange="onMgrAllToggle('${u.id}')" style="width:17px;height:17px">
+            Tất cả dự án (hiện tại &amp; tương lai)
+          </label>
+          <div class="mgr-proj-list" data-uid="${u.id}" style="${isAll?'opacity:.45;pointer-events:none':''}">${projectCheckboxes}</div>
+          <button class="btn btn-primary" style="margin-top:10px;width:auto;padding:8px 14px"
+            onclick="saveManagerProjects('${u.id}')">Lưu quyền</button>
         </div>
       </div>`;
     }).join('');
@@ -1953,9 +2448,26 @@ async function loadManagerAccessList(){
     box.innerHTML = '<p class="muted">Không tải được danh sách: ' + e.message + '</p>';
   }
 }
-async function toggleManagerAccess(uid, next){
+function toggleManagerEditBox(uid){
+  const el = $('mgrEdit_' + uid);
+  if (el) el.classList.toggle('hidden');
+}
+function onMgrAllToggle(uid){
+  const allBox = document.querySelector(`.mgr-all-check[data-uid="${uid}"]`);
+  const listBox = document.querySelector(`.mgr-proj-list[data-uid="${uid}"]`);
+  if (listBox) listBox.style.cssText = (allBox && allBox.checked) ? 'opacity:.45;pointer-events:none' : '';
+}
+async function saveManagerProjects(uid){
   try{
-    await db.collection('users').doc(uid).update({ managerAccess: next });
+    const allChecked = document.querySelector(`.mgr-all-check[data-uid="${uid}"]`).checked;
+    const managerProjects = allChecked ? ['*']
+      : [...document.querySelectorAll(`.mgr-proj-check[data-uid="${uid}"]:checked`)].map(c => c.value);
+    // Ghi managerProjects (nguồn duy nhất từ v1.8) và xoá managerAccess kiểu cũ nếu có,
+    // để tránh 2 trường dữ liệu xung đột nhau về sau.
+    await db.collection('users').doc(uid).update({
+      managerProjects,
+      managerAccess: firebase.firestore.FieldValue.delete(),
+    });
     loadManagerAccessList();
   }catch(e){ alert('Không cập nhật được: ' + e.message); }
 }
@@ -2968,7 +3480,31 @@ function onActiveProjectChange(){
 // ============================================================================
 // DỰ ÁN KHẢO SÁT (v1.4) — Admin: dữ liệu gộp toàn cục + lọc theo dự án
 // ============================================================================
+// v1.8 — Quản lý bị giới hạn theo dự án cụ thể (không có '*') KHÔNG thể dùng truy vấn "list"
+// không lọc (.get() không where) như Admin/Quản lý '*' — Firestore từ chối CẢ TRUY VẤN nếu có
+// bất kỳ tài liệu nào trong phạm vi mà rule từ chối, không chỉ ẩn tài liệu đó (xem ghi chú kỹ
+// thuật đầu firestore.rules). Vì vậy trường hợp này dùng where('projectId','in',[...]) trên
+// collection surveys (index tự động, không cần Admin tạo tay) rồi đọc trees theo từng
+// subcollection surveys/{id}/trees — KHÔNG dùng collectionGroup('trees') (cần composite index
+// thủ công nếu thêm where, nên tránh).
 async function loadAllSurveysAndTrees(){
+  const scopedIds = (isManagerOnly() && !isGlobalManager()) ? managerProjectsOf() : null;
+  if (scopedIds){
+    if (!scopedIds.length){ allSurveysCache = []; allTreesCache = []; return; }
+    try{
+      const surveysSnap = await db.collection('surveys').where('projectId', 'in', scopedIds.slice(0, 30)).get();
+      allSurveysCache = surveysSnap.docs.map(doc => Object.assign({ id: doc.id }, doc.data()));
+    }catch(e){ allSurveysCache = []; }
+    try{
+      const treeArrays = await Promise.all(allSurveysCache.map(s =>
+        db.collection('surveys').doc(s.id).collection('trees').get()
+          .then(snap => snap.docs.map(doc => Object.assign({ id: doc.id, surveyId: s.id }, doc.data())))
+          .catch(() => [])
+      ));
+      allTreesCache = treeArrays.flat();
+    }catch(e){ allTreesCache = []; }
+    return;
+  }
   try{
     const surveysSnap = await db.collection('surveys').get();
     allSurveysCache = surveysSnap.docs.map(doc => Object.assign({ id: doc.id }, doc.data()));
@@ -3344,7 +3880,30 @@ function showWizardStep(n){
   $('wBtnBack').classList.toggle('hidden', n===1);
   $('wBtnNext').classList.toggle('hidden', n===4);
   $('wBtnCreate').classList.toggle('hidden', n!==4);
+  if (n===2) updateWizardMonthPreview();
   if (n===4) renderWizardSummary();
+}
+// v1.8 — Xem trước THÁNG THỰC TẾ (dương lịch) tương ứng với "Số tháng dự báo mỗi cây":
+// vì monthTags của mỗi cây được tính từ NGÀY LẬP PHIẾU thực tế (xem addMonthsTag(today,n) ở
+// saveTree), không phải từ ngày bắt đầu dự án — nên đây chỉ là VÍ DỤ MINH HOẠ (mốc "x" = ngày
+// bắt đầu dự án nếu đã nhập, hoặc hôm nay nếu chưa) để Admin hình dung được biên độ thời gian,
+// không phải giá trị cố định sẽ áp dụng cho mọi phiếu.
+function updateWizardMonthPreview(){
+  const box = $('wjMonthPreview');
+  if (!box) return;
+  const n = Math.max(1, Math.min(12, parseInt($('wjForecastMonths').value, 10) || 7));
+  const startVal = $('wjStart').value;
+  const baseDate = startVal ? new Date(startVal + 'T00:00:00') : new Date();
+  const usingToday = !startVal;
+  const tags = Array.from({length:n}, (_, i) => addMonthsTag(baseDate, i));
+  const chips = tags.map((tag,i) => `<span class="badge" style="margin:2px 4px 2px 0">${i===0?'x':'x+'+i} = ${tagToLabel(tag)}</span>`).join('');
+  box.innerHTML = `<p style="margin:0 0 6px 0"><b>Ví dụ minh hoạ ${n} tháng dự báo</b>` +
+    (usingToday ? ' (tính từ hôm nay — chưa nhập Ngày bắt đầu):' : ` (tính từ Ngày bắt đầu ${escapeHtml(startVal)}):`) + `</p>` +
+    `<div>${chips}</div>` +
+    `<p class="muted" style="margin:8px 0 0 0">Lưu ý: mốc "x" trong thực tế được tính theo <b>đúng ngày khảo sát viên lập phiếu</b>
+      (không cố định theo ngày bắt đầu dự án ở trên) — nếu một phiếu được lập trễ hơn, toàn bộ ${n} tháng dự báo của
+      riêng phiếu đó sẽ dịch theo đúng ngày lập phiếu. Ví dụ trên chỉ giúp hình dung biên độ thời gian dự báo sẽ kéo dài
+      khoảng bao lâu theo lịch dương.</p>`;
 }
 function wizardValidateStep(n){
   clearError('wizardError');
@@ -3671,6 +4230,138 @@ function pairwiseBonferroni(matrix){
   }
   return pairs;
 }
+// ============================================================================
+// HỒI QUY TUYẾN TÍNH ĐƠN BIẾN / ĐA BIẾN (v1.9) — dùng cho phân tích ảnh hưởng của mật độ trồng
+// & tuổi vườn lên năng suất. Cài đặt tối giản (OLS bằng khử Gauss), đủ dùng để có con số tham
+// khảo ngay trên web — KHÔNG thay thế phần mềm thống kê chuyên dụng cho kết luận chính thức.
+// ============================================================================
+function solveLinearSystem(A, b){
+  const n = b.length;
+  const M = A.map((row,i) => row.concat([b[i]]));
+  for (let col=0; col<n; col++){
+    let piv = col;
+    for (let r=col+1;r<n;r++) if (Math.abs(M[r][col]) > Math.abs(M[piv][col])) piv = r;
+    if (Math.abs(M[piv][col]) < 1e-9) return null; // ma trận suy biến (VD 2 biến độc lập trùng nhau)
+    [M[col], M[piv]] = [M[piv], M[col]];
+    const pv = M[col][col];
+    for (let c=col;c<=n;c++) M[col][c] /= pv;
+    for (let r=0;r<n;r++){ if (r===col) continue; const f = M[r][col]; for (let c=col;c<=n;c++) M[r][c] -= f*M[col][c]; }
+  }
+  return M.map(row => row[n]);
+}
+function invertMatrix(A){
+  const n = A.length;
+  const M = A.map((row,i) => row.concat(Array.from({length:n},(_,j)=> i===j?1:0)));
+  for (let col=0; col<n; col++){
+    let piv = col;
+    for (let r=col+1;r<n;r++) if (Math.abs(M[r][col]) > Math.abs(M[piv][col])) piv = r;
+    if (Math.abs(M[piv][col]) < 1e-9) return null;
+    [M[col], M[piv]] = [M[piv], M[col]];
+    const pv = M[col][col];
+    for (let c=0;c<2*n;c++) M[col][c] /= pv;
+    for (let r=0;r<n;r++){ if (r===col) continue; const f = M[r][col]; for (let c=0;c<2*n;c++) M[r][c] -= f*M[col][c]; }
+  }
+  return M.map(row => row.slice(n));
+}
+// Hồi quy tuyến tính đơn biến (OLS) — trả về hệ số góc, hệ số chặn, r, R², kiểm định t cho hệ số góc.
+function linearRegression(xs, ys){
+  const n = xs.length;
+  if (n < 3) return null;
+  const mx = xs.reduce((a,b)=>a+b,0)/n, my = ys.reduce((a,b)=>a+b,0)/n;
+  let sxy=0, sxx=0, syy=0;
+  for (let i=0;i<n;i++){ const dx=xs[i]-mx, dy=ys[i]-my; sxy+=dx*dy; sxx+=dx*dx; syy+=dy*dy; }
+  if (sxx <= 0) return null; // biến độc lập không có phương sai (mọi giá trị bằng nhau)
+  const slope = sxy/sxx;
+  const intercept = my - slope*mx;
+  const r = syy>0 ? sxy/Math.sqrt(sxx*syy) : 0;
+  const r2 = r*r;
+  const df = n-2;
+  let sse=0; for (let i=0;i<n;i++){ const pred = intercept+slope*xs[i]; sse += (ys[i]-pred)**2; }
+  const mse = df>0 ? sse/df : NaN;
+  const seSlope = (df>0) ? Math.sqrt(mse/sxx) : NaN;
+  const t = (seSlope>0) ? slope/seSlope : NaN;
+  const p = (df>0 && isFinite(t)) ? tTestPValue(t, df) : NaN;
+  return { n, slope, intercept, r, r2, df, t, p, seSlope };
+}
+// Hồi quy tuyến tính đa biến (OLS qua phương trình chuẩn X'Xb=X'y) — predictorCols: mảng các mảng
+// giá trị biến độc lập (cùng độ dài), y: mảng biến phụ thuộc. Trả về beta[0]=hệ số chặn, beta[1..]=
+// hệ số từng biến theo đúng thứ tự predictorCols, cùng R² và p-value (kiểm định t) cho từng hệ số.
+function multipleRegression(predictorCols, y){
+  const n = y.length, p = predictorCols.length, dim = p+1;
+  if (n < dim+2) return null;
+  const X = []; for (let i=0;i<n;i++){ const row=[1]; for (let j=0;j<p;j++) row.push(predictorCols[j][i]); X.push(row); }
+  const XtX = Array.from({length:dim}, () => new Array(dim).fill(0));
+  const Xty = new Array(dim).fill(0);
+  for (let i=0;i<n;i++){
+    for (let a=0;a<dim;a++){
+      Xty[a] += X[i][a]*y[i];
+      for (let b=0;b<dim;b++) XtX[a][b] += X[i][a]*X[i][b];
+    }
+  }
+  const beta = solveLinearSystem(XtX, Xty);
+  if (!beta) return null;
+  const my = y.reduce((a,b)=>a+b,0)/n;
+  const preds = X.map(row => row.reduce((s,v,i)=>s+v*beta[i],0));
+  let ssTot=0, ssRes=0;
+  for (let i=0;i<n;i++){ ssTot += (y[i]-my)**2; ssRes += (y[i]-preds[i])**2; }
+  const r2 = ssTot>0 ? 1-ssRes/ssTot : 0;
+  const dfRes = n-dim;
+  const mse = dfRes>0 ? ssRes/dfRes : NaN;
+  const XtXinv = invertMatrix(XtX);
+  const seBeta = XtXinv ? beta.map((_,i) => Math.sqrt(Math.max(0, mse*XtXinv[i][i]))) : beta.map(()=>NaN);
+  const tStats = beta.map((b,i) => seBeta[i]>0 ? b/seBeta[i] : NaN);
+  const pVals = tStats.map(t => (dfRes>0 && isFinite(t)) ? tTestPValue(t, dfRes) : NaN);
+  return { n, p, beta, r2, dfRes, seBeta, tStats, pVals };
+}
+// Cỡ mẫu tối thiểu để hiện kết quả hồi quy — dưới ngưỡng này dễ cho ra hệ số/​R² không ổn định,
+// nên chỉ báo "chưa đủ dữ liệu" thay vì hiện con số gây hiểu lầm.
+const REGRESSION_MIN_N = 8;
+function buildYieldRegressionSectionHtml(){
+  const trees = analyzableTrees();
+  const rows = trees.map(t => ({
+    matDo: Number(t.matDo), tuoiVuon: Number(t.tuoiVuon),
+    yield: Object.values(t.forecast || {}).reduce((a,b)=>a+(Number(b)||0),0),
+  }));
+  const withMatDo = rows.filter(r => isFinite(r.matDo) && r.matDo > 0);
+  const withTuoi = rows.filter(r => isFinite(r.tuoiVuon) && r.tuoiVuon > 0);
+  const withBoth = rows.filter(r => isFinite(r.matDo) && r.matDo > 0 && isFinite(r.tuoiVuon) && r.tuoiVuon > 0);
+
+  const regMatDo = withMatDo.length >= REGRESSION_MIN_N ? linearRegression(withMatDo.map(r=>r.matDo), withMatDo.map(r=>r.yield)) : null;
+  const regTuoi = withTuoi.length >= REGRESSION_MIN_N ? linearRegression(withTuoi.map(r=>r.tuoiVuon), withTuoi.map(r=>r.yield)) : null;
+  const regMulti = withBoth.length >= REGRESSION_MIN_N
+    ? multipleRegression([withBoth.map(r=>r.matDo), withBoth.map(r=>r.tuoiVuon)], withBoth.map(r=>r.yield)) : null;
+
+  const fmtP = p => !isFinite(p) ? '—' : (p<0.001 ? '<0,001' : p.toFixed(3));
+  const rowHtml = (label, reg, nHave) => !reg
+    ? `<tr><td>${label}</td><td colspan="4" class="muted">Chưa đủ dữ liệu (N=${nHave}, cần tối thiểu ${REGRESSION_MIN_N} cây có giá trị).</td></tr>`
+    : `<tr><td>${label}</td><td>${reg.n}</td><td>${reg.r.toFixed(3)}</td><td>${reg.r2.toFixed(3)}</td>
+       <td>${fmtP(reg.p)} ${reg.p<0.05 ? '(có ý nghĩa)' : '(chưa đủ bằng chứng)'}</td></tr>`;
+
+  const multiHtml = regMulti ? `
+    <p style="margin-top:10px"><b>Hồi quy đa biến</b> (đồng thời cả 2 biến, N=${regMulti.n}):
+    Năng suất ước tính ≈ ${regMulti.beta[0].toFixed(2)}
+    ${regMulti.beta[1]>=0?' + ':' − '}${Math.abs(regMulti.beta[1]).toFixed(3)}×Mật độ
+    ${regMulti.beta[2]>=0?' + ':' − '}${Math.abs(regMulti.beta[2]).toFixed(3)}×Tuổi vườn
+    — R² = ${regMulti.r2.toFixed(3)} (mô hình giải thích được ${(regMulti.r2*100).toFixed(1)}% biến thiên
+    năng suất quan sát được). Hệ số mật độ: p ${fmtP(regMulti.pVals[1])}; hệ số tuổi vườn:
+    p ${fmtP(regMulti.pVals[2])}.</p>`
+    : `<p class="muted" style="margin-top:10px">Chưa đủ cây có đầy đủ CẢ HAI giá trị mật độ và tuổi vườn
+    (N=${withBoth.length}, cần tối thiểu ${REGRESSION_MIN_N}) để chạy hồi quy đa biến.</p>`;
+
+  return `
+    <h5 style="margin:16px 0 6px;font-size:12.5px;color:#1f2937">Hồi quy: Mật độ trồng & Tuổi vườn với năng suất (đơn biến)</h5>
+    <div class="table-wrap"><table><tr><th>Biến độc lập</th><th>N</th><th>Hệ số tương quan r</th>
+      <th>R²</th><th>p (kiểm định hệ số góc)</th></tr>
+      ${rowHtml('Mật độ trồng (cây/ha)', regMatDo, withMatDo.length)}
+      ${rowHtml('Tuổi vườn (năm)', regTuoi, withTuoi.length)}
+    </table></div>
+    ${multiHtml}
+    <p class="muted" style="margin-top:8px">⚠️ Hồi quy tuyến tính đơn giản trên dữ liệu hiện có — r/R²
+    cho biết MỨC ĐỘ LIÊN HỆ tuyến tính, KHÔNG khẳng định quan hệ nhân quả (còn nhiều biến chưa đưa vào
+    mô hình như giống, đất, khí hậu, quy trình canh tác). "Tuổi vườn" chỉ mới được lưu theo từng cây kể
+    từ bản cập nhật này — phiếu nhập trước đó sẽ không có giá trị này cho tới khi được sửa lại. Nên đối
+    chiếu độc lập (SPSS/R/Python) trước khi dùng cho kết luận chính thức, đặc biệt khi N còn nhỏ.</p>`;
+}
 function buildHistogramSvg(vals, opts){
   opts = Object.assign({ labels:false, color:'#2C7A4B', monthIndex:null }, opts || chartOptions.hist);
   const n = vals.length;
@@ -3800,7 +4491,8 @@ function buildDeepStatsSectionHtml(){
     <h5 style="margin:14px 0 6px;font-size:12.5px;color:#1f2937">So sánh cặp tháng (Bonferroni)</h5>
     <div class="table-wrap"><table><tr><th>Cặp so sánh</th><th>Chênh lệch TB</th><th>t</th><th>p (hiệu chỉnh)</th>
       <th>Kết luận</th></tr>${pairwiseRows || '<tr><td colspan="5" class="muted">Chỉ có 1 mốc tháng, không so sánh được.</td></tr>'}</table></div>
-    <div class="stat-narrative">${narrative}</div>`;
+    <div class="stat-narrative">${narrative}</div>
+    ${buildYieldRegressionSectionHtml()}`;
 }
 function renderDeepStats(){
   const box = $('deepStatsBox'); if (!box) return;
